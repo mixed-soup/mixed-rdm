@@ -9,7 +9,6 @@
   id: BackmenBoards
   recipes:
   - ShipyardCircuitboard # backmen
-  - SalvageExpeditionsComputerCircuitboard
   - CloningConsoleComputerCircuitboard
   - MedicalScannerMachineCircuitboard
   - VaccinatorMachineCircuitboard

@@ -95,6 +95,11 @@
     Silver: 300
 
 - type: latheRecipe
+  parent: BaseGoldBorgModuleRecipe
+  id: BorgModuleAdvancedMining
+  result: BorgModuleAdvancedMining
+
+- type: latheRecipe
   id: PersonalAI
   result: PersonalAI
   categories:
