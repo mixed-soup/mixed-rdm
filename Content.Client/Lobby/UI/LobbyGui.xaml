@@ -19,8 +19,6 @@
             <!-- LHS Controls -->
             <BoxContainer Name="LeftSide" Orientation="Vertical" SeparationOverride="4" HorizontalExpand="True">
                 <Control Name="DefaultState" VerticalExpand="True">
-<<<<<<< HEAD
-=======
                     <!-- Left Panel  -->
                     <BoxContainer Orientation="Vertical" HorizontalExpand="False" VerticalExpand="True"  VerticalAlignment="Bottom">
                         <controls:HLine Color="#404040" Thickness="1" Margin="0 1"/>
@@ -40,7 +38,6 @@
                         <!--<BoxContainer Orientation="Vertical" SeparationOverride="4" Name="VoteContainer"
                                       Access="Public" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0 8" />-->
                     </BoxContainer>
->>>>>>> upstream/master
 
                     <!-- Character Setup State -->
                     <Control Access="Public" Visible="False" Name="CharacterSetupState" VerticalExpand="True" />
