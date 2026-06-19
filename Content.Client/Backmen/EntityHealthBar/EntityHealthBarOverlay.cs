@@ -1,5 +1,6 @@
 using System.Numerics;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
@@ -19,12 +20,10 @@ namespace Content.Client.Backmen.EntityHealthBar;
 /// Yeah a lot of this is duplicated from doafters.
 /// Not much to be done until there's a generic HUD system
 /// </summary>
-public sealed class BkmEntityHealthBarOverlay : Overlay
+public sealed partial class BkmEntityHealthBarOverlay : Overlay
 {
-    [Dependency]
-    private readonly IEntityManager _entManager = default!;
-    [Dependency]
-    private readonly IPrototypeManager _protoManager = default!;
+    [Dependency] private IEntityManager _entManager = default!;
+    [Dependency] private IPrototypeManager _protoManager = default!;
 
     private readonly SharedTransformSystem _transform;
     private readonly MobStateSystem _mobStateSystem;
@@ -32,8 +31,7 @@ public sealed class BkmEntityHealthBarOverlay : Overlay
     private readonly ShaderInstance _shader;
     private readonly SharedInteractionSystem _interaction;
 
-    [Dependency]
-    private readonly IPlayerManager _playerManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
     public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
     public List<string> DamageContainers = new();
 
@@ -198,7 +196,7 @@ public sealed class BkmEntityHealthBarOverlay : Overlay
         if (!crit)
         {
             var hue = (5f / 18f) * progress;
-            return Color.FromHsv((hue, 1f, 0.75f, 1f));
+            return Color.FromHsv(new Vector4(hue, 1f, 0.75f, 1f));
         }
         else
         {

@@ -13,13 +13,13 @@ using Robust.Server.GameObjects;
 
 namespace Content.Server.Atmos.Portable;
 
-public sealed class SpaceHeaterSystem : EntitySystem
+public sealed partial class SpaceHeaterSystem : EntitySystem
 {
-    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
-    [Dependency] private readonly PowerReceiverSystem _power = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly UserInterfaceSystem _userInterfaceSystem = default!;
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private PopupSystem _popup = default!;
+    [Dependency] private PowerReceiverSystem _power = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
 
     public override void Initialize()
     {
@@ -54,11 +54,13 @@ public sealed class SpaceHeaterSystem : EntitySystem
 
     private void OnUIActivationAttempt(EntityUid uid, SpaceHeaterComponent spaceHeater, ActivatableUIOpenAttemptEvent args)
     {
-        if (!Comp<TransformComponent>(uid).Anchored)
-        {
+        if (Comp<TransformComponent>(uid).Anchored)
+            return;
+
+        if (!args.Silent)
             _popup.PopupEntity(Loc.GetString("comp-space-heater-unanchored", ("device", Loc.GetString("comp-space-heater-device-name"))), uid, args.User);
-            args.Cancel();
-        }
+
+        args.Cancel();
     }
 
     private void OnDeviceUpdated(EntityUid uid, SpaceHeaterComponent spaceHeater, ref AtmosDeviceUpdateEvent args)
@@ -112,7 +114,9 @@ public sealed class SpaceHeaterSystem : EntitySystem
         if (!TryComp<GasThermoMachineComponent>(uid, out var thermoMachine))
             return;
 
-        thermoMachine.TargetTemperature = float.Clamp(thermoMachine.TargetTemperature + args.Temperature, thermoMachine.MinTemperature, thermoMachine.MaxTemperature);
+        thermoMachine.TargetTemperature = float.Clamp(thermoMachine.TargetTemperature + args.Temperature,
+                                                      spaceHeater.MinTemperature,
+                                                      spaceHeater.MaxTemperature);
 
         UpdateAppearance(uid);
         DirtyUI(uid, spaceHeater);

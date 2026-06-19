@@ -1,34 +1,26 @@
 using Content.Shared.Actions;
 using Content.Shared.Bed.Sleep;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Mobs.Components;
+using Content.Shared.StatusEffectNew;
+using Content.Shared.StatusEffectNew.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Shared.Backmen.Abilities.Psionics;
 
-public sealed class MassSleepPowerSystem : EntitySystem
+public sealed partial class MassSleepPowerSystem : StatusEffectGrantedPowerSystem<MassSleepPowerComponent, MassSleepPowerActionEvent>
 {
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedPsionicAbilitiesSystem _psionics = default!;
-    [Dependency] private readonly SleepingSystem _sleepingSystem = default!;
-    private EntityQuery<PsionicInsulationComponent> _qPsionicInsulation;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedPsionicAbilitiesSystem _psionics = default!;
+    [Dependency] private StatusEffectNew.StatusEffectsSystem _effectsSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<MassSleepPowerComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<MassSleepPowerComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<MassSleepPowerComponent, MassSleepPowerActionEvent>(OnPowerUsed);
+    private static readonly EntProtoId ActionMassSleep = "ActionMassSleep";
 
-        _qPsionicInsulation = GetEntityQuery<PsionicInsulationComponent>();
-    }
-
-    [ValidatePrototypeId<EntityPrototype>] private const string ActionMassSleep = "ActionMassSleep";
-
-    private void OnInit(EntityUid uid, MassSleepPowerComponent component, ComponentInit args)
+    protected override void EnsurePowerActions(EntityUid uid, MassSleepPowerComponent component)
     {
         _actions.AddAction(uid, ref component.MassSleepPowerAction, ActionMassSleep);
 
@@ -44,16 +36,19 @@ public sealed class MassSleepPowerSystem : EntitySystem
             psionic.PsionicAbility = component.MassSleepPowerAction;
     }
 
-    private void OnShutdown(EntityUid uid, MassSleepPowerComponent component, ComponentShutdown args)
+    protected override void RemovePowerActions(EntityUid uid, MassSleepPowerComponent component)
     {
         _actions.RemoveAction(uid, component.MassSleepPowerAction);
     }
 
-    [ValidatePrototypeId<DamageContainerPrototype>]
-    private const string Biological = "Biological";
+    private static readonly ProtoId<DamageContainerPrototype> Biological = "Biological";
+    private static readonly EntProtoId StatusEffectForcedSleeping = "StatusEffectForcedSleeping";
 
-    private void OnPowerUsed(EntityUid uid, MassSleepPowerComponent component, MassSleepPowerActionEvent args)
+    protected override void HandlePowerUse(EntityUid uid, MassSleepPowerComponent component, MassSleepPowerActionEvent args)
     {
+        if (args.Handled)
+            return;
+
         var handle = false;
         foreach (var entity in _lookup.GetEntitiesInRange<MobStateComponent>(args.Target, component.Radius))
         {
@@ -62,13 +57,13 @@ public sealed class MassSleepPowerSystem : EntitySystem
                 entity.Owner == uid ||
 #endif
 
-                _qPsionicInsulation.HasComp(entity))
+                _effectsSystem.HasEffectComp<PsionicInsulationComponent>(entity))
                 continue;
 
             if (!TryComp<DamageableComponent>(entity, out var damageable) || damageable.DamageContainerID != Biological)
                 continue;
 
-            var result = _sleepingSystem.TrySleeping((entity.Owner,entity.Comp));
+            var result = _effectsSystem.TryUpdateStatusEffectDuration(entity, StatusEffectForcedSleeping, TimeSpan.FromSeconds(10));
             if (!handle && result)
                 handle = true;
         }
@@ -78,4 +73,4 @@ public sealed class MassSleepPowerSystem : EntitySystem
     }
 }
 
-public sealed partial class MassSleepPowerActionEvent : WorldTargetActionEvent {}
+public sealed partial class MassSleepPowerActionEvent : WorldTargetActionEvent;

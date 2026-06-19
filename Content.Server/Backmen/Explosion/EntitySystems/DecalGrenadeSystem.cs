@@ -2,6 +2,7 @@ using System.Numerics;
 using Content.Server.Decals;
 using Content.Server.Backmen.Explosion.Components;
 using Content.Server.Explosion.EntitySystems;
+using Content.Shared.Trigger;
 using Robust.Server.GameObjects;
 using Robust.Shared.Random;
 using Robust.Shared.Map;
@@ -9,12 +10,12 @@ using Robust.Shared.Map.Components;
 
 namespace Content.Server.Backmen.Explosion.EntitySystems
 {
-    public sealed class DecalGrenadeSystem : EntitySystem
+    public sealed partial class DecalGrenadeSystem : EntitySystem
     {
-        [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly TransformSystem _transformSystem = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly DecalSystem _decalSystem = default!;
+        [Dependency] private IRobustRandom _random = default!;
+        [Dependency] private TransformSystem _transformSystem = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private DecalSystem _decalSystem = default!;
 
         public override void Initialize()
         {

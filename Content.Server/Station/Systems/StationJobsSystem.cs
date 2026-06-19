@@ -23,10 +23,10 @@ namespace Content.Server.Station.Systems;
 [PublicAPI]
 public sealed partial class StationJobsSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly GameTicker _gameTicker = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private GameTicker _gameTicker = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -74,6 +74,38 @@ public sealed partial class StationJobsSystem : EntitySystem
         stationJobs.JobList = stationJobs.SetupAvailableJobs.ToDictionary(
             x => x.Key,
             x=> (int?)(x.Value[1] < 0 ? null : x.Value[1]));
+
+        stationJobs.TotalJobs = stationJobs.JobList.Values.Select(x => x ?? 0).Sum();
+
+        UpdateJobsAvailable();
+    }
+
+    /// <summary>
+    /// Replaces <see cref="StationJobsComponent.SetupAvailableJobs"/> with the provided jobs.
+    /// </summary>
+    public void SetSetupAvailableJobs(
+        EntityUid station,
+        IEnumerable<KeyValuePair<ProtoId<JobPrototype>, int[]>>? jobs,
+        StationJobsComponent? stationJobs = null,
+        bool syncRuntime = false)
+    {
+        if (!Resolve(station, ref stationJobs, false))
+            return;
+
+        stationJobs.SetupAvailableJobs.Clear();
+
+        if (jobs != null)
+        {
+            foreach (var (job, slots) in jobs)
+                stationJobs.SetupAvailableJobs[job] = slots;
+        }
+
+        if (!syncRuntime)
+            return;
+
+        stationJobs.JobList = stationJobs.SetupAvailableJobs.ToDictionary(
+            x => x.Key,
+            x => (int?)(x.Value[1] < 0 ? null : x.Value[1]));
 
         stationJobs.TotalJobs = stationJobs.JobList.Values.Select(x => x ?? 0).Sum();
 

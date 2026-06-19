@@ -1,10 +1,10 @@
 ﻿using Content.Server.Humanoid;
-using Content.Server.Repairable;
 using Content.Shared.Backmen.Disease;
 using Content.Shared.Humanoid;
 using Content.Shared.Humanoid.Markings;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
+using Content.Shared.Repairable;
 using Robust.Shared.Enums;
 using Robust.Shared.Prototypes;
 
@@ -20,8 +20,8 @@ public sealed partial class DiseaseCyborgConversion : DiseaseEffect
 
 public sealed partial class DiseaseEffectSystem
 {
-    [Dependency] private readonly HumanoidAppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private HumanoidAppearanceSystem _appearanceSystem = default!;
+    [Dependency] private MetaDataSystem _metaDataSystem = default!;
 
     private void DiseaseCyborgConversion(Entity<DiseaseCarrierComponent> ent,
         ref DiseaseEffectArgs<DiseaseCyborgConversion> args)

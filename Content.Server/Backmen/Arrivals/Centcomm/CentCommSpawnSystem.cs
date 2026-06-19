@@ -1,58 +1,82 @@
 ﻿using System.Linq;
+using Content.Server.GameTicking;
 using Content.Server.GameTicking.Events;
 using Content.Server.Spawners.Components;
 using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
 using Content.Shared.GameTicking;
-using Robust.Server.Player;
+using Content.Shared.Station.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Content.Server.Backmen.Arrivals.CentComm;
 
-public sealed class CentCommSpawnSystem : EntitySystem
+public sealed partial class CentCommSpawnSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private GameTicker _gameTicker = default!;
+    [Dependency] private StationJobsSystem _stationJobs = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
         SubscribeLocalEvent<StationCentCommDirectorComponent, CentCommEvent>(OnCentCommEvent);
-        SubscribeLocalEvent<StationCentCommDirectorComponent, ComponentStartup>(OnComponentStartup);
+        SubscribeLocalEvent<StationInitializedEvent>(OnStationInitialized, before: [typeof(StationJobsSystem)]);
+        SubscribeLocalEvent<RoundStartingEvent>(OnRoundStarting);
     }
 
-    private void OnComponentStartup(Entity<StationCentCommDirectorComponent> ent, ref ComponentStartup args)
+    private void OnStationInitialized(StationInitializedEvent ev)
     {
-#if DEBUG
-        ent.Comp.isLowPop = false;
-#else
-        if (_playerManager.PlayerCount >= 20)
+        if (!TryComp<StationCentCommDirectorComponent>(ev.Station, out var director)
+            || !TryComp<StationJobsComponent>(ev.Station, out var jobs))
         {
-            ent.Comp.isLowPop = false;
+            return;
         }
-#endif
-        var stationJobs = CompOrNull<StationJobsComponent>(ent.Owner);
-        if (stationJobs == null)
-            return;
 
-        var stationDict = stationJobs.SetupAvailableJobs;
-        stationDict.Clear();
+        ConfigureJobs(ev.Station, director, jobs);
+    }
 
-        if (ent.Comp.isLowPop)
-            return;
-
-        var availableJobs = _playerManager.PlayerCount is >= 20 and < 40
-            ? ent.Comp.SetupMedAvailableJobs
-            : ent.Comp.SetupHighAvailableJobs;
-
-
-        foreach (var job in availableJobs)
+    private void OnRoundStarting(RoundStartingEvent ev)
+    {
+        var query = EntityQueryEnumerator<StationCentCommDirectorComponent, StationJobsComponent>();
+        while (query.MoveNext(out var uid, out var director, out var jobs))
         {
-            stationDict[job.Key] = job.Value;
+            ConfigureJobs(uid, director, jobs, syncJobList: true);
         }
+    }
+
+    private void ConfigureJobs(
+        EntityUid station,
+        StationCentCommDirectorComponent director,
+        StationJobsComponent jobs,
+        bool syncJobList = false)
+    {
+        ApplyJobConfiguration(station, director, jobs, _gameTicker.ReadyPlayerCount(), syncJobList);
+    }
+
+    internal void TriggerRoundStartingJobConfiguration()
+    {
+        OnRoundStarting(new RoundStartingEvent(_gameTicker.RoundId));
+    }
+
+    private void ApplyJobConfiguration(
+        EntityUid station,
+        StationCentCommDirectorComponent director,
+        StationJobsComponent jobs,
+        int playerCount,
+        bool syncJobList)
+    {
+        director.isLowPop = playerCount < 20;
+
+        var availableJobs = !director.isLowPop
+            ? playerCount is >= 20 and < 40
+                ? director.SetupMedAvailableJobs
+                : director.SetupHighAvailableJobs
+            : null;
+
+        _stationJobs.SetSetupAvailableJobs(station, availableJobs, jobs, syncJobList);
     }
 
     private void OnCentCommEvent(Entity<StationCentCommDirectorComponent> ent, ref CentCommEvent args)
@@ -93,30 +117,26 @@ public sealed class CentCommSpawnSystem : EntitySystem
         var point = FindSpawnPoint(station);
         if (point == null)
         {
-            Log.Warning($"Can't find spawn point for {EntityManager.ToPrettyString(station)}");
+            Log.Warning($"Can't find spawn point for {ToPrettyString(station)}");
             return;
         }
 
         Spawn(protoId, point.Value);
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string WorkerProto = "SpawnPointCMBKCCAssistant";
+    private readonly EntProtoId WorkerProto = "SpawnPointCMBKCCAssistant";
 
     private void AddWorker(EntityUid station) => SpawnEntity(station, WorkerProto);
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string OperatorProto = "SpawnPointCMBKCCOperator";
+    private readonly EntProtoId OperatorProto = "SpawnPointCMBKCCOperator";
 
     private void AddOperator(EntityUid station) => SpawnEntity(station, OperatorProto);
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string SecurityProto = "SpawnPointCMBKCCSecOfficer";
+    private readonly EntProtoId SecurityProto = "SpawnPointCMBKCCSecOfficer";
 
     private void AddSecurity(EntityUid station) => SpawnEntity(station, SecurityProto);
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string CargoProto = "SpawnPointCMBKCCCargo";
+    private readonly EntProtoId CargoProto = "SpawnPointCMBKCCCargo";
 
     private void AddCargo(EntityUid station) => SpawnEntity(station, CargoProto);
 

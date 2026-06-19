@@ -12,6 +12,7 @@ using Content.Shared.Hands.Components;
 using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
 using Content.Shared.Inventory;
+using Content.Shared.Materials;
 using Content.Shared.Nutrition.Components;
 using Content.Shared.Paper;
 using Content.Shared.Power;
@@ -23,17 +24,18 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.Disease;
 
-public sealed class DiseaseDiagnosisSystem : EntitySystem
+public sealed partial class DiseaseDiagnosisSystem : EntitySystem
 {
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly InventorySystem _inventorySystem = default!;
-    [Dependency] private readonly PaperSystem _paperSystem = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedAudioSystem _sharedSoundSystem = default!;
-    [Dependency] private readonly MetaDataSystem _metaData = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
+    [Dependency] private PaperSystem _paperSystem = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedAudioSystem _sharedSoundSystem = default!;
+    [Dependency] private MetaDataSystem _metaData = default!;
+    [Dependency] private SharedMaterialStorageSystem _storageSystem = default!;
 
     public override void Initialize()
     {
@@ -66,7 +68,7 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
                 diseaseMachine.Accumulator -= diseaseMachine.Delay;
                 var ev = new DiseaseMachineFinishedEvent(diseaseMachine, true);
                 RaiseLocalEvent(owner, ev);
-                if(ev.Dequeue)
+                if (ev.Dequeue)
                     RemCompDeferred<DiseaseMachineRunningComponent>(owner);
             }
         }
@@ -75,7 +77,6 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
     ///
     /// Event Handlers
     ///
-
     /// <summary>
     /// This handles using swabs on other people
     /// and checks that the swab isn't already used
@@ -98,11 +99,21 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
             TryComp<IngestionBlockerComponent>(maskUid, out var blocker) &&
             blocker.Enabled)
         {
-            _popupSystem.PopupEntity(Loc.GetString("swab-mask-blocked", ("target", Identity.Entity(args.Target.Value, EntityManager)), ("mask", maskUid)), args.User, args.User);
+            _popupSystem.PopupEntity(Loc.GetString("swab-mask-blocked",
+                    ("target", Identity.Entity(args.Target.Value, EntityManager)),
+                    ("mask", maskUid)),
+                args.User,
+                args.User);
             return;
         }
 
-        _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, args.User, swab.SwabDelay, new DiseaseSwabDoAfterEvent(), uid, target: args.Target, used: uid)
+        _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager,
+            args.User,
+            swab.SwabDelay,
+            new DiseaseSwabDoAfterEvent(),
+            uid,
+            target: args.Target,
+            used: uid)
         {
             BreakOnMove = true,
             NeedHand = true
@@ -123,15 +134,24 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
         if (HasComp<DiseaseMachineRunningComponent>(uid) || !this.IsPowered(uid, EntityManager))
             return;
 
-        if (!HasComp<HandsComponent>(args.User) || HasComp<ToolComponent>(args.Used)) // Don't want to accidentally breach wrenching or whatever
+        if (!HasComp<HandsComponent>(args.User) ||
+            HasComp<ToolComponent>(args.Used)) // Don't want to accidentally breach wrenching or whatever
             return;
 
         if (!TryComp<DiseaseSwabComponent>(args.Used, out var swab))
         {
-            _popupSystem.PopupEntity(Loc.GetString("diagnoser-cant-use-swab", ("machine", uid), ("swab", args.Used)), uid, args.User);
+            _popupSystem.PopupEntity(Loc.GetString("diagnoser-cant-use-swab", ("machine", uid), ("swab", args.Used)),
+                uid,
+                args.User);
             return;
         }
-        _popupSystem.PopupEntity(Loc.GetString("machine-insert-item", ("machine", uid), ("item", args.Used), ("user", args.User)), uid, args.User);
+
+        args.Handled = true;
+
+        _popupSystem.PopupEntity(
+            Loc.GetString("machine-insert-item", ("machine", uid), ("item", args.Used), ("user", args.User)),
+            uid,
+            args.User);
 
 
         machine.Disease = swab.Disease;
@@ -147,7 +167,9 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
     /// until it's turned on. It has some slight
     /// differences in checks from the diagnoser.
     /// </summary>
-    private void OnAfterInteractUsingVaccine(EntityUid uid, DiseaseVaccineCreatorComponent component, AfterInteractUsingEvent args)
+    private void OnAfterInteractUsingVaccine(EntityUid uid,
+        DiseaseVaccineCreatorComponent component,
+        AfterInteractUsingEvent args)
     {
         if (args.Handled || !args.CanReach)
             return;
@@ -155,18 +177,38 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
         if (HasComp<DiseaseMachineRunningComponent>(uid) || !this.IsPowered(uid, EntityManager))
             return;
 
-        if (!HasComp<HandsComponent>(args.User) || HasComp<ToolComponent>(args.Used)) //This check ensures tools don't break without yaml ordering jank
+        if (!HasComp<HandsComponent>(args.User) ||
+            HasComp<ToolComponent>(args.Used)) //This check ensures tools don't break without yaml ordering jank
             return;
 
         if (!TryComp<DiseaseSwabComponent>(args.Used, out var swab) || swab.Disease == null || !swab.Disease.Infectious)
         {
-            _popupSystem.PopupEntity(Loc.GetString("diagnoser-cant-use-swab", ("machine", uid), ("swab", args.Used)), uid, args.User);
+            _popupSystem.PopupEntity(Loc.GetString("diagnoser-cant-use-swab", ("machine", uid), ("swab", args.Used)),
+                uid,
+                args.User);
             return;
         }
-        _popupSystem.PopupEntity(Loc.GetString("machine-insert-item", ("machine", uid), ("item", args.Used), ("user", args.User)), uid, args.User);
+
+        if (!_storageSystem.CanChangeMaterialAmount(uid, "Biomass", (0 - component.BiomassCost)))
+        {
+            _popupSystem.PopupEntity(Loc.GetString("diagnoser-chat-error", ("units", component.BiomassCost)),
+                uid,
+                args.User);
+
+            return;
+        }
+
+
+        args.Handled = true;
+
+        _popupSystem.PopupEntity(
+            Loc.GetString("machine-insert-item", ("machine", uid), ("item", args.Used), ("user", args.User)),
+            uid,
+            args.User);
+
         var machine = Comp<DiseaseMachineComponent>(uid);
         machine.Disease = swab.Disease;
-        EntityManager.DeleteEntity(args.Used);
+        QueueDel(args.Used);
 
         EnsureComp<DiseaseMachineRunningComponent>(uid);
         UpdateAppearance(uid, true, true);
@@ -212,6 +254,7 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
             report.AddMarkup(Loc.GetString("diagnoser-disease-report-not-infectious"));
             report.PushNewline();
         }
+
         string cureResistLine = string.Empty;
         cureResistLine += disease.CureResist switch
         {
@@ -252,7 +295,6 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
     ///
     /// Appearance stuff
     ///
-
     /// <summary>
     /// Appearance helper function to
     /// set the component's power and running states.
@@ -265,6 +307,7 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
         _appearance.SetData(uid, DiseaseMachineVisuals.IsOn, isOn, appearance);
         _appearance.SetData(uid, DiseaseMachineVisuals.IsRunning, isRunning, appearance);
     }
+
     /// <summary>
     /// Makes sure the machine is visually off/on.
     /// </summary>
@@ -279,11 +322,15 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
     /// </summary>
     private void OnSwabDoAfter(EntityUid uid, DiseaseSwabComponent component, DoAfterEvent args)
     {
-        if (args.Handled || args.Cancelled || !TryComp<DiseaseCarrierComponent>(args.Args.Target, out var carrier) || !TryComp<DiseaseSwabComponent>(args.Args.Used, out var swab))
+        if (args.Handled || args.Cancelled || !TryComp<DiseaseCarrierComponent>(args.Args.Target, out var carrier) ||
+            !TryComp<DiseaseSwabComponent>(args.Args.Used, out var swab))
             return;
 
         swab.Used = true;
-        _popupSystem.PopupEntity(Loc.GetString("swab-swabbed", ("target", Identity.Entity(args.Args.Target.Value, EntityManager))), args.Args.Target.Value, args.Args.User);
+        _popupSystem.PopupEntity(
+            Loc.GetString("swab-swabbed", ("target", Identity.Entity(args.Args.Target.Value, EntityManager))),
+            args.Args.Target.Value,
+            args.Args.User);
 
         if (swab.Disease != null || carrier.Diseases.Count == 0)
             return;
@@ -295,7 +342,9 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
     /// Prints a diagnostic report with its findings.
     /// Also cancels the animation.
     /// </summary>
-    private void OnDiagnoserFinished(EntityUid uid, DiseaseDiagnoserComponent component, DiseaseMachineFinishedEvent args)
+    private void OnDiagnoserFinished(EntityUid uid,
+        DiseaseDiagnoserComponent component,
+        DiseaseMachineFinishedEvent args)
     {
         var isPowered = this.IsPowered(uid, EntityManager);
         UpdateAppearance(uid, isPowered, false);
@@ -341,11 +390,11 @@ public sealed class DiseaseDiagnosisSystem : EntitySystem
             reportTitle = Loc.GetString("diagnoser-disease-report-none");
             contents.AddMarkup(Loc.GetString("diagnoser-disease-report-none-contents"));
         }
-        _metaData.SetEntityName(printed,reportTitle);
 
-        _paperSystem.SetContent((printed,EnsureComp<PaperComponent>(printed)), contents.ToMarkup());
+        _metaData.SetEntityName(printed, reportTitle);
+
+        _paperSystem.SetContent((printed, EnsureComp<PaperComponent>(printed)), contents.ToMarkup());
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string ResearchDisk5000 = "ResearchDisk5000";
+    private readonly EntProtoId ResearchDisk5000 = "ResearchDisk5000";
 }

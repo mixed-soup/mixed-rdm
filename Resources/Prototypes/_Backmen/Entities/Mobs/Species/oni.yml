@@ -45,12 +45,13 @@
         layer:
         - MobLayer
   - type: Stamina
-    critThreshold: 115
+    baseCritThreshold: 115
   - type: InteractionPopup
     successChance: 1
     interactSuccessString: hugging-success-generic
     interactSuccessSound: /Audio/Effects/thudswoosh.ogg
     messagePerceivedByOthers: hugging-success-generic-others
+  - type: FootPrints
 
 - type: entity
   save: false

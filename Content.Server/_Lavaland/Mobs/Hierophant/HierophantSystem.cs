@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using Content.Server._Lavaland.Mobs.Hierophant.Components;
 using Content.Shared._Lavaland.Aggression;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
@@ -24,16 +26,16 @@ using Robust.Shared.Timing;
 
 namespace Content.Server._Lavaland.Mobs.Hierophant;
 
-public sealed class HierophantSystem : EntitySystem
+public sealed partial class HierophantSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedTransformSystem _xform = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly MegafaunaSystem _megafauna = default!;
-    [Dependency] private readonly HierophantFieldSystem _hierophantField = default!;
-    [Dependency] private readonly DamageableSystem _damage = default!;
-    [Dependency] private readonly MobThresholdSystem _threshold = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedTransformSystem _xform = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private MegafaunaSystem _megafauna = default!;
+    [Dependency] private HierophantFieldSystem _hierophantField = default!;
+    [Dependency] private DamageableSystem _damage = default!;
+    [Dependency] private MobThresholdSystem _threshold = default!;
 
     private readonly EntProtoId _damageBoxPrototype = "LavalandHierophantSquare";
     private readonly EntProtoId _chaserPrototype = "LavalandHierophantChaser";
@@ -77,7 +79,7 @@ public sealed class HierophantSystem : EntitySystem
         _hierophantField.DeactivateField((field, fieldComp));
         // After 10 seconds, hierophant teleports back to it's original place
         var position = _xform.GetMapCoordinates(field);
-        _damage.SetAllDamage(ent, damageable, 0);
+        _damage.SetAllDamage((ent, damageable), 0);
         _threshold.SetMobStateThreshold(ent, _baseHierophantHp, MobState.Dead, thresholds);
         Timer.Spawn(TimeSpan.FromSeconds(10), () => _xform.SetMapCoordinates(ent, position));
     }
@@ -158,7 +160,7 @@ public sealed class HierophantSystem : EntitySystem
 
     private void InitBoss(Entity<HierophantBossComponent> ent, AggressiveComponent aggressors)
     {
-        ent.Comp.Aggressive = true;  
+        ent.Comp.Aggressive = true;
         RaiseLocalEvent(ent, new MegafaunaStartupEvent());
     }
 
@@ -440,7 +442,7 @@ public sealed class HierophantSystem : EntitySystem
             scalingMultiplier *= HealthScalingFactor;
 
         Logger.Info($"Setting threshold for {uid} to {_baseHierophantHp * scalingMultiplier}");
-        if (_threshold.TryGetDeadThreshold(uid, out var deadThreshold, thresholds) 
+        if (_threshold.TryGetDeadThreshold(uid, out var deadThreshold, thresholds)
             && deadThreshold < _baseHierophantHp * scalingMultiplier)
             _threshold.SetMobStateThreshold(uid, _baseHierophantHp * scalingMultiplier, MobState.Dead, thresholds);
     }

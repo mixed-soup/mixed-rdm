@@ -11,17 +11,17 @@ using Robust.Shared.Timing;
 
 namespace Content.Client.Backmen.Standing;
 
-public sealed class LayingDownSystem : SharedLayingDownSystem
+public sealed partial class LayingDownSystem : SharedLayingDownSystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly StandingStateSystem _standing = default!;
-    [Dependency] private readonly AnimationPlayerSystem _animation = default!;
-    [Dependency] private readonly SharedBuckleSystem _buckle = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly SharedRotationVisualsSystem _rotationVisuals = default!;
-    [Dependency] private readonly SpriteSystem _sprites = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private IEyeManager _eyeManager = default!;
+    [Dependency] private StandingStateSystem _standing = default!;
+    [Dependency] private AnimationPlayerSystem _animation = default!;
+    [Dependency] private SharedBuckleSystem _buckle = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedRotationVisualsSystem _rotationVisuals = default!;
+    [Dependency] private SpriteSystem _sprites = default!;
 
     private bool _autoGetUp;
 
@@ -30,7 +30,6 @@ public sealed class LayingDownSystem : SharedLayingDownSystem
         base.Initialize();
 
         SubscribeLocalEvent<LayingDownComponent, MoveEvent>(OnMovementInput);
-        SubscribeLocalEvent<LayingDownComponent, AfterAutoHandleStateEvent>(OnChangeDraw);
         SubscribeLocalEvent<StandingStateComponent, AfterAutoHandleStateEvent>(OnChangeStanding);
 
         _cfg.OnValueChanged(CCVars.AutoGetUp, b => _autoGetUp = b, true);
@@ -57,22 +56,6 @@ public sealed class LayingDownSystem : SharedLayingDownSystem
         if (sprite.Rotation != Angle.FromDegrees(270) && sprite.Rotation != Angle.FromDegrees(90))
         {
             _sprites.SetRotation((ent, sprite), Angle.FromDegrees(270));
-        }
-    }
-
-    private void OnChangeDraw(Entity<LayingDownComponent> ent, ref AfterAutoHandleStateEvent args)
-    {
-        if (!TryComp<SpriteComponent>(ent, out var sprite))
-            return;
-
-        switch (ent.Comp.DrawDowned)
-        {
-            case true:
-                _sprites.SetDrawDepth((ent, sprite), (int) Shared.DrawDepth.DrawDepth.SmallMobs);
-                break;
-            case false when sprite.DrawDepth == (int) Shared.DrawDepth.DrawDepth.SmallMobs:
-                _sprites.SetDrawDepth((ent, sprite), (int) Shared.DrawDepth.DrawDepth.Mobs);
-                break;
         }
     }
 

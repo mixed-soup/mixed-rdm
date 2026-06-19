@@ -8,12 +8,12 @@ using Robust.Shared.Physics.Events;
 
 namespace Content.Shared.StepTrigger.Systems;
 
-public sealed class StepTriggerSystem : EntitySystem
+public sealed partial class StepTriggerSystem : EntitySystem
 {
-    [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
-    [Dependency] private readonly SharedGravitySystem _gravity = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly EntityWhitelistSystem _whitelistSystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookup = default!;
+    [Dependency] private SharedGravitySystem _gravity = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private EntityWhitelistSystem _whitelistSystem = default!;
 
     public override void Initialize()
     {
@@ -69,7 +69,7 @@ public sealed class StepTriggerSystem : EntitySystem
                 if (ent == uid)
                     continue;
 
-                if (_whitelistSystem.IsBlacklistPass(component.Blacklist, ent.Value))
+                if (_whitelistSystem.IsWhitelistPass(component.Blacklist, ent.Value))
                 {
                     return false;
                 }
@@ -139,7 +139,7 @@ public sealed class StepTriggerSystem : EntitySystem
         // and the entity is flying or currently weightless
         // Makes sense simulation wise to have this be part of steptrigger directly IMO
         if (!component.IgnoreWeightless && TryComp<PhysicsComponent>(otherUid, out var physics) &&
-            (physics.BodyStatus == BodyStatus.InAir || _gravity.IsWeightless(otherUid, physics)))
+            (physics.BodyStatus == BodyStatus.InAir || _gravity.IsWeightless(otherUid)))
             return false;
 
         var msg = new StepTriggerAttemptEvent { Source = uid, Tripper = otherUid };

@@ -12,11 +12,12 @@ namespace Content.Server.Administration.Commands;
 ///     Lists someones active Ban Ids or opens a window to see them.
 /// </summary>
 [AdminCommand(AdminFlags.Ban)]
-public sealed class BanListCommand : LocalizedCommands
+public sealed partial class BanListCommand : LocalizedCommands
 {
-    [Dependency] private readonly IServerDbManager _dbManager = default!;
-    [Dependency] private readonly EuiManager _eui = default!;
-    [Dependency] private readonly IPlayerLocator _locator = default!;
+    [Dependency] private IPlayerLocator _locator = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IServerDbManager _dbManager = default!;
+    [Dependency] private EuiManager _eui = default!;
 
     public override string Command => "banlist";
 
@@ -66,8 +67,7 @@ public sealed class BanListCommand : LocalizedCommands
         if (args.Length != 1)
             return CompletionResult.Empty;
 
-        var playerMgr = IoCManager.Resolve<IPlayerManager>();
-        var options = playerMgr.Sessions.Select(c => c.Name).OrderBy(c => c).ToArray();
+        var options = _playerManager.Sessions.Select(c => c.Name).OrderBy(c => c).ToArray();
         return CompletionResult.FromHintOptions(options, Loc.GetString("cmd-banlist-hint"));
     }
 }

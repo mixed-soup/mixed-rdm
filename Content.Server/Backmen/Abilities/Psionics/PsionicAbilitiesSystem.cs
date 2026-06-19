@@ -10,7 +10,7 @@ using Content.Shared.Backmen.Abilities.Psionics;
 using Content.Shared.Backmen.Psionics;
 using Content.Shared.Interaction;
 using Content.Shared.Physics;
-using Content.Shared.StatusEffect;
+using Content.Shared.StatusEffectNew;
 using Robust.Shared.Random;
 using Robust.Shared.Prototypes;
 using Robust.Server.Player;
@@ -19,23 +19,22 @@ using Robust.Shared.Player;
 
 namespace Content.Server.Backmen.Abilities.Psionics;
 
-public sealed class PsionicAbilitiesSystem : SharedPsionicAbilitiesSystem
+public sealed partial class PsionicAbilitiesSystem : SharedPsionicAbilitiesSystem
 {
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly SharedActionsSystem _actionsSystem = default!;
-    [Dependency] private readonly EuiManager _euiManager = default!;
-    [Dependency] private readonly StatusEffectsSystem _statusEffectsSystem = default!;
-    [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedActionsSystem _actionsSystem = default!;
+    [Dependency] private EuiManager _euiManager = default!;
+    [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
+    [Dependency] private GlimmerSystem _glimmerSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
 
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<PsionicAwaitingPlayerComponent, PlayerAttachedEvent>(OnPlayerAttached);
     }
-
 
     private void OnPlayerAttached(EntityUid uid, PsionicAwaitingPlayerComponent component, PlayerAttachedEvent args)
     {
@@ -83,8 +82,7 @@ public sealed class PsionicAbilitiesSystem : SharedPsionicAbilitiesSystem
         AddComp(uid, newComponent);
     }
 
-    [ValidatePrototypeId<WeightedRandomPrototype>]
-    private const string RandomPsionicPowerPool = "RandomPsionicPowerPool";
+    private static readonly ProtoId<WeightedRandomPrototype> RandomPsionicPowerPool = "RandomPsionicPowerPool";
 
     public void AddRandomPsionicPower(EntityUid uid)
     {
@@ -92,7 +90,7 @@ public sealed class PsionicAbilitiesSystem : SharedPsionicAbilitiesSystem
             return;
         EnsureComp<PsionicComponent>(uid);
 
-        if (!_prototypeManager.TryIndex<WeightedRandomPrototype>(RandomPsionicPowerPool, out var pool))
+        if (!_prototypeManager.TryIndex(RandomPsionicPowerPool, out var pool))
         {
             Log.Error("Can't index the random psionic power pool!");
             return;
@@ -100,7 +98,7 @@ public sealed class PsionicAbilitiesSystem : SharedPsionicAbilitiesSystem
 
         // uh oh, stinky!
         var newComponent = (Component) _componentFactory.GetComponent(pool.Pick());
-        EntityManager.AddComponent(uid, newComponent, true);
+        AddComp(uid, newComponent, true);
 
         _glimmerSystem.Glimmer += _random.Next(1, 5);
     }
@@ -130,7 +128,7 @@ public sealed class PsionicAbilitiesSystem : SharedPsionicAbilitiesSystem
             _actionsSystem.RemoveAction(uid, psionic.PsionicAbility);
 
         if(!noEffect)
-            _statusEffectsSystem.TryAddStatusEffect(uid, "Stutter", TimeSpan.FromMinutes(5), false, "StutteringAccent");
+            _statusEffectsSystem.TryAddStatusEffectDuration(uid, "StatusEffectStutter", TimeSpan.FromMinutes(5));
 
         RemCompDeferred<PsionicComponent>(uid);
     }

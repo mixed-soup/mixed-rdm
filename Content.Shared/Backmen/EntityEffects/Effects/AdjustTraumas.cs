@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text;
 using Content.Shared.Backmen.Surgery.Pain.Components;
 using Content.Shared.Backmen.Surgery.Pain.Systems;
 using Content.Shared.Backmen.Surgery.Traumas;
@@ -9,75 +10,109 @@ using Content.Shared.Body.Organ;
 using Content.Shared.Body.Systems;
 using Content.Shared.EntityEffects;
 using Content.Shared.FixedPoint;
+using Content.Shared.Mobs.Components;
 using JetBrains.Annotations;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 using Robust.Shared.Utility;
 
 namespace Content.Shared.Backmen.EntityEffects.Effects;
 
+/// <inheritdoc cref="EntityEffectSystem{T, TEffect}"/>
 [UsedImplicitly]
-public sealed partial class AdjustTraumas : EntityEffect
+public sealed partial class AdjustTraumasEntityEffectSystem : EntityEffectSystem<MobStateComponent, AdjustTraumas>
 {
-    [DataField(required: true)]
-    public FixedPoint2 Amount;
+    [Dependency] private SharedBodySystem _body = default!;
+    [Dependency] private TraumaSystem _trauma = default!;
+    [Dependency] private PainSystem _pain = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
-    [DataField(required: true)]
-    public TraumaType TraumaType;
+    private EntityQuery<WoundableComponent> _woundableQuery;
+    private EntityQuery<OrganComponent> _organQuery;
+    private EntityQuery<NerveComponent> _nerveQuery;
+    private EntityQuery<BoneComponent> _boneQuery;
 
-    [DataField("identifier")]
-    public string ModifierIdentifier = "TraumaModifier";
-
-    [DataField] public bool TargetBodyParts = true;
-    [DataField] public bool TargetOrgans = true;
-
-    [DataField]
-    public ComponentRegistry? TargetComponents;
-
-    [DataField]
-    public bool MustHaveAllComponents;
-
-    protected override string? ReagentEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys) => null;
-
-    private void ApplyTraumaEffects(
-        EntityUid body,
-        EntityUid target,
-        FixedPoint2 changeAmount,
-        IEntityManager entMan,
-        SharedBodySystem bodySys,
-        TraumaSystem traumaSys)
+    public override void Initialize()
     {
-        if (entMan.TryGetComponent<OrganComponent>(target, out var organComp))
+        base.Initialize();
+        _woundableQuery = GetEntityQuery<WoundableComponent>();
+        _organQuery = GetEntityQuery<OrganComponent>();
+        _nerveQuery = GetEntityQuery<NerveComponent>();
+        _boneQuery = GetEntityQuery<BoneComponent>();
+    }
+
+    protected override void Effect(Entity<MobStateComponent> entity, ref EntityEffectEvent<AdjustTraumas> args)
+    {
+        var scale = FixedPoint2.New(args.Scale);
+        var effect = args.Effect;
+        var changeAmount = effect.Amount * scale;
+
+        var possibleTraumaTargets = new HashSet<EntityUid>();
+
+        if (effect.TargetBodyParts)
         {
-            if (TraumaType != TraumaType.OrganDamage)
+            foreach (var uid in from bodyPart in _body.GetBodyChildren(entity)
+                     where _woundableQuery.HasComponent(bodyPart.Id)
+                     where CheckForTargetedComponents(bodyPart.Id, effect)
+                     select bodyPart.Id)
+            {
+                possibleTraumaTargets.Add(uid);
+            }
+        }
+
+        if (effect.TargetOrgans)
+        {
+            foreach (var uid in from organ in _body.GetBodyOrgans(entity)
+                     where CheckForTargetedComponents(organ.Id, effect)
+                     select organ.Id)
+            {
+                possibleTraumaTargets.Add(uid);
+            }
+        }
+
+        if (possibleTraumaTargets.Count == 0)
+            return;
+
+        var target = _random.Pick(possibleTraumaTargets);
+        ApplyTraumaEffects(entity, target, changeAmount, effect);
+    }
+
+    private void ApplyTraumaEffects(EntityUid body, EntityUid target, FixedPoint2 changeAmount, AdjustTraumas effect)
+    {
+        if (_organQuery.TryGetComponent(target, out var organComp))
+        {
+            if (effect.TraumaType != TraumaType.OrganDamage)
                 return;
 
             if (!organComp.BodyPart.HasValue)
                 return;
 
-            ChangeOrganModifiers((target, organComp), changeAmount, traumaSys);
+            ChangeOrganModifiers((target, organComp), changeAmount, effect);
         }
         else
         {
-            switch (TraumaType)
+            switch (effect.TraumaType)
             {
                 case TraumaType.BoneDamage:
-                    var comp = entMan.GetComponent<WoundableComponent>(target);
+                    var comp = _woundableQuery.GetComponent(target);
                     var bone = comp.Bone.ContainedEntities.FirstOrNull();
-                    if (bone == null || !entMan.TryGetComponent(bone, out BoneComponent? boneComp))
+                    if (!_boneQuery.TryComp(bone, out var boneComp))
                         break;
 
-                    traumaSys.ApplyDamageToBone(bone.Value, changeAmount, boneComp);
+                    _trauma.ApplyDamageToBone(bone.Value, changeAmount, boneComp);
                     break;
                 case TraumaType.OrganDamage:
-                    var organs = bodySys.GetPartOrgans(target).ToList();
+                    var organs = _body.GetPartOrgans(target).ToList();
                     if (organs.Count == 0)
                         break;
 
                     if (changeAmount > 0)
                     {
-                        var organTarget = IoCManager.Resolve<IRobustRandom>().PickAndTake(organs);
-                        ChangeOrganModifiers(organTarget, changeAmount, traumaSys);
+                        var organTarget = _random.PickAndTake(organs);
+                        ChangeOrganModifiers(organTarget, changeAmount, effect);
                     }
                     else
                     {
@@ -95,7 +130,7 @@ public sealed partial class AdjustTraumas : EntityEffect
                         }
 
                         if (organTarget != null)
-                            ChangeOrganModifiers(organTarget.Value, changeAmount, traumaSys);
+                            ChangeOrganModifiers(organTarget.Value, changeAmount, effect);
                     }
 
                     break;
@@ -103,24 +138,23 @@ public sealed partial class AdjustTraumas : EntityEffect
                     // not implemented yet
                     break;
                 case TraumaType.NerveDamage:
-                    var painSystem = entMan.System<PainSystem>();
                     if (changeAmount > 0)
                     {
-                        foreach (var bodyPart in bodySys.GetBodyChildren(body))
+                        foreach (var bodyPart in _body.GetBodyChildren(body))
                         {
-                            if (!entMan.TryGetComponent(bodyPart.Id, out NerveComponent? nerve))
+                            if (!_nerveQuery.TryComp(bodyPart.Id, out var nerve))
                                 continue;
 
                             // you actually have AdjustPainFeels for this, but fine
-                            if (!painSystem.TryChangePainFeelsModifier(
+                            if (!_pain.TryChangePainFeelsModifier(
                                     body,
-                                    ModifierIdentifier,
+                                    effect.ModifierIdentifier,
                                     bodyPart.Id,
                                     changeAmount,
                                     nerve))
                             {
-                                painSystem.TryAddPainFeelsModifier(body,
-                                    ModifierIdentifier,
+                                _pain.TryAddPainFeelsModifier(body,
+                                    effect.ModifierIdentifier,
                                     bodyPart.Id,
                                     changeAmount,
                                     nerve);
@@ -130,9 +164,9 @@ public sealed partial class AdjustTraumas : EntityEffect
                     else
                     {
                         var available = changeAmount;
-                        foreach (var bodyPart in bodySys.GetBodyChildren(body))
+                        foreach (var bodyPart in _body.GetBodyChildren(body))
                         {
-                            if (!entMan.TryGetComponent(bodyPart.Id, out NerveComponent? nerve))
+                            if (!_nerveQuery.TryComp(bodyPart.Id, out var nerve))
                                 continue;
 
                             foreach (var painFeelsMod in nerve.PainFeelingModifiers)
@@ -141,7 +175,7 @@ public sealed partial class AdjustTraumas : EntityEffect
                                 if (change > available)
                                 {
                                     var newChange = change - available;
-                                    painSystem.TrySetPainFeelsModifier(
+                                    _pain.TrySetPainFeelsModifier(
                                         painFeelsMod.Key.Item1,
                                         painFeelsMod.Key.Item2,
                                         bodyPart.Id,
@@ -151,7 +185,7 @@ public sealed partial class AdjustTraumas : EntityEffect
                                 }
 
                                 available -= change;
-                                painSystem.TryRemovePainFeelsModifier(
+                                _pain.TryRemovePainFeelsModifier(
                                     painFeelsMod.Key.Item1,
                                     painFeelsMod.Key.Item2,
                                     bodyPart.Id,
@@ -168,83 +202,94 @@ public sealed partial class AdjustTraumas : EntityEffect
         }
     }
 
-    private void ChangeOrganModifiers(Entity<OrganComponent> organ, FixedPoint2 changeAmount, TraumaSystem traumaSys)
+    private void ChangeOrganModifiers(Entity<OrganComponent> organ, FixedPoint2 changeAmount, AdjustTraumas effect)
     {
         if (changeAmount > 0)
         {
-            if (!traumaSys.TryChangeOrganDamageModifier(
+            if (!_trauma.TryChangeOrganDamageModifier(
                     organ.Owner,
                     changeAmount,
                     organ.Owner,
-                    ModifierIdentifier,
+                    effect.ModifierIdentifier,
                     organ.Comp))
             {
-                traumaSys.TryAddOrganDamageModifier(
+                _trauma.TryAddOrganDamageModifier(
                     organ.Owner,
                     changeAmount,
                     organ.Owner,
-                    ModifierIdentifier,
+                    effect.ModifierIdentifier,
                     organ.Comp);
             }
         }
         else
         {
-            foreach (var modifier in organ.Comp.IntegrityModifiers)
+            // Create a copy of the collection to avoid modifying it during iteration
+            var modifiers = organ.Comp.IntegrityModifiers.ToList();
+            var remainingHeal = -changeAmount; // Convert to positive value for easier comparison
+
+            foreach (var modifier in modifiers)
             {
                 // Healing modifier are not getting removed
                 if (modifier.Value < 0)
                     continue;
 
-                if (modifier.Value > -changeAmount)
+                // modifier.Value is damage (positive), remainingHeal is healing amount (positive)
+                if (modifier.Value <= remainingHeal)
                 {
-                    traumaSys.TryChangeOrganDamageModifier(
+                    // Full modifier can be removed
+                    remainingHeal -= modifier.Value;
+                    _trauma.TryRemoveOrganDamageModifier(organ.Owner,
+                        modifier.Key.Item2,
+                        modifier.Key.Item1,
+                        organ.Comp);
+
+                    if (remainingHeal <= 0)
+                        break;
+                }
+                else
+                {
+                    // Partial modifier reduction: reduce by remainingHeal amount
+                    // Since changeAmount is negative, we pass -remainingHeal
+                    _trauma.TryChangeOrganDamageModifier(
                         organ.Owner,
-                        changeAmount,
+                        -remainingHeal,
                         modifier.Key.Item2,
                         modifier.Key.Item1,
                         organ.Comp);
                     break;
                 }
-
-                changeAmount += modifier.Value;
-                traumaSys.TryRemoveOrganDamageModifier(organ.Owner,
-                    modifier.Key.Item2,
-                    modifier.Key.Item1,
-                    organ.Comp);
             }
         }
     }
 
-    private bool CheckForTargetedComponents(EntityUid target, IEntityManager entMan)
+    private bool CheckForTargetedComponents(EntityUid target, AdjustTraumas effect)
     {
-        if (TargetComponents == null)
+        if (effect.TargetComponents == null)
             return true;
 
-        if (MustHaveAllComponents)
-        {
-            var passedComps =
-                (from component in TargetComponents
-                    let compToPass = component.Value.GetType()
-                    where entMan.HasComponent(target, compToPass)
-                    select component.Value.Component).ToList();
+        effect.TargetComponentsLoaded ??= StringsToRegs(effect.TargetComponents);
 
-            if (passedComps.Count == TargetComponents.Count)
+        if (effect.MustHaveAllComponents)
+        {
+            var passedComps = effect.TargetComponentsLoaded.Count(x => EntityManager.HasComponent(target, x));
+
+            if (passedComps == effect.TargetComponents.Length)
                 return true;
         }
         else
         {
-            foreach (var component in TargetComponents
-                         .Select(component => component.Value.GetType()))
+            foreach (var component in effect.TargetComponentsLoaded)
             {
                 try
                 {
-                    if (entMan.HasComponent(target, component))
+                    if (EntityManager.HasComponent(target, component))
                     {
                         return true;
                     }
                 }
-                catch (KeyNotFoundException)
+                catch (KeyNotFoundException err)
                 {
+                    Log.Error($"Ошибка компонент не найден! {component.Name}");
                     continue;
                 }
             }
@@ -253,43 +298,97 @@ public sealed partial class AdjustTraumas : EntityEffect
         return false;
     }
 
-    public override void Effect(EntityEffectBaseArgs args)
+    private List<ComponentRegistration> StringsToRegs(string[]? input)
     {
-        var scale = FixedPoint2.New(1);
+        if (input == null || input.Length == 0)
+            return [];
 
-        if (args is EntityEffectReagentArgs reagentArgs)
+        var list = new List<ComponentRegistration>(input.Length);
+        foreach (var name in input)
         {
-            scale = reagentArgs.Quantity * reagentArgs.Scale;
+            if (Factory.TryGetRegistration(name, out var registration))
+                list.Add(registration);
+            else if (Factory.GetComponentAvailability(name) != ComponentAvailability.Ignore)
+                Log.Error($"{nameof(StringsToRegs)} failed: Unknown component name {name} passed to AdjustTraumasEntityEffectSystem!");
         }
 
-        var bodySys = args.EntityManager.System<SharedBodySystem>();
-        var traumaSys = args.EntityManager.System<TraumaSystem>();
+        return list;
+    }
+}
 
-        var possibleTraumaTargets = new List<EntityUid>();
+[UsedImplicitly]
+public sealed partial class AdjustTraumas : EntityEffectBase<AdjustTraumas>
+{
+    [DataField(required: true)]
+    public FixedPoint2 Amount;
 
+    [DataField(required: true)]
+    public TraumaType TraumaType;
+
+    [DataField("identifier")]
+    public string ModifierIdentifier = "TraumaModifier";
+
+    [DataField] public bool TargetBodyParts = true;
+    [DataField] public bool TargetOrgans = true;
+
+    [DataField(customTypeSerializer: typeof(CustomArraySerializer<string, ComponentNameSerializer>))]
+    public string[]? TargetComponents;
+
+    [NonSerialized]
+    public List<ComponentRegistration>? TargetComponentsLoaded;
+
+    [DataField]
+    public bool MustHaveAllComponents;
+
+    public override string? EntityEffectGuidebookText(IPrototypeManager prototype, IEntitySystemManager entSys)
+    {
+        var traumaTypeName = TraumaType switch
+        {
+            TraumaType.BoneDamage => "trauma-type-bone-damage",
+            TraumaType.OrganDamage => "trauma-type-organ-damage",
+            TraumaType.VeinsDamage => "trauma-type-veins-damage",
+            TraumaType.NerveDamage => "trauma-type-nerve-damage",
+            TraumaType.Dismemberment => "trauma-type-dismemberment",
+            _ => "trauma-type-unknown"
+        };
+
+        var targetPaths = "";
+        if (TargetComponents != null && TargetComponents.Length > 0)
+        {
+            var componentNames = string.Join(", ", TargetComponents);
+            targetPaths = Loc.GetString(
+                "entity-effect-guidebook-adjust-traumas-target-components",
+                ("components", componentNames),
+                ("mustHaveAll", MustHaveAllComponents));
+        }
+
+        var targetInfo = "";
+        var targetParts = new List<string>();
         if (TargetBodyParts)
-        {
-            possibleTraumaTargets
-                .AddRange(from bodyPart in bodySys.GetBodyChildren(args.TargetEntity)
-                    where args.EntityManager.HasComponent<WoundableComponent>(bodyPart.Id)
-                    where CheckForTargetedComponents(bodyPart.Id, args.EntityManager)
-                    select bodyPart.Id);
-        }
-
+            targetParts.Add(Loc.GetString("entity-effect-guidebook-adjust-traumas-target-body-parts"));
         if (TargetOrgans)
+            targetParts.Add(Loc.GetString("entity-effect-guidebook-adjust-traumas-target-organs"));
+
+        if (targetParts.Count > 0)
         {
-            possibleTraumaTargets.AddRange
-                (from organ in bodySys.GetBodyOrgans(args.TargetEntity)
-                    where CheckForTargetedComponents(organ.Id, args.EntityManager)
-                    select organ.Id);
+            targetInfo = Loc.GetString(
+                "entity-effect-guidebook-adjust-traumas-targets",
+                ("targets", string.Join(", ", targetParts)));
         }
 
-        if (possibleTraumaTargets.Count == 0)
-            return;
+        var mainText = Loc.GetString(
+            "entity-effect-guidebook-adjust-traumas",
+            ("chance", Probability),
+            ("deltasign", MathF.Sign(Amount.Float())),
+            ("amount", MathF.Abs(Amount.Float())),
+            ("traumaType", Loc.GetString(traumaTypeName)));
 
-        var changeAmount = Amount * scale;
-        var target = IoCManager.Resolve<IRobustRandom>().PickAndTake(possibleTraumaTargets);
+        var result = mainText;
+        if (!string.IsNullOrEmpty(targetInfo))
+            result += " " + targetInfo;
+        if (!string.IsNullOrEmpty(targetPaths))
+            result += " " + targetPaths;
 
-        ApplyTraumaEffects(args.TargetEntity, target, changeAmount, args.EntityManager, bodySys, traumaSys);
+        return result;
     }
 }

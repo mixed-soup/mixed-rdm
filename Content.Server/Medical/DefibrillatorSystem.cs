@@ -1,3 +1,4 @@
+using System.Linq;
 using Content.Server.Atmos.Rotting;
 using Content.Server.Chat.Systems;
 using Content.Server.DoAfter;
@@ -5,13 +6,23 @@ using Content.Server.Electrocution;
 using Content.Server.EUI;
 using Content.Server.Ghost;
 using Content.Server.Popups;
-using Content.Server.PowerCell;
 using Content.Server.Revenant.Components;
-using Content.Shared.Backmen.Chat;
+
+using Content.Shared.Backmen.Surgery.Consciousness;
 using Content.Shared.Backmen.Surgery.Consciousness.Components;
 using Content.Shared.Backmen.Surgery.Consciousness.Systems;
+using Content.Shared.Backmen.Surgery.Pain.Components;
+using Content.Shared.Backmen.Surgery.Wounds.Systems;
 using Content.Shared.Backmen.Targeting;
+using Content.Shared.Body.Components;
+using Content.Shared.Body.Systems;
 using Content.Shared.Damage;
+using Content.Shared.FixedPoint;
+using Content.Shared.PowerCell;
+using Content.Shared.Traits.Assorted;
+using Content.Shared.Chat;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.DoAfter;
 using Content.Shared.Interaction;
 using Content.Shared.Item.ItemToggle;
@@ -22,6 +33,9 @@ using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Timing;
 using Content.Shared.Traits.Assorted;
+using Content.Shared.Movement.Pulling.Components;
+using Content.Shared.PowerCell;
+using Content.Shared.Timing;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Player;
 
@@ -30,24 +44,28 @@ namespace Content.Server.Medical;
 /// <summary>
 /// This handles interactions and logic relating to <see cref="DefibrillatorComponent"/>
 /// </summary>
-public sealed class DefibrillatorSystem : EntitySystem
+public sealed partial class DefibrillatorSystem : EntitySystem
 {
-    [Dependency] private readonly ChatSystem _chatManager = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly DoAfterSystem _doAfter = default!;
-    [Dependency] private readonly ElectrocutionSystem _electrocution = default!;
-    [Dependency] private readonly EuiManager _euiManager = default!;
-    [Dependency] private readonly ISharedPlayerManager _player = default!;
-    [Dependency] private readonly ItemToggleSystem _toggle = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly MobThresholdSystem _mobThreshold = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
-    [Dependency] private readonly PowerCellSystem _powerCell = default!;
-    [Dependency] private readonly RottingSystem _rotting = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedMindSystem _mind = default!;
-    [Dependency] private readonly UseDelaySystem _useDelay = default!;
-    [Dependency] private readonly ConsciousnessSystem _consciousness = default!; // backmen edit:
+    [Dependency] private ChatSystem _chatManager = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private DoAfterSystem _doAfter = default!;
+    [Dependency] private ElectrocutionSystem _electrocution = default!;
+    [Dependency] private EuiManager _euiManager = default!;
+    [Dependency] private ISharedPlayerManager _player = default!;
+    [Dependency] private ItemToggleSystem _toggle = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private MobThresholdSystem _mobThreshold = default!;
+    [Dependency] private PopupSystem _popup = default!;
+    [Dependency] private PowerCellSystem _powerCell = default!;
+    [Dependency] private RottingSystem _rotting = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
+    [Dependency] private UseDelaySystem _useDelay = default!;
+    [Dependency] private ConsciousnessSystem _consciousness = default!; // backmen edit:
+    [Dependency] private SharedInteractionSystem _interactionSystem = default!;
+    [Dependency] private SharedBloodstreamSystem _bloodstream = default!; // backmen edit: for blood level check
+    [Dependency] private SharedBodySystem _body = default!; // backmen edit: for checking body parts
+    [Dependency] private WoundSystem _wound = default!; // backmen edit: for checking wounds
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -182,6 +200,18 @@ public sealed class DefibrillatorSystem : EntitySystem
 
         _audio.PlayPvs(component.ZapSound, uid);
         _electrocution.TryDoElectrocution(target, null, component.ZapDamage, component.WritheDuration, true, ignoreInsulation: true);
+
+        var interacters = new HashSet<EntityUid>();
+        _interactionSystem.GetEntitiesInteractingWithTarget(target, interacters);
+        foreach (var other in interacters)
+        {
+            if (other == user)
+                continue;
+
+            // Anyone else still operating on the target gets zapped too
+            _electrocution.TryDoElectrocution(other, null, component.ZapDamage, component.WritheDuration, true);
+        }
+
         if (!TryComp<UseDelayComponent>(uid, out var useDelay))
             return;
         _useDelay.SetLength((uid, useDelay), component.ZapDelay, component.DelayId);
@@ -208,18 +238,61 @@ public sealed class DefibrillatorSystem : EntitySystem
                 if (TryComp<ConsciousnessComponent>(target, out var consciousness)
                     && _consciousness.TryGetNerveSystem(target, out var nerveSys))
                 {
-                    _consciousness.RemoveConsciousnessModifier(target, nerveSys.Value, "Suffocation", consciousness);
-                    _consciousness.RemoveConsciousnessModifier(target, target, "DeathThreshold", consciousness);
+                    Entity<ConsciousnessComponent?> entConsciousness = (target, consciousness);
+                    _consciousness.RemoveConsciousnessModifier(entConsciousness, nerveSys.Value, ConsciousnessModifierIds.Asphyxiation);
+                    _consciousness.RemoveConsciousnessModifier(entConsciousness, target, "DeathThreshold");
 
-                    if (_consciousness.CheckConscious(target, consciousness, mob))
+                    // Remove Bloodloss modifier if blood is restored
+                    // When a character is dead, UpdateConsciousnessBleeding might not update the modifier properly,
+                    // so we manually remove it if blood level is above the lethal threshold
+                    if (TryComp<BloodstreamComponent>(target, out var bloodstream))
                     {
-                        _consciousness.ForceConscious(target, component.ForceConsciousnessDuration, consciousness);
+                        var bloodLevel = (FixedPoint2) _bloodstream.GetBloodLevel((target, bloodstream));
+                        // GetBloodLevel returns [0, MaxVolumeModifier], while LethalBloodlossThreshold is a fraction [0, 1]
+                        // So we need to normalize bloodLevel or scale the threshold
+                        var thresholdValue = bloodstream.LethalBloodlossThreshold * bloodstream.MaxVolumeModifier;
+                        // If blood level is above the lethal threshold (67% of max), remove the Bloodloss modifier
+                        // This ensures that if blood was restored, the modifier doesn't prevent revival
+                        if (bloodLevel >= thresholdValue)
+                        {
+                            _consciousness.RemoveConsciousnessModifier(entConsciousness, nerveSys.Value, "Bloodloss");
+                        }
+                    }
+
+                    // Remove WoundPain modifier only if there are no wounds causing pain
+                    // Check all body parts for wounds with PainInflicterComponent
+                    var hasPainfulWounds = false;
+                    if (TryComp<BodyComponent>(target, out var body))
+                    {
+                        foreach (var (bodyPartId, _) in _body.GetBodyChildren(target, body))
+                        {
+                            if (_wound.GetWoundableWoundsWithComp<PainInflicterComponent>(bodyPartId).Any())
+                            {
+                                hasPainfulWounds = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Only remove WoundPain modifier if there are no wounds causing pain
+                    // This ensures we don't remove it if the character still has painful wounds
+                    if (!hasPainfulWounds)
+                    {
+                        _consciousness.RemoveConsciousnessModifier(entConsciousness, nerveSys.Value, "WoundPain");
+                    }
+
+                    if (_consciousness.CheckConscious((target, consciousness, mob)))
+                    {
+                        _consciousness.ForceConscious(entConsciousness, component.ForceConsciousnessDuration);
                         dead = false;
                     }
+                    _consciousness.ForcePassOut(entConsciousness, TimeSpan.FromSeconds(10));
+                    _consciousness.RemoveConsciousnessModifier(entConsciousness, target, "DeathThreshold");
+                    _consciousness.RemoveConsciousnessModifier(entConsciousness, nerveSys.Value, ConsciousnessModifierIds.Asphyxiation);
                 }
                 else // backmen edit end
                 {
-                    _damageable.TryChangeDamage(target, component.ZapHeal, true, origin: uid, targetPart: TargetBodyPart.Chest); // backmen: surgery
+                    _damageable.ChangeDamage(target, component.ZapHeal, true, origin: uid, targetPart: TargetBodyPart.Chest); // backmen: surgery
                 }
             }
 

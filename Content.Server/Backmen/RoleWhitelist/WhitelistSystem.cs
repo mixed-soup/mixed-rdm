@@ -17,11 +17,11 @@ using Robust.Shared.Prototypes;
 namespace Content.Server.Backmen.RoleWhitelist;
 
 [UsedImplicitly]
-public sealed class WhitelistSystem  : SharedWhitelistSystem
+public sealed partial class WhitelistSystem  : SharedWhitelistSystem
 {
-    [Dependency] private readonly IServerNetManager _net = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IServerDbManager _db = default!;
+    [Dependency] private IServerNetManager _net = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IServerDbManager _db = default!;
 
     private readonly HashSet<NetUserId> _whitelisted = new();
 
@@ -37,8 +37,7 @@ public sealed class WhitelistSystem  : SharedWhitelistSystem
         SubscribeLocalEvent<PlayerSpawnCompleteEvent>(OnPlayerSpawnComplete, after: new []{ typeof(TraitSystem) });
     }
 
-    [ValidatePrototypeId<SpeciesPrototype>]
-    private const string SpecieDiona = "Diona";
+    private static readonly ProtoId<SpeciesPrototype> SpecieDiona = "Diona";
 
     private void OnPlayerSpawnComplete(PlayerSpawnCompleteEvent msg)
     {
@@ -53,8 +52,7 @@ public sealed class WhitelistSystem  : SharedWhitelistSystem
         }
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string DionaReform = "MobDionaReformed";
+    private readonly EntProtoId DionaReform = "MobDionaReformed";
     public override void ProcessReform(EntityUid child, Entity<ReformComponent> source)
     {
         ActorComponent? actor = null;

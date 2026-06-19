@@ -1,4 +1,5 @@
 using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Examine;
 using Content.Shared.Item;
 using Content.Shared.Item.ItemToggle;
@@ -9,12 +10,12 @@ using Content.Shared.Weapons.Melee.Events;
 
 namespace Content.Shared.Backmen.SawCleaver;
 
-public sealed class SawCleaverSystem : EntitySystem
+public sealed partial class SawCleaverSystem : EntitySystem
 {
-    [Dependency] private readonly SharedItemSystem _item = default!;
-    [Dependency] private readonly ItemToggleSystem _itemToggle = default!;
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
+    [Dependency] private SharedItemSystem _item = default!;
+    [Dependency] private ItemToggleSystem _itemToggle = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
 
     public override void Initialize()
     {

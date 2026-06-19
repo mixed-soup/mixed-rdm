@@ -2,6 +2,7 @@ using Content.Shared.Actions;
 using Content.Server.Atmos.Components;
 using Content.Server.Atmos.EntitySystems;
 using Content.Server.Popups;
+using Content.Shared.Atmos.Components;
 using Content.Shared.Backmen.Abilities.Psionics;
 using Content.Shared.Backmen.Psionics;
 using Content.Shared.Backmen.Psionics.Events;
@@ -12,25 +13,14 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Abilities.Psionics;
 
-public sealed class PyrokinesisPowerSystem : SharedPyrokinesisPowerSystem
+public sealed partial class PyrokinesisPowerSystem : SharedPyrokinesisPowerSystem
 {
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly FlammableSystem _flammableSystem = default!;
-    [Dependency] private readonly SharedPsionicAbilitiesSystem _psionics = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private FlammableSystem _flammableSystem = default!;
+    [Dependency] private SharedPsionicAbilitiesSystem _psionics = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<PyrokinesisPowerComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<PyrokinesisPowerComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<PyrokinesisPowerComponent, PyrokinesisPowerActionEvent>(OnPowerUsed);
-    }
-
-    [ValidatePrototypeId<EntityPrototype>] private const string ActionPyrokinesis = "ActionPyrokinesis";
-
-    private void OnInit(EntityUid uid, PyrokinesisPowerComponent component, ComponentInit args)
+    protected override void EnsurePowerActions(EntityUid uid, PyrokinesisPowerComponent component)
     {
         _actions.AddAction(uid, ref component.PyrokinesisPowerAction, ActionPyrokinesis);
 
@@ -42,12 +32,12 @@ public sealed class PyrokinesisPowerSystem : SharedPyrokinesisPowerSystem
             psionic.PsionicAbility = component.PyrokinesisPowerAction;
     }
 
-    private void OnShutdown(EntityUid uid, PyrokinesisPowerComponent component, ComponentShutdown args)
+    protected override void RemovePowerActions(EntityUid uid, PyrokinesisPowerComponent component)
     {
         _actions.RemoveAction(uid, component.PyrokinesisPowerAction);
     }
 
-    private void OnPowerUsed(Entity<PyrokinesisPowerComponent> ent, ref PyrokinesisPowerActionEvent args)
+    protected override void HandlePowerUse(EntityUid uid, PyrokinesisPowerComponent component, PyrokinesisPowerActionEvent args)
     {
         if(args.Handled)
             return;
@@ -55,7 +45,7 @@ public sealed class PyrokinesisPowerSystem : SharedPyrokinesisPowerSystem
         if (!TryComp<FlammableComponent>(args.Target, out var flammableComponent))
             return;
 
-        flammableComponent.FireStacks += ent.Comp.FireStacks;
+        flammableComponent.FireStacks += component.FireStacks;
         _flammableSystem.Ignite(args.Target, args.Performer, flammableComponent);
         _popupSystem.PopupEntity(Loc.GetString("pyrokinesis-power-used", ("target", args.Target)),
             args.Target,
@@ -64,11 +54,13 @@ public sealed class PyrokinesisPowerSystem : SharedPyrokinesisPowerSystem
         _psionics.LogPowerUsed(args.Performer, "pyrokinesis");
 
         args.Handled = true;
-        
+
         if (TryComp<NoosphericZapPowerComponent>(args.Performer, out var powerComponent))
         {
             var actionEnt = _actions.GetAction(powerComponent.NoosphericZapPowerAction);
             _actions.SetCooldown(powerComponent.NoosphericZapPowerAction, actionEnt?.Comp.UseDelay ?? TimeSpan.FromMinutes(1));
         }
     }
+
+    private readonly EntProtoId ActionPyrokinesis = "ActionPyrokinesis";
 }

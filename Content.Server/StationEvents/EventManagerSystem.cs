@@ -12,16 +12,16 @@ using Content.Shared.EntityTable;
 
 namespace Content.Server.StationEvents;
 
-public sealed class EventManagerSystem : EntitySystem
+public sealed partial class EventManagerSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
-    [Dependency] private readonly EntityTableSystem _entityTable = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private EntityTableSystem _entityTable = default!;
     [Dependency] public readonly GameTicker GameTicker = default!;
-    [Dependency] private readonly RoundEndSystem _roundEnd = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!; // backmen: glimmer
+    [Dependency] private RoundEndSystem _roundEnd = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!; // backmen: glimmer
 
     public bool EventsEnabled { get; private set; }
     private void SetEnabled(bool value) => EventsEnabled = value;
@@ -72,7 +72,7 @@ public sealed class EventManagerSystem : EntitySystem
             return;
         }
 
-        if (!_prototype.TryIndex(randomLimitedEvent, out _))
+        if (!_prototype.Resolve(randomLimitedEvent, out _))
         {
             Log.Warning("A requested event is not available!");
             return;
@@ -105,7 +105,7 @@ public sealed class EventManagerSystem : EntitySystem
 
         foreach (var eventid in selectedEvents)
         {
-            if (!_prototype.TryIndex(eventid, out var eventproto))
+            if (!_prototype.Resolve(eventid, out var eventproto))
             {
                 Log.Warning("An event ID has no prototype index!");
                 continue;

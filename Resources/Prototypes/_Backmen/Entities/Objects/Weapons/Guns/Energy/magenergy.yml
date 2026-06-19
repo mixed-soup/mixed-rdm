@@ -81,7 +81,7 @@
     walkModifier: 1
     sprintModifier: 0.8
   - type: HeldSpeedModifier
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: RedHeavyLaser
     fireCost: 100
   - type: Gun
@@ -110,7 +110,6 @@
   - type: Wieldable
   - type: UseDelay
     delay: 2.5
-  - type: Telescope # backmen: immersive
 
 - type: entity
   name: pulse rifle
@@ -126,7 +125,7 @@
     - state: mag-unshaded-4
       map: ["enum.GunVisualLayers.MagUnshaded"]
       shader: unshaded
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: Pulse
     fireCost: 100
   - type: Clothing
@@ -145,6 +144,8 @@
     - FullAuto
     soundGunshot:
       path: /Audio/Weapons/Guns/Gunshots/laser3.ogg
+  - type: PowerCellSlot
+    cellSlotId: gun_magazine
   - type: ItemSlots
     slots:
       gun_magazine:

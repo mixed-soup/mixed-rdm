@@ -108,6 +108,8 @@
     fiberMaterial: fibers-durathread
     fiberColor: fibers-regal-blue
   - type: FingerprintMask
+  - type: StaminaResistance
+    damageCoefficient: 0.92
   - type: Armor
     coverage: # backmen: armour coverage
     - Hand
@@ -117,7 +119,6 @@
         Blunt: 0.6
         Slash: 0.6
         Piercing: 0.5
-        Stun: 0.5
 
 - type: entity
   parent: ClothingHandsBase
@@ -132,6 +133,8 @@
   - type: Fiber
     fiberMaterial: fibers-durathread
     fiberColor: fibers-black
+  - type: StaminaResistance
+    damageCoefficient: 0.92
   - type: Armor
     coverage: # backmen: armour coverage
     - Hand
@@ -141,7 +144,7 @@
         Blunt: 0.6
         Slash: 0.6
         Piercing: 0.9
-        Stun: 0.5
+
   - type: FingerprintMask
 
 #### Medical
@@ -195,16 +198,6 @@
       flatReductions:
         Heat: 10
         Caustic: 5
-  - type: Armor
-    coverage: # backmen: armour coverage
-    - Hand
-    modifiers:
-      coefficients:
-        Heat: 0.4
-        Blunt: 0.6
-        Slash: 0.6
-        Piercing: 0.9
-        Stun: 0.5
 
 - type: entity
   parent: ClothingHandsBase
@@ -236,7 +229,7 @@
   - type: FingerprintMask
 
 - type: entity
-  parent: [ClothingHandsBase, BaseToggleClothing, BaseMajorContraband]
+  parent: [ClothingHandsBase, BaseToggleClothing, BaseHighlyIllegalContraband]
   id: ClothingHandsGlovesSpaceNinja
   name: space ninja gloves
   description: These black nano-enhanced gloves insulate from electricity and provide fire resistance.
@@ -270,6 +263,7 @@
     - components:
       - type: BatteryDrainer
       - type: StunProvider
+        cooldown: 10
         noPowerPopup: ninja-no-power
         whitelist:
           components:
@@ -310,16 +304,6 @@
   - type: Insulated
   - type: Fiber
     fiberMaterial: fibers-insulative
-  - type: Armor
-    coverage: # backmen: armour coverage
-    - Hand
-    modifiers:
-      coefficients:
-        Heat: 0.4
-        Blunt: 0.6
-        Slash: 0.6
-        Piercing: 0.7
-        Stun: 0.5
 
 # can't parent combat gloves since they are butcherable
 - type: entity
@@ -335,16 +319,6 @@
   - type: Insulated
   - type: Fiber
     fiberColor: fibers-black
-  - type: Armor
-    coverage: # backmen: armour coverage
-    - Hand
-    modifiers:
-      coefficients:
-        Heat: 0.4
-        Blunt: 0.6
-        Slash: 0.6
-        Piercing: 0.7
-        Stun: 0.5
 
 - type: entity
   parent: [ BaseSecurityCargoContraband, ClothingHandsGlovesCombat ]
@@ -363,16 +337,6 @@
   - type: Fiber
     fiberMaterial: fibers-insulative
     fiberColor: fibers-olive
-  - type: Armor
-    coverage: # backmen: armour coverage
-    - Hand
-    modifiers:
-      coefficients:
-        Heat: 0.4
-        Blunt: 0.6
-        Slash: 0.6
-        Piercing: 0.7
-        Stun: 0.5
 
 - type: entity
   parent: ClothingHandsButcherable
@@ -715,10 +679,10 @@
     bluntStaminaDamageFactor: 2.0
     animation: WeaponArcFist
   - type: StaminaDamageOnHit
-    damage: 35
+    damage: 42
     sound: /Audio/Weapons/egloves.ogg
   - type: StaminaDamageOnCollide
-    damage: 35
+    damage: 42
     sound: /Audio/Weapons/egloves.ogg
   - type: LandAtCursor # it deals stamina damage when thrown
   - type: Battery

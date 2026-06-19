@@ -51,6 +51,67 @@ public sealed class ServerTraumaSystem : TraumaSystem
 
             ApplyDamageToBone(uid, -bone.BoneRegenerationRate, bone);
         }
+
+        // Organ regeneration
+        var organQuery = EntityQueryEnumerator<OrganComponent, MetaDataComponent>();
+        while (organQuery.MoveNext(out var uid, out var organ, out var meta))
+        {
+            if (Paused(uid, meta))
+                continue;
+
+            if (organ.Body == null)
+                continue;
+
+            if (MobState.IsDead(organ.Body.Value))
+                continue;
+
+            // Get the body part containing this organ
+            if (organ.BodyPart == null || !BodyPartQuery.TryComp(organ.BodyPart, out var bodyPart))
+                continue;
+
+            if (!WoundableQuery.TryComp(organ.BodyPart, out var woundable))
+                continue;
+
+            if (woundable.WoundableSeverity is WoundableSeverity.Critical or WoundableSeverity.Loss)
+                continue;
+
+            // Skip if organ is already at full integrity
+            if (organ.OrganIntegrity >= organ.IntegrityCap)
+                continue;
+
+            // Regenerate by reducing damage modifiers
+            if (organ.IntegrityModifiers.Count == 0)
+                continue;
+
+            var regenerationAmount = organ.OrganRegenerationRate;
+            var modifiersToProcess = organ.IntegrityModifiers.ToList();
+
+            foreach (var modifier in modifiersToProcess)
+            {
+                if (modifier.Value <= 0)
+                    continue;
+
+                if (regenerationAmount <= 0)
+                    break;
+
+                var reduction = FixedPoint2.Min(regenerationAmount, modifier.Value);
+                if (reduction <= 0)
+                    continue;
+
+                // Use TryChangeOrganDamageModifier to properly reduce the modifier
+                // Negative change means healing
+                if (TryChangeOrganDamageModifier(uid, -reduction, modifier.Key.Item2, modifier.Key.Item1, organ))
+                {
+                    regenerationAmount -= reduction;
+
+                    // Check if modifier reached zero or below and remove it
+                    if (organ.IntegrityModifiers.TryGetValue(modifier.Key, out var newValue) && newValue <= 0)
+                    {
+                        TryRemoveOrganDamageModifier(uid, modifier.Key.Item2, modifier.Key.Item1, organ);
+                    }
+                }
+            }
+        }
     }
 
     #region Very Private Server API
@@ -220,6 +281,20 @@ public sealed class ServerTraumaSystem : TraumaSystem
     #region Public API
 
     [PublicAPI]
+    public bool TryApplyTraumas(
+        Entity<WoundableComponent> target,
+        Entity<TraumaInflicterComponent> inflicter,
+        IReadOnlyList<TraumaType> traumas,
+        FixedPoint2 severity)
+    {
+        if (traumas.Count == 0)
+            return false;
+
+        ApplyTraumas(target, inflicter, traumas.ToList(), severity);
+        return true;
+    }
+
+    [PublicAPI]
     public override EntityUid AddTrauma(
         EntityUid target,
         Entity<WoundableComponent> holdingWoundable,
@@ -257,7 +332,11 @@ public sealed class ServerTraumaSystem : TraumaSystem
         var ev1 = new TraumaInducedEvent((traumaEnt, traumaComp), target, severity, traumaType);
         RaiseLocalEvent(inflicter, ref ev1);
 
-        Dirty(traumaEnt, traumaComp);
+        DirtyFields(traumaEnt, traumaComp, null,
+            nameof(TraumaComponent.TraumaSeverity),
+            nameof(TraumaComponent.TraumaTarget),
+            nameof(TraumaComponent.HoldingWoundable),
+            nameof(TraumaComponent.TraumaType));
         return traumaEnt;
     }
 
@@ -342,7 +421,6 @@ public sealed class ServerTraumaSystem : TraumaSystem
         }
 
         organ.OrganSeverity = nearestSeverity;
-        Dirty(uid, organ);
     }
 
     [PublicAPI]
@@ -453,7 +531,7 @@ public sealed class ServerTraumaSystem : TraumaSystem
         }
         boneComp.BoneSeverity = nearestSeverity;
 
-        Dirty(bone, boneComp);
+        DirtyField(bone, boneComp, nameof(BoneComponent.BoneSeverity));
     }
 
 
@@ -494,7 +572,7 @@ public sealed class ServerTraumaSystem : TraumaSystem
         boneComp.BoneIntegrity = newIntegrity;
         CheckBoneSeverity(bone, boneComp);
 
-        Dirty(bone, boneComp);
+        DirtyField(bone, boneComp, nameof(BoneComponent.BoneIntegrity));
         return true;
     }
 
@@ -519,7 +597,7 @@ public sealed class ServerTraumaSystem : TraumaSystem
         boneComp.BoneIntegrity = newIntegrity;
         CheckBoneSeverity(bone, boneComp);
 
-        Dirty(bone, boneComp);
+        DirtyField(bone, boneComp, nameof(BoneComponent.BoneIntegrity));
         return true;
     }
 

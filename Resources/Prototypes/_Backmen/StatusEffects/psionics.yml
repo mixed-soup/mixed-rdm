@@ -1,0 +1,111 @@
+- type: alert
+  id: PsionicInsulation
+  icons: [ /Textures/Backmen/Interface/Alerts/Psi/Insulated.png ]
+  name: alerts-PsionicInsulation-name
+  description: alerts-PsionicInsulation-desc
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectPsionicallyInsulated
+  name: psionically insulated
+  components:
+  - type: PsionicInsulation
+  - type: StatusEffectAlert
+    alert: PsionicInsulation
+
+- type: alert
+  id: PsionicAllSee
+  icons: [ /Textures/Backmen/Interface/Alerts/Psi/PsionicAllSee.png ]
+  name: alerts-PsionicAllSee-name
+  description: alerts-PsionicAllSee-desc
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectPsionicAllSee
+  name: psionic all see
+  components:
+  - type: MetapsionicVisible
+  - type: StatusEffectAlert
+    alert: PsionicAllSee
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectGrantMetapsionicPower
+  name: grant metapsionic power
+  components:
+  - type: StatusEffect
+    blacklist:
+      components:
+      - MetapsionicPower
+  - type: MetapsionicPower
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectGrantTelegnosisPower
+  name: grant telegnosis power
+  components:
+  - type: StatusEffect
+    blacklist:
+      components:
+      - TelegnosisPower
+  - type: TelegnosisPower
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectGrantPsionicInvisibilityPower
+  name: grant psionic invisibility power
+  components:
+  - type: StatusEffect
+    blacklist:
+      components:
+      - PsionicInvisibilityPower
+  - type: PsionicInvisibilityPower
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectGrantDispelPower
+  name: grant dispel power
+  components:
+  - type: StatusEffect
+    blacklist:
+      components:
+      - DispelPower
+  - type: DispelPower
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectGrantNoosphericZapPower
+  name: grant noospheric zap power
+  components:
+  - type: StatusEffect
+    blacklist:
+      components:
+      - NoosphericZapPower
+  - type: NoosphericZapPower
+
+
+- type: entity
+  parent: [StatusEffectSeeingRainbow, StatusEffectScrambled, StatusEffectSlurred]
+  id: StatusEffectLotophagoiOil
+  name: psionic rainbow repeater
+  components:
+  - type: TelepathicRepeater
+  - type: StatusEffectAlert
+    alert: TelepathicRepeater
+
+- type: alert
+  id: TelepathicRepeater
+  icons: [ /Textures/Backmen/Interface/Alerts/Psi/TelepathicRepeater.png ]
+  name: alerts-TelepathicRepeater-name
+  description: alerts-TelepathicRepeater-desc
+
+- type: entity
+  parent: MobStatusEffectBase
+  id: StatusEffectPNV
+  name: pnv granted
+  components:
+  - type: StatusEffect
+    blacklist:
+      components:
+      - NightVision
+  - type: PNVStatusEffect

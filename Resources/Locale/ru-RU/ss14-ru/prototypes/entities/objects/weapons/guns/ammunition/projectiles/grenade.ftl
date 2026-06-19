@@ -4,3 +4,5 @@ ent-PelletClusterLethal = шрапнель (шарик, летальный)
     .desc = { ent-BaseBullet.desc }
 ent-PelletClusterIncendiary = шрапнель (шарик, зажигательный)
     .desc = { ent-BaseBulletIncendiary.desc }
+ent-PelletClusterLessLethal = дробь (шар, менее смертельно)
+    .desc = { ent-BaseBullet.desc }

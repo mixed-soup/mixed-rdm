@@ -1,8 +1,10 @@
-﻿using Content.Shared.Bed.Sleep;
+﻿using Content.Shared.Backmen.Standing;
+using Content.Shared.Bed.Sleep;
 using Content.Shared.Buckle.Components;
 using Content.Shared.CombatMode.Pacification;
 using Content.Shared.Damage;
 using Content.Shared.Damage.ForceSay;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Emoting;
 using Content.Shared.Hands;
 using Content.Shared.Interaction;
@@ -23,6 +25,8 @@ namespace Content.Shared.Mobs.Systems;
 
 public partial class MobStateSystem
 {
+    [Dependency] private SharedLayingDownSystem _layingDownSystem = default!;
+
     //General purpose event subscriptions. If you can avoid it register these events inside their own systems
     private void SubscribeEvents()
     {
@@ -54,8 +58,15 @@ public partial class MobStateSystem
     {
         // TODO is this necessary?
         // Shouldn't the interaction have already been blocked by a general interaction check?
-        if (args.User == ent.Owner && IsIncapacitated(ent))
+        if (args.User == ent.Owner && (IsCritical(ent, ent.Comp) || IsDead(ent, ent.Comp)))
             args.Cancelled = true;
+    }
+
+    private void Down(EntityUid target)
+    {
+        _standing.Down(target);
+        var ev = new DropHandItemsEvent();
+        RaiseLocalEvent(target, ref ev);
     }
 
     private void CheckConcious(Entity<MobStateComponent> ent, ref ConsciousAttemptEvent args)
@@ -79,11 +90,20 @@ public partial class MobStateSystem
                 break;
             case MobState.SoftCritical:
             case MobState.Critical:
+                if (TryComp<LayingDownComponent>(target, out var li)) // backmen
+                {
+                    _layingDownSystem.TryProcessAutoGetUp((target,li)); // backmen
+                    return; // backmen
+                }
                 _standing.Stand(target);
                 break;
             case MobState.Dead:
                 RemComp<CollisionWakeComponent>(target);
-                _standing.Stand(target);
+                if (TryComp<LayingDownComponent>(target, out var li2)) // backmen
+                {
+                    _layingDownSystem.TryProcessAutoGetUp((target,li2)); // backmen
+                    return; // backmen
+                }
                 break;
             case MobState.Invalid:
                 //unused
@@ -104,27 +124,41 @@ public partial class MobStateSystem
         switch (state)
         {
             case MobState.Alive:
-                _standing.Stand(target);
+            {
+                if (TryComp<LayingDownComponent>(target, out var li)) // backmen
+                {
+                    _layingDownSystem.TryProcessAutoGetUp((target,li)); // backmen
+                }
+                else // backmen
+                {
+                    _standing.Stand(target);
+                }
                 _appearance.SetData(target, MobStateVisuals.State, MobState.Alive);
                 break;
+            }
             case MobState.SoftCritical: // backmen edit: soft crit
-                _standing.Down(target);
-                _appearance.SetData(target, MobStateVisuals.State, MobState.Critical);
-                break;
             case MobState.Critical:
-                _standing.Down(target);
+            {
+                Down(target);
                 _appearance.SetData(target, MobStateVisuals.State, MobState.Critical);
                 break;
+            }
             case MobState.Dead:
+            {
                 EnsureComp<CollisionWakeComponent>(target);
-                _standing.Down(target);
+                Down(target);
                 _appearance.SetData(target, MobStateVisuals.State, MobState.Dead);
                 break;
+            }
             case MobState.Invalid:
+            {
                 //unused;
                 break;
+            }
             default:
+            {
                 throw new NotImplementedException();
+            }
         }
     }
 
@@ -175,6 +209,7 @@ public partial class MobStateSystem
         {
             case MobState.Dead:
             case MobState.Critical:
+            case MobState.SoftCritical:
                 args.Cancel();
                 break;
         }

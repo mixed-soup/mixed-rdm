@@ -1,5 +1,6 @@
 ﻿using Content.Server.Body.Components;
 using Content.Shared.Backmen.Disease;
+using Content.Shared.Body.Components;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
 using Content.Shared.FixedPoint;
@@ -32,7 +33,7 @@ public sealed partial class DiseaseAdjustReagent : DiseaseEffect
 
 public sealed partial class DiseaseEffectSystem
 {
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionContainer = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainer = default!;
 
     private void DiseaseAdjustReagent(Entity<DiseaseCarrierComponent> ent, ref DiseaseEffectArgs<DiseaseAdjustReagent> args)
     {
@@ -47,7 +48,7 @@ public sealed partial class DiseaseEffectSystem
         if (!TryComp<BloodstreamComponent>(args.DiseasedEntity, out var bloodstream))
             return;
 
-        var stream = bloodstream.ChemicalSolution;
+        var stream = bloodstream.BloodSolution;
         if (stream == null)
             return;
 

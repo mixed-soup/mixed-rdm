@@ -10,7 +10,10 @@ using Content.Shared.Administration.Logs;
 using Content.Shared.Backmen.Abilities.Psionics;
 using Content.Shared.Backmen.Vampiric;
 using Content.Shared.Backmen.Vampiric.Components;
+using Content.Shared.Body.Components;
+using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Database;
 using Content.Shared.DoAfter;
 using Content.Shared.FixedPoint;
@@ -32,29 +35,29 @@ using Robust.Shared.Random;
 
 namespace Content.Server.Backmen.Vampiric;
 
-public sealed class BkmVampireLevelingSystem : EntitySystem
+public sealed partial class BkmVampireLevelingSystem : EntitySystem
 {
-    [Dependency] private readonly StoreSystem _store = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly PolymorphSystem _polymorph = default!;
-    [Dependency] private readonly MovementSpeedModifierSystem _speedModifier = default!;
+    [Dependency] private StoreSystem _store = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private PolymorphSystem _polymorph = default!;
+    [Dependency] private MovementSpeedModifierSystem _speedModifier = default!;
 
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
 
-    [Dependency] private readonly HungerSystem _hunger = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private HungerSystem _hunger = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
 
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly SharedStunSystem _stun = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedStunSystem _stun = default!;
 
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
 
-    [Dependency] private readonly BloodSuckerSystem _bloodSucker = default!;
-    [Dependency] private readonly UserInterfaceSystem _ui = default!;
+    [Dependency] private BloodSuckerSystem _bloodSucker = default!;
+    [Dependency] private UserInterfaceSystem _ui = default!;
 
     public override void Initialize()
     {
@@ -98,10 +101,10 @@ public sealed class BkmVampireLevelingSystem : EntitySystem
 
         _bloodSucker.MakeVampire(args.Target.Value);
         _stun.TryKnockdown(args.Target.Value, TimeSpan.FromSeconds(30), true);
-        _stun.TryParalyze(args.Target.Value, TimeSpan.FromSeconds(30), true);
+        _stun.TryUpdateStunDuration(args.Target.Value, TimeSpan.FromSeconds(30));
 
         _hunger.ModifyHunger(ent, -100);
-        _stun.TryStun(ent, TimeSpan.FromSeconds(_random.Next(1, 3)), true);
+        _stun.TryUpdateStunDuration(ent, TimeSpan.FromSeconds(_random.Next(1, 3)));
     }
 
     private void OnUseNewVamp(Entity<BkmVampireComponent> ent, ref InnateNewVampierActionEvent args)
@@ -119,7 +122,8 @@ public sealed class BkmVampireLevelingSystem : EntitySystem
         if (!TryComp<BloodstreamComponent>(args.Target, out var bloodstream))
             return;
 
-        if (bloodstream.BloodReagent != "Blood" || bloodstream.BloodSolution == null)
+        var bloodReferenceSolution = bloodstream.BloodReferenceSolution;
+        if (bloodReferenceSolution == null || !bloodReferenceSolution.ContainsPrototype("Blood"))
         {
             _popupSystem.PopupEntity(Loc.GetString("bloodsucker-fail-not-blood", ("target", args.Target)), args.Target, ent.Owner, Shared.Popups.PopupType.Medium);
             return;
@@ -141,7 +145,7 @@ public sealed class BkmVampireLevelingSystem : EntitySystem
         _popupSystem.PopupEntity(Loc.GetString("bloodsucker-doafter-start", ("target", args.Target)), args.Target, ent, Shared.Popups.PopupType.Medium);
 
         _doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, ent, TimeSpan.FromSeconds(10),
-            new InnateNewVampierDoAfterEvent(), ent, target: args.Target, used: ent)
+            new InnateNewVampierDoAfterEvent(), eventTarget: ent, target: args.Target, used: ent)
         {
             BreakOnDamage = true,
             NeedHand = true,
@@ -192,7 +196,7 @@ public sealed class BkmVampireLevelingSystem : EntitySystem
         _store.ToggleUi(ent, ent, store);
     }
 
-    [ValidatePrototypeId<EntityPrototype>] private const string VmpShop = "VmpShop";
+    private readonly EntProtoId VmpShop = "VmpShop";
 
     public void InitShop(Entity<BkmVampireComponent> ent)
     {
@@ -209,11 +213,8 @@ public sealed class BkmVampireLevelingSystem : EntitySystem
         store.CurrencyWhitelist.Add(ent.Comp.CurrencyPrototype);
     }
 
-    [ValidatePrototypeId<PolymorphPrototype>]
-    private const string BVampieBat = "BVampieBat";
-
-    [ValidatePrototypeId<PolymorphPrototype>]
-    private const string BVampieMouse = "BVampieMouse";
+    private static readonly ProtoId<PolymorphPrototype> BVampieBat = "BVampieBat";
+    private static readonly ProtoId<PolymorphPrototype> BVampieMouse = "BVampieMouse";
 
     private void OnShopBuyPerk(Entity<BkmVampireComponent> ent, ref VampireStoreEvent args)
     {

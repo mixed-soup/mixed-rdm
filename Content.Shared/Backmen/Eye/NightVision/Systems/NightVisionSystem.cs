@@ -8,11 +8,11 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Backmen.Eye.NightVision.Systems;
 
-public sealed class NightVisionSystem : EntitySystem
+public sealed partial class NightVisionSystem : EntitySystem
 {
-    [Dependency] private readonly SharedActionsSystem _actionsSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly INetManager _net = default!;
+    [Dependency] private SharedActionsSystem _actionsSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private INetManager _net = default!;
 
     public override void Initialize()
     {
@@ -23,8 +23,7 @@ public sealed class NightVisionSystem : EntitySystem
         SubscribeLocalEvent<NightVisionComponent, NVInstantActionEvent>(OnActionToggle);
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string SwitchNightVisionAction = "SwitchNightVision";
+    private readonly EntProtoId SwitchNightVisionAction = "SwitchNightVision";
 
     private void OnComponentStartup(EntityUid uid, NightVisionComponent component, ComponentStartup args)
     {
@@ -37,7 +36,7 @@ public sealed class NightVisionSystem : EntitySystem
         component.IsNightVision = !component.IsNightVision;
         var changeEv = new NightVisionnessChangedEvent(component.IsNightVision);
         RaiseLocalEvent(uid, ref changeEv);
-        Dirty(uid, component);
+        DirtyField(uid, component, nameof(NightVisionComponent.IsNightVision));
         _actionsSystem.SetCooldown(component.ActionContainer, TimeSpan.FromSeconds(1));
         if (component is { IsNightVision: true, PlaySoundOn: true })
         {
@@ -64,7 +63,7 @@ public sealed class NightVisionSystem : EntitySystem
 
         var changeEv = new NightVisionnessChangedEvent(component.IsNightVision);
         RaiseLocalEvent(uid, ref changeEv);
-        Dirty(uid, component);
+        DirtyField(uid, component, nameof(NightVisionComponent.IsNightVision));
     }
 }
 

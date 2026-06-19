@@ -15,6 +15,7 @@ using Content.Shared.StatusEffect;
 using Content.Shared.Damage;
 using Content.Shared.Destructible;
 using Content.Shared.Construction.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.MassMedia.Components;
 using Content.Shared.MassMedia.Systems;
 using Content.Shared.Power;
@@ -29,25 +30,25 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Psionics.Glimmer
 {
-    public sealed class GlimmerReactiveSystem : EntitySystem
+    public sealed partial class GlimmerReactiveSystem : EntitySystem
     {
-        [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-        [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-        [Dependency] private readonly ElectrocutionSystem _electrocutionSystem = default!;
-        [Dependency] private readonly SharedAudioSystem _sharedAudioSystem = default!;
-        [Dependency] private readonly SharedAmbientSoundSystem _sharedAmbientSoundSystem = default!;
-        [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly LightningSystem _lightning = default!;
-        [Dependency] private readonly ExplosionSystem _explosionSystem = default!;
-        [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
-        [Dependency] private readonly AnchorableSystem _anchorableSystem = default!;
-        [Dependency] private readonly SharedDestructibleSystem _destructibleSystem = default!;
-        //[Dependency] private readonly GhostSystem _ghostSystem = default!;
-        //[Dependency] private readonly RevenantSystem _revenantSystem = default!;
-        [Dependency] private readonly MapSystem _mapSystem = default!;
-        [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-        [Dependency] private readonly SharedPointLightSystem _pointLightSystem = default!;
-        [Dependency] private readonly GameTicker _ticker = default!;
+        [Dependency] private GlimmerSystem _glimmerSystem = default!;
+        [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+        [Dependency] private ElectrocutionSystem _electrocutionSystem = default!;
+        [Dependency] private SharedAudioSystem _sharedAudioSystem = default!;
+        [Dependency] private SharedAmbientSoundSystem _sharedAmbientSoundSystem = default!;
+        [Dependency] private IRobustRandom _random = default!;
+        [Dependency] private LightningSystem _lightning = default!;
+        [Dependency] private ExplosionSystem _explosionSystem = default!;
+        [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
+        [Dependency] private AnchorableSystem _anchorableSystem = default!;
+        [Dependency] private SharedDestructibleSystem _destructibleSystem = default!;
+        //[Dependency] private GhostSystem _ghostSystem = default!;
+        //[Dependency] private RevenantSystem _revenantSystem = default!;
+        [Dependency] private MapSystem _mapSystem = default!;
+        [Dependency] private SharedTransformSystem _transformSystem = default!;
+        [Dependency] private SharedPointLightSystem _pointLightSystem = default!;
+        [Dependency] private GameTicker _ticker = default!;
 
 
         public float Accumulator = 0;
@@ -232,7 +233,7 @@ namespace Content.Server.Backmen.Psionics.Glimmer
             Beam(uid, args.Origin.Value, tier);
         }
 
-        [ValidatePrototypeId<EntityPrototype>] private const string MaterialBluespace = "MaterialBluespace1";
+        private readonly EntProtoId MaterialBluespace = "MaterialBluespace1";
         private void OnDestroyed(EntityUid uid, GlimmerReactiveComponent component, DestructionEventArgs args)
         {
             Spawn(MaterialBluespace, Transform(uid).Coordinates);
@@ -263,8 +264,7 @@ namespace Content.Server.Backmen.Psionics.Glimmer
             }
         }
 
-        [ValidatePrototypeId<StatusEffectPrototype>]
-        private const string Electrocution = "Electrocution";
+        private static readonly ProtoId<StatusEffectPrototype> Electrocution = "Electrocution";
 
         private readonly HashSet<Entity<IComponent>> _entitySet = new();
         private readonly List<EntityUid> _entities = new();
@@ -299,12 +299,9 @@ namespace Content.Server.Backmen.Psionics.Glimmer
             }
         }
 
-        [ValidatePrototypeId<EntityPrototype>]
-        private const string SuperchargedLightning = "SuperchargedLightning";
-        [ValidatePrototypeId<EntityPrototype>]
-        private const string HyperchargedLightning = "HyperchargedLightning";
-        [ValidatePrototypeId<EntityPrototype>]
-        private const string ChargedLightning = "ChargedLightning";
+        private readonly EntProtoId SuperchargedLightning = "SuperchargedLightning";
+        private readonly EntProtoId HyperchargedLightning = "HyperchargedLightning";
+        private readonly EntProtoId ChargedLightning = "ChargedLightning";
 
         private void Beam(EntityUid prober, EntityUid target, GlimmerTier tier, bool obeyCd = true)
         {

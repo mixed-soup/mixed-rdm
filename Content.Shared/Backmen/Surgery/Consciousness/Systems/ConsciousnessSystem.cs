@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Content.Shared.Backmen.Surgery.Consciousness.Components;
+using Content.Shared.Backmen.Surgery.Pain.Components;
 using Content.Shared.Backmen.Surgery.Pain.Systems;
 using Content.Shared.Backmen.Surgery.Wounds.Systems;
 using Content.Shared.Body.Systems;
@@ -7,6 +8,8 @@ using Content.Shared.FixedPoint;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
+using Content.Shared.Zombies;
+using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -15,66 +18,110 @@ namespace Content.Shared.Backmen.Surgery.Consciousness.Systems;
 
 public abstract partial class ConsciousnessSystem : EntitySystem
 {
-    [Dependency] protected readonly IGameTiming Timing = default!;
+    [Dependency] protected IGameTiming Timing = default!;
 
-    [Dependency] protected readonly IRobustRandom Random = default!;
-    [Dependency] protected readonly IPrototypeManager Proto = default!;
+    [Dependency] protected IRobustRandom Random = default!;
+    [Dependency] protected IPrototypeManager Proto = default!;
 
-    [Dependency] protected readonly SharedBodySystem Body = default!;
+    [Dependency] protected SharedBodySystem Body = default!;
 
-    [Dependency] protected readonly PainSystem Pain = default!;
-    [Dependency] protected readonly WoundSystem Wound = default!;
+    [Dependency] protected PainSystem Pain = default!;
+    [Dependency] protected WoundSystem Wound = default!;
 
-    [Dependency] protected readonly MobStateSystem MobStateSys = default!;
-    [Dependency] protected readonly MobThresholdSystem MobThresholds = default!;
+    [Dependency] protected MobStateSystem MobStateSys = default!;
+    [Dependency] protected MobThresholdSystem MobThresholds = default!;
 
-    protected EntityQuery<ConsciousnessComponent> ConsciousnessQuery;
-    protected EntityQuery<MobStateComponent> MobStateQuery;
+    [Dependency] protected EntityQuery<ConsciousnessComponent> ConsciousnessQuery = default!;
+    [Dependency] protected EntityQuery<MobStateComponent> MobStateQuery = default!;
+    [Dependency] protected EntityQuery<PainImmuneComponent> PainImmuneQuery = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        InitNet();
-
-        ConsciousnessQuery = GetEntityQuery<ConsciousnessComponent>();
-        MobStateQuery = GetEntityQuery<MobStateComponent>();
+        SubscribeLocalEvent<ConsciousnessComponent, MobStateChangedEvent>(OnRelayState);
+        SubscribeLocalEvent<ConsciousnessComponent, AfterAutoHandleStateEvent>(OnAfterAutoHandleState);
     }
 
-    protected void UpdateConsciousnessModifiers(EntityUid uid, ConsciousnessComponent? consciousness)
+    private void OnAfterAutoHandleState(Entity<ConsciousnessComponent> ent, ref AfterAutoHandleStateEvent args)
     {
-        if (!ConsciousnessQuery.Resolve(uid, ref consciousness))
+        SanitizeConsciousnessDictionaries(ent.Comp);
+    }
+
+    private void SanitizeConsciousnessDictionaries(ConsciousnessComponent component)
+    {
+        if (component.NerveSystem != null && TerminatingOrDeleted(component.NerveSystem.Value.Owner))
+            component.NerveSystem = null;
+
+        foreach (var key in component.Modifiers.Keys.ToArray())
+        {
+            if (TerminatingOrDeleted(key.Item1))
+                component.Modifiers.Remove(key);
+        }
+
+        foreach (var key in component.Multipliers.Keys.ToArray())
+        {
+            if (TerminatingOrDeleted(key.Item1))
+                component.Multipliers.Remove(key);
+        }
+
+        foreach (var (id, (entity, _, _)) in component.RequiredConsciousnessParts.ToArray())
+        {
+            if (entity != null && TerminatingOrDeleted(entity.Value))
+                component.RequiredConsciousnessParts.Remove(id);
+        }
+    }
+
+    protected virtual void OnMobStateChanged(Entity<ConsciousnessComponent> consciousness,
+        ref MobStateChangedEvent args)
+    {
+        // do nothing
+    }
+
+    private void OnRelayState(Entity<ConsciousnessComponent> ent, ref MobStateChangedEvent args)
+    {
+        if (TryGetNerveSystem(ent.AsNullable(), out var nerveSys))
+        {
+            RaiseLocalEvent(nerveSys.Value, args);
+        }
+
+        OnMobStateChanged(ent, ref args);
+    }
+
+    protected void UpdateConsciousnessModifiers(Entity<ConsciousnessComponent?> uid)
+    {
+        if (!ConsciousnessQuery.Resolve(uid, ref uid.Comp))
             return;
 
         var totalDamage
-            = consciousness.Modifiers.Aggregate(FixedPoint2.Zero,
-                (current, modifier) => current + modifier.Value.Change * consciousness.Multiplier);
+            = uid.Comp.Modifiers.Aggregate(FixedPoint2.Zero,
+                (current, modifier) => current + modifier.Value.Change * uid.Comp.Multiplier);
 
-        var newConsciousness = consciousness.Cap + totalDamage;
-        if (newConsciousness != consciousness.RawConsciousness)
+        var newConsciousness = uid.Comp.Cap + totalDamage;
+        if (newConsciousness != uid.Comp.RawConsciousness)
         {
-            var ev = new ConsciousnessChangedEvent(consciousness, newConsciousness, consciousness.RawConsciousness);
+            var ev = new ConsciousnessChangedEvent(uid.Comp, newConsciousness, uid.Comp.RawConsciousness);
             RaiseLocalEvent(uid, ref ev);
         }
 
-        consciousness.RawConsciousness = newConsciousness;
+        uid.Comp.RawConsciousness = newConsciousness;
 
-        CheckConscious(uid, consciousness);
-        Dirty(uid, consciousness);
+        CheckConscious(uid);
+        DirtyField(uid, uid.Comp, nameof(ConsciousnessComponent.RawConsciousness));
     }
 
-    protected void UpdateConsciousnessMultipliers(EntityUid uid, ConsciousnessComponent? consciousness)
+    protected void UpdateConsciousnessMultipliers(Entity<ConsciousnessComponent?> uid)
     {
-        if (!ConsciousnessQuery.Resolve(uid, ref consciousness))
+        if (!ConsciousnessQuery.Resolve(uid, ref uid.Comp))
             return;
 
-        consciousness.Multiplier = consciousness.Multipliers.Count == 0
+        uid.Comp.Multiplier = uid.Comp.Multipliers.Count == 0
             ? FixedPoint2.New(1)
-            : consciousness.Multipliers.Aggregate(FixedPoint2.Zero,
-            (current, multiplier) => current + multiplier.Value.Change) / consciousness.Multipliers.Count;
+            : uid.Comp.Multipliers.Aggregate(FixedPoint2.Zero,
+            (current, multiplier) => current + multiplier.Value.Change) / uid.Comp.Multipliers.Count;
 
-        CheckConscious(uid, consciousness);
-        Dirty(uid, consciousness);
+        CheckConscious(uid);
+        DirtyField(uid, uid.Comp, nameof(ConsciousnessComponent.Multiplier));
     }
 
     /// <summary>
@@ -84,73 +131,73 @@ public abstract partial class ConsciousnessSystem : EntitySystem
     /// <param name="isConscious">should this entity be conscious</param>
     /// <param name="consciousness">consciousness component</param>
     protected void SetConscious(
-        EntityUid target,
-        bool isConscious,
-        ConsciousnessComponent? consciousness = null)
+        Entity<ConsciousnessComponent?> target,
+        bool isConscious)
     {
-        if (!Resolve(target, ref consciousness))
+        if (!Resolve(target, ref target.Comp))
             return;
 
-        consciousness.IsConscious = isConscious;
-        Dirty(target, consciousness);
+        target.Comp.IsConscious = isConscious;
+        DirtyField(target, target.Comp, nameof(ConsciousnessComponent.IsConscious));
     }
 
     protected void UpdateMobState(
-        EntityUid target,
-        ConsciousnessComponent? consciousness = null,
-        MobStateComponent? mobState = null)
+        Entity<ConsciousnessComponent?, MobStateComponent?> target)
     {
         if (TerminatingOrDeleted(target)
-            || !ConsciousnessQuery.Resolve(target, ref consciousness)
-            || !MobStateQuery.Resolve(target, ref mobState, false))
+            || !ConsciousnessQuery.Resolve(target, ref target.Comp1)
+            || !MobStateQuery.Resolve(target, ref target.Comp2, false))
+            return;
+
+        // Zombies are revived corpses; consciousness must not re-apply death/unconscious states.
+        if (HasComp<ZombieComponent>(target.Owner))
             return;
 
         var newMobState = MobState.Alive;
-        if (TryGetNerveSystem(target, out var nerveSys))
+        if (!PainImmuneQuery.HasComp(target) && TryGetNerveSystem(target, out var nerveSys))
         {
             var comp = nerveSys.Value.Comp;
             if (comp.Pain >= comp.SoftPainCap || comp.ForcePainCrit)
                 newMobState = MobState.SoftCritical;
         }
 
-        if (!consciousness.ForceConscious)
+        if (!target.Comp1.ForceConscious)
         {
-            if (!consciousness.IsConscious)
+            if (!target.Comp1.IsConscious)
                 newMobState = MobState.Critical;
 
-            if (consciousness.PassedOut)
+            if (target.Comp1.PassedOut)
                 newMobState = MobState.Critical;
 
-            if (consciousness.ForceUnconscious)
+            if (target.Comp1.ForceUnconscious)
                 newMobState = MobState.Critical;
 
-            if (consciousness.Consciousness <= 0)
+            if (target.Comp1.Consciousness <= 0)
                 newMobState = MobState.Dead;
         }
 
-        if (consciousness.ForceDead)
+        if (target.Comp1.ForceDead)
             newMobState = MobState.Dead;
 
-        MobStateSys.ChangeMobState(target, newMobState, mobState);
-        MobThresholds.VerifyThresholds(target, mobState: mobState);
+        MobStateSys.ChangeMobState(target, newMobState, target);
+        MobThresholds.VerifyThresholds(target, mobState: target.Comp2);
     }
 
     protected void CheckRequiredParts(
-        EntityUid bodyId,
-        ConsciousnessComponent consciousness)
+        Entity<ConsciousnessComponent> bodyId)
     {
         var alive = true;
         var conscious = true;
 
-        foreach (var (/*identifier */_, (entity, forcesDeath, isLost)) in consciousness.RequiredConsciousnessParts)
+        foreach (var (/*identifier */_, (entity, forcesDeath, isLost)) in bodyId.Comp.RequiredConsciousnessParts)
         {
             if (entity == null || !isLost)
                 continue;
 
             if (forcesDeath)
             {
-                consciousness.ForceDead = true;
-                Dirty(bodyId, consciousness);
+                bodyId.Comp.ForceDead = true;
+                DirtyField(bodyId, bodyId.Comp, nameof(ConsciousnessComponent.ForceDead));
 
                 alive = false;
                 break;
@@ -161,12 +208,14 @@ public abstract partial class ConsciousnessSystem : EntitySystem
 
         if (alive)
         {
-            consciousness.ForceDead = false;
-            consciousness.ForceUnconscious = !conscious;
+            bodyId.Comp.ForceDead = false;
+            bodyId.Comp.ForceUnconscious = !conscious;
 
-            Dirty(bodyId, consciousness);
+            DirtyFields(bodyId, bodyId.Comp, null,
+                nameof(ConsciousnessComponent.ForceDead),
+                nameof(ConsciousnessComponent.ForceUnconscious));
         }
 
-        CheckConscious(bodyId, consciousness);
+        CheckConscious(bodyId.AsNullable());
     }
 }

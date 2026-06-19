@@ -3,187 +3,225 @@
   suffix: Filled, Hardsuit
   parent: LockerWarden
   components:
-  - type: StorageFill
-    contents:
-      - id: FlashlightSeclite
-      - id: WeaponDisabler
-      - id: ClothingBeltSecurityFilled
-      - id: Flash
-      - id: ClothingEyesGlassesSecurity
-      - id: ClothingHandsGlovesCombat
-      - id: ClothingShoesBootsJack
-      - id: ClothingOuterCoatWarden
-      - id: ClothingOuterWinterWarden
-      - id: RubberStampWarden
-      - id: DoorRemoteArmory
-      - id: ClothingOuterHardsuitWarden
-      - id: HoloprojectorSecurity
-      - id: ClothingEyesHudSecurity
-      - id: ClothingHeadCage # backmen
-        amount: 2
-      - id: BookSpaceLaw
-      - id: ClothingHeadHatCapWardenAlt # Corvax-SecFashion
-      - id: ClothingOuterCoatWardenAlt # Corvax-SecFashion
-      - id: ClothingBackpackWarden # Corvax-SecFashion
-      - id: BoxBodyBagPrisoner # Backmen-AdvancedBodyBags
-      - id: ClothingBackpackElectropack
-        amount: 2
-      - id: RemoteSignaller
-        amount: 2
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:AllSelector
+        children:
+        - !type:NestedSelector
+          tableId: FillLockerWarden
+        - !type:NestedSelector
+          tableId: FillLockerWardenHarduit
 
 - type: entity
   id: LockerWardenFilled
   suffix: Filled
   parent: LockerWarden
   components:
-  - type: StorageFill
-    contents:
-      - id: FlashlightSeclite
-      - id: WeaponDisabler
-        prob: 0.3
-      - id: ClothingHeadHatWarden
-      - id: ClothingHeadHatBeretWarden
-      - id: ClothingHeadHatCapWardenAlt # Corvax-SecFashion
-      - id: ClothingBeltSecurityFilled
-      - id: Flash
-      - id: ClothingEyesGlassesSecurity
-      - id: ClothingHandsGlovesCombat
-      - id: ClothingShoesBootsJack
-      - id: ClothingOuterCoatWarden
-      - id: ClothingOuterWinterWarden
-      - id: ClothingOuterCoatWardenAlt # Corvax-SecFashion
-      - id: RubberStampWarden
-      - id: DoorRemoteArmory
-      - id: HoloprojectorSecurity
-      - id: ClothingEyesHudSecurity
-      - id: ClothingHeadCage # backmen
-        amount: 2
-      - id: BookSpaceLaw
-      - id: ClothingBackpackWarden # Corvax-SecFashion
-      - id: BoxBodyBagPrisoner # Backmen-AdvancedBodyBags
-      - id: ClothingBackpackElectropack
-        amount: 2
-      - id: RemoteSignaller
-        amount: 2
-      - id: Binoculars
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillLockerWarden
+
+- type: entityTable
+  id: FillLockerWarden
+  table: !type:AllSelector
+    children:
+    - id: FlashlightSeclite
+    - id: WeaponDisabler
+      prob: 0.3  # backmen edit: шанс на дисаблер
+    - id: ClothingBeltSecurityFilled
+    - id: Flash
+    - id: ClothingEyesGlassesSecurity
+    - id: ClothingHandsGlovesCombat
+    - id: ClothingShoesBootsJack
+    - id: ClothingOuterCoatWarden
+    - id: ClothingOuterWinterWarden
+    - id: ClothingOuterCoatWardenAlt # Corvax-SecFashion
+    - id: RubberStampWarden
+    - id: DoorRemoteArmory
+    - id: HoloprojectorSecurity
+    - id: ClothingEyesHudSecurity
+    - id: ClothingHeadCage # backmen edit
+      amount: 2
+    - id: BookSpaceLaw
+    - id: ClothingBackpackWarden # Corvax-SecFashion
+    - id: BoxBodyBagPrisoner # backmen edit: AdvancedBodyBags
+    - id: ClothingBackpackElectropack
+      amount: 2
+    - id: RemoteSignaller
+      amount: 2
+    - id: Binoculars
+    # backmen edit start: кастомные шапки для Warden
+    - id: ClothingHeadHatWarden
+    - id: ClothingHeadHatBeretWarden
+    - id: ClothingHeadHatCapWardenAlt # Corvax-SecFashion
+    # backmen edit end
+
+- type: entityTable
+  id: FillLockerWardenHarduit
+  table: !type:AllSelector
+    children:
+    - id: ClothingOuterHardsuitWarden
+    - id: OxygenTankFilled
+    - id: ClothingMaskBreath
 
 - type: entity
   id: LockerSecurityFilled
   suffix: Filled
   parent: LockerSecurity
   components:
-  - type: StorageFill
-    contents:
-      - id: Eftpos # backmen
-      - id: FlashlightSeclite
-        prob: 0.8
-      - id: WeaponDisabler
-      - id: ClothingUniformJumpsuitSecGrey
-        prob: 0.3
-      - id: ClothingHeadHelmetBasic
-      - id: ClothingOuterArmorBasic
-      - id: ClothingBeltSecurityFilled
-      - id: Flash
-        prob: 0.5
-      - id: ClothingEyesGlassesSecurity
-      - id: ClothingHeadsetSecurity
-      - id: ClothingHandsGlovesColorBlack
-      - id: ClothingShoesBootsJack
-      - id: WeaponMeleeNeedle
-        prob: 0.1
-      - id: ClothingOuterCoatSecurityOvercoat # Corvax-SecFashion
-        prob: 0.2
-      - id: ClothingEyesHudSecurity
-      - id: HoloprojectorSecurity
-        prob: 0.6
-      - id: BookSpaceLaw
-        prob: 0.5
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillLockerSecurity
 
-# backmen brigmedic's locker reworked
+- type: entityTable
+  id: FillLockerSecurity
+  table: !type:AllSelector
+    children:
+    - id: Eftpos # backmen edit
+    - id: FlashlightSeclite
+      prob: 0.8
+    - id: WeaponDisabler
+    - id: ClothingUniformJumpsuitSecGrey
+      prob: 0.3
+    - id: ClothingHeadHelmetBasic
+    - id: ClothingOuterArmorBasic
+    - id: ClothingBeltSecurityFilled
+    - id: Flash
+      prob: 0.5
+    - id: ClothingEyesGlassesSecurity
+    - id: ClothingHeadsetSecurity
+    - id: ClothingHandsGlovesColorBlack
+    - id: ClothingShoesBootsJack
+    - id: WeaponMeleeNeedle
+      prob: 0.1
+    - id: ClothingOuterCoatSecurityOvercoat # Corvax-SecFashion
+      prob: 0.2
+    - id: ClothingEyesHudSecurity
+    - id: HoloprojectorSecurity
+      prob: 0.6
+    - id: BookSpaceLaw
+      prob: 0.5
+
+# backmen edit start: переработанный локер Brigmedic
 - type: entity
   id: LockerBrigmedicFilled
   suffix: Brigmedic, Filled
   parent: LockerBrigmedic
   components:
-  - type: StorageFill
-    contents:
-      - id: ClothingEyesGlassesSecurity
-      - id: WeaponDisabler
-      - id: TrackingImplanter
-        amount: 2
-      - id: ClothingOuterHardsuitBrigmedic
-      - id: BoxSterileMask
-      - id: ClothingHeadHatBeretBrigmedic
-      - id: ClothingOuterCoatAMG
-      - id: ClothingUniformJumpsuitBrigmedic
-      - id: ClothingUniformJumpskirtBrigmedic
-      - id: ClothingUniformJumpskirtOfLife
-        prob: 0.1
-      - id: MedkitFilled
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillLockerBrigmedic
+
+- type: entityTable
+  id: FillLockerBrigmedic
+  table: !type:AllSelector
+    children:
+    - id: ClothingEyesGlassesSecurity
+    - id: WeaponDisabler
+    - id: TrackingImplanter
+      amount: 2
+    - id: ClothingOuterHardsuitBrigmedic
+    - id: BoxSterileMask
+    - id: ClothingHeadHatBeretBrigmedic
+    - id: ClothingOuterCoatAMG
+    - id: ClothingUniformJumpsuitBrigmedic
+    - id: ClothingUniformJumpskirtBrigmedic
+    - id: ClothingUniformJumpskirtOfLife
+      prob: 0.1
+    - id: MedkitFilled
+    - !type:GroupSelector
+      prob: 0.7
+      children:
       - id: MedkitCombatFilled
       - id: MedkitAdvancedFilled
       - id: MedkitOxygenFilled
-        prob: 0.4
+        prob: 0.8
       - id: MedkitBruteFilled
-        prob: 0.4
+        prob: 0.8
       - id: MedkitToxinFilled
-        prob: 0.4
+        prob: 0.8
       - id: MedkitBurnFilled
-        prob: 0.4
-      - id: ClothingHeadCage # backmen
-      - id: ClothingHeadsetAltBrigmedic # backmen
-      - id: BoxBodyBagPrisoner # Backmen-AdvancedBodyBags
-      - id: MikaPlush # backmen 
+        prob: 1.8
+      - id: ClothingHeadCage # backmen edit
+      - id: ClothingHeadsetAltBrigmedic # backmen edit
+      - id: BoxBodyBagPrisoner # backmen edit: AdvancedBodyBags
+      - id: MikaPlush # backmen edit
         prob: 0.1
+      - id: ClothingNeckCloakMoth # backmen edit: Moth-pocalypse
+        prob: 0.15
+# backmen edit end
 
 - type: entity
   id: LockerDetectiveFilled
   suffix: Filled
   parent: LockerDetective
   components:
-  - type: StorageFill
-    contents:
-      - id: ClothingEyesGlassesNoir
-      #- id: ClothingHeadHatDetGadget
-      - id: ClothingNeckTieDet
-      - id: ClothingOuterVestDetective
-      - id: ClothingOuterCoatDetectiveLoadout
-      - id: FlippoEngravedLighter
-      - id: FlashlightSeclite
-      - id: ForensicScanner
-      - id: LogProbeCartridge
-      - id: BoxForensicPad
-      - id: DrinkDetFlask
-      - id: ClothingHandsGlovesForensic
-      - id: BookBusido # Corvax-Books
-      - id: ClothingHeadCage # backmen
-        amount: 1
-      - id: RubberStampDetective
-      - id: HoloprojectorSecurity
-      - id: BoxEvidenceMarkers
-      - id: HandLabeler
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillLockerDetective
+
+- type: entityTable
+  id: FillLockerDetective
+  table: !type:AllSelector
+    children:
+    - id: ClothingEyesGlassesNoir
+    - id: ClothingNeckTieDet
+    - id: ClothingOuterVestDetective
+    - id: ClothingOuterCoatDetectiveLoadout
+    - id: FlippoEngravedLighter
+    - id: FlashlightSeclite
+    - id: ForensicScanner
+    - id: LogProbeCartridge
+    - id: BoxForensicPad
+    - id: DrinkDetFlask
+    - id: ClothingHandsGlovesForensic
+    - id: BookBusido # Corvax-Books
+    - id: ClothingHeadCage # backmen edit
+      amount: 1
+    - id: RubberStampDetective
+    - id: HoloprojectorSecurity
+    - id: BoxEvidenceMarkers
+    - id: HandLabeler
 
 - type: entity
   id: ClosetBombFilled
   parent: ClosetBomb
   suffix: Filled
   components:
-  - type: StorageFill
-    contents:
-      - id: ClothingHeadHelmetBombSuit
-      - id: ClothingOuterSuitBomb
-      - id: Wirecutter
-      - id: Screwdriver
-      - id: Multitool
-        prob: 0.5
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillClosetBomb
+
+- type: entityTable
+  id: FillClosetBomb
+  table: !type:AllSelector
+    children:
+    - id: ClothingHeadHelmetBombSuit
+    - id: ClothingOuterSuitBomb
+    - id: Wirecutter
+    - id: Screwdriver
+    - id: Multitool
+      prob: 0.5
 
 - type: entity
   parent: [GunSafeBaseSecure, BaseSecurityContraband]
   id: GunSafeDisabler
   name: disabler safe
   components:
-  - type: StorageFill
-    contents:
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillGunSafeDisabler
+
+- type: entityTable
+  id: FillGunSafeDisabler
+  table: !type:AllSelector
+    children:
     - id: WeaponDisabler
       amount: 5
 
@@ -193,11 +231,18 @@
   name: mk58 safe
   categories: [ HideSpawnMenu ]
   components:
-  - type: StorageFill
-    contents:
-    - id: WeaponPistolACP14
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillGunSafePistolMk58
+
+- type: entityTable
+  id: FillGunSafePistolMk58
+  table: !type:AllSelector
+    children:
+    - id: WeaponPistolACP14  # backmen edit: ACP14 вместо Mk58
       amount: 4
-    - id: MagazinePistol9x17
+    - id: MagazinePistol9x17  # backmen edit: 9x17 вместо .35 auto
       amount: 8
 
 - type: entity
@@ -206,9 +251,16 @@
   name: lecter safe
   categories: [ HideSpawnMenu ]
   components:
-  - type: StorageFill
-    contents:
-    - id: WeaponRifleAR18
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillGunSafeRifleLecter
+
+- type: entityTable
+  id: FillGunSafeRifleLecter
+  table: !type:AllSelector
+    children:
+    - id: WeaponRifleAR18  # backmen edit: AR-18 вместо Lecter
       amount: 2
     - id: MagazineRifle
       amount: 4
@@ -219,9 +271,16 @@
   name: drozd safe
   categories: [ HideSpawnMenu ]
   components:
-  - type: StorageFill
-    contents:
-    - id: WeaponSubMachineGunVectorSpecial
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillGunSafeSubMachineGunDrozd
+
+- type: entityTable
+  id: FillGunSafeSubMachineGunDrozd
+  table: !type:AllSelector
+    children:
+    - id: WeaponSubMachineGunVectorSpecial  # backmen edit: Vector Special вместо Drozd
       amount: 2
     - id: MagazinePistolSubMachineGun
       amount: 4
@@ -232,9 +291,16 @@
   name: enforcer safe
   categories: [ HideSpawnMenu ]
   components:
-  - type: StorageFill
-    contents:
-    - id: WeaponShotgun39
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillGunSafeShotgunEnforcer
+
+- type: entityTable
+  id: FillGunSafeShotgunEnforcer
+  table: !type:AllSelector
+    children:
+    - id: WeaponShotgun39  # backmen edit: Shotgun39 вместо Enforcer
       amount: 2
     - id: BoxLethalshot
       amount: 4
@@ -245,12 +311,19 @@
   name: kammerer safe
   categories: [ HideSpawnMenu ]
   components:
-  - type: StorageFill
-    contents:
-    - id: WeaponShotguntrenchgun4034
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillGunSafeShotgunKammerer
+
+- type: entityTable
+  id: FillGunSafeShotgunKammerer
+  table: !type:AllSelector
+    children:
+    - id: WeaponShotguntrenchgun4034  # backmen edit: Trenchgun4034 вместо Kammerer
       amount: 2
     - id: BoxLethalshot
-      amount: 2
+      amount: 4
 
 - type: entity
   id: GunSafeSubMachineGunWt550
@@ -259,9 +332,16 @@
   name: wt550 safe
   categories: [ HideSpawnMenu ]
   components:
-  - type: StorageFill
-    contents:
-    - id: WeaponSubMachineGunMP5
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillGunSafeSubMachineGunWt550
+
+- type: entityTable
+  id: FillGunSafeSubMachineGunWt550
+  table: !type:AllSelector
+    children:
+    - id: WeaponSubMachineGunMP5  # backmen edit: MP5 вместо WT550
       amount: 2
     - id: MagazinePistolSubMachineGunTopMounted
       amount: 4
@@ -272,7 +352,14 @@
   name: laser safe
   categories: [ HideSpawnMenu ]
   components:
-  - type: StorageFill
-    contents:
-    - id: WeaponEarthGovLaserRifle
+  - type: EntityTableContainerFill
+    containers:
+      entity_storage: !type:NestedSelector
+        tableId: FillGunSafeLaserCarbine
+
+- type: entityTable
+  id: FillGunSafeLaserCarbine
+  table: !type:AllSelector
+    children:
+    - id: WeaponEarthGovLaserRifle  # backmen edit: EarthGov Laser Rifle
       amount: 3

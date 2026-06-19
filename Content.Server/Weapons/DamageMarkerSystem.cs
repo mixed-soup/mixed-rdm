@@ -4,17 +4,18 @@ using Content.Server._Lavaland.Pressure;
 using Content.Shared._Lavaland.Weapons.Marker;
 using Content.Shared._White.BackStab;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Stunnable;
 
 namespace Content.Server.Weapons;
 
-public sealed class DamageMarkerSystem : SharedDamageMarkerSystem
+public sealed partial class DamageMarkerSystem : SharedDamageMarkerSystem
 {
     // Lavaland Change Start
-    [Dependency] private readonly PressureEfficiencyChangeSystem _pressure = default!;
-    [Dependency] private readonly BackStabSystem _backstab = default!;
-    [Dependency] private readonly SharedStunSystem _stun = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
+    [Dependency] private PressureEfficiencyChangeSystem _pressure = default!;
+    [Dependency] private BackStabSystem _backstab = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
     public override void Initialize()
     {
         base.Initialize();
@@ -37,15 +38,17 @@ public sealed class DamageMarkerSystem : SharedDamageMarkerSystem
 
             if (boost.BackstabBoost != null
                 && _backstab.TryBackstab(uid, args.User, Angle.FromDegrees(45d), playSound: false))
-                _damageable.TryChangeDamage(uid,
-                (boost.BackstabBoost + boost.Boost) * pressureMultiplier,
-                damageable: damageable,
-                origin: args.User);
+            {
+                _damageable.TryChangeDamage((uid,damageable),
+                    (boost.BackstabBoost + boost.Boost) * pressureMultiplier,
+                    origin: args.User);
+            }
             else
-                _damageable.TryChangeDamage(uid,
-                boost.Boost * pressureMultiplier,
-                damageable: damageable,
-                origin: args.User);
+            {
+                _damageable.TryChangeDamage((uid,damageable),
+                    boost.Boost * pressureMultiplier,
+                    origin: args.User);
+            }
         }
     }
     // Lavaland Change End

@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using Content.Shared.Backmen.Targeting;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Mobs.Components;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -12,13 +14,13 @@ namespace Content.Shared._Lavaland.Damage;
 /// <summary>
 ///     We have to use it's own system even for the damage field because WIZDEN SYSTEMS FUCKING SUUUUUUUUUUUCKKKKKKKKKKKKKKK
 /// </summary>
-public abstract class SharedDamageSquareSystem : EntitySystem
+public abstract partial class SharedDamageSquareSystem : EntitySystem
 {
-    [Dependency] private readonly SharedMapSystem _map = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly DamageableSystem _dmg = default!;
-    [Dependency] private readonly SharedAudioSystem _aud = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private SharedMapSystem _map = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private DamageableSystem _dmg = default!;
+    [Dependency] private SharedAudioSystem _aud = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private const float ImmunityFrames = 0.3f;
 
@@ -66,7 +68,7 @@ public abstract class SharedDamageSquareSystem : EntitySystem
             }
 
             // Damage
-            _dmg.TryChangeDamage(entity, field.Comp.Damage, damageable: dmg, targetPart: TargetBodyPart.Chest);
+            _dmg.ChangeDamage((entity,dmg), field.Comp.Damage, targetPart: TargetBodyPart.Chest);
             // Sound
             if (field.Comp.Sound != null)
                 _aud.PlayEntity(field.Comp.Sound, entity, entity, AudioParams.Default.WithVolume(-3f));

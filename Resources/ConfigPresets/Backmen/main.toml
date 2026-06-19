@@ -1,8 +1,8 @@
 ﻿[game]
-hostname = "🌆 Backmen [TTS]"
+hostname = "[RU][TTS] BACKMEN 🌆 [LRP]"
 maxplayers = 70
 soft_max_players = 60
-desc="""📣 Наш личный модовый не коммерческий проект, который мы ведем и разрабатываем уже более 3 лет"""
+desc="""Русскоязычный сервер Backmen\nКлассический геймплей, собственная сборка, умеренное РП\nДобро пожаловать в сообщество! ✨"""
 map_pool="BackmenDefaultMapPool"
 defaultpreset="secret"
 lobbyenabled = true
@@ -24,9 +24,9 @@ github="https://github.com/Rxup/space-station-14"
 
 [shuttle]
 arrivals = true
-arrivals_map = "/Maps/Misc/kosmoport.yml"
+#arrivals_map = "/Maps/Misc/kosmoport.yml"
 #arrivals_map = "/Maps/Backmen/Etc/terminal.yml"
-#arrivals_map = "/Maps/Misc/terminal.yml"
+arrivals_map = "/Maps/Misc/terminal.yml"
 arrivals_returns = true
 auto_call_time = 150
 auto_call_extension_time = 70
@@ -123,9 +123,6 @@ min_account_age = 1440
 
 [queue]
 enabled=true
-
-[laying]
-crawlundertables=true
 
 [vote]
 restart_required_ratio = 0.6

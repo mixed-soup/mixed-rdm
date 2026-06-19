@@ -24,13 +24,13 @@ namespace Content.Server.Cargo.Systems;
 /// <summary>
 /// This handles calculating the price of items, and implements two basic methods of pricing materials.
 /// </summary>
-public sealed class PricingSystem : EntitySystem
+public sealed partial class PricingSystem : EntitySystem
 {
-    [Dependency] private readonly IConsoleHost _consoleHost = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly BodySystem _bodySystem = default!;
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
+    [Dependency] private IConsoleHost _consoleHost = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private BodySystem _bodySystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
 
     /// <inheritdoc/>
     public override void Initialize()
@@ -90,19 +90,22 @@ public sealed class PricingSystem : EntitySystem
         if (args.Handled)
             return;
 
-        if (!TryComp<BodyComponent>(uid, out var body) || !TryComp<MobStateComponent>(uid, out var state))
+        if (!TryComp<MobStateComponent>(uid, out var state))
         {
-            Log.Error($"Tried to get the mob price of {ToPrettyString(uid)}, which has no {nameof(BodyComponent)} and no {nameof(MobStateComponent)}.");
+            Log.Error($"Tried to get the mob price of {ToPrettyString(uid)}, which has no {nameof(MobStateComponent)}.");
             return;
         }
 
-        // TODO: Better handling of missing.
-        var partList = _bodySystem.GetBodyChildren(uid, body).ToList();
-        var totalPartsPresent = partList.Sum(_ => 1);
-        var totalParts = partList.Count;
+        var partPenalty = 0.0;
+        if (TryComp<BodyComponent>(uid, out var body))
+        {
+            var partList = _bodySystem.GetBodyChildren(uid, body).ToList();
+            var totalPartsPresent = partList.Sum(_ => 1);
+            var totalParts = partList.Count;
 
-        var partRatio = totalPartsPresent / (double) totalParts;
-        var partPenalty = component.Price * (1 - partRatio) * component.MissingBodyPartPenalty;
+            var partRatio = totalPartsPresent / (double) totalParts;
+            partPenalty = component.Price * (1 - partRatio) * component.MissingBodyPartPenalty;
+        }
 
         args.Price += (component.Price - partPenalty) * (_mobStateSystem.IsAlive(uid, state) ? 1.0 : component.DeathPenalty);
     }

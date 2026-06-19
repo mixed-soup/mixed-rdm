@@ -11,12 +11,12 @@ using Robust.Shared.Timing;
 
 namespace Content.Shared.Clothing.Systems; // EinsteinEngines CODE
 
-public sealed class EmitsSoundOnMoveSystem : EntitySystem
+public sealed partial class EmitsSoundOnMoveSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedMapSystem _grid = default!;
-    [Dependency] private readonly SharedGravitySystem _gravity = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedMapSystem _grid = default!;
+    [Dependency] private SharedGravitySystem _gravity = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     private EntityQuery<InputMoverComponent> _moverQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -61,7 +61,7 @@ public sealed class EmitsSoundOnMoveSystem : EntitySystem
         if (Transform(uid).GridUid == null)
             return;
 
-        if (component.RequiresGravity && _gravity.IsWeightless(uid, physics, Transform(uid)))
+        if (component.RequiresGravity && _gravity.IsWeightless(uid))
             return;
 
         var parent = Transform(uid).ParentUid;

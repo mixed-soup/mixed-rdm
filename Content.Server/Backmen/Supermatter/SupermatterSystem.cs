@@ -13,13 +13,16 @@ using Content.Server.Station.Systems;
 using Content.Shared.Atmos;
 using Content.Shared.Audio;
 using Content.Shared.Backmen.CCVar;
-using Content.Shared.Backmen.Chat;
+
 using Content.Shared.Backmen.Supermatter;
 using Content.Shared.Backmen.Supermatter.Components;
+using Content.Shared.Backmen.Supermatter.Events;
+using Content.Shared.Chat;
 using Content.Shared.Explosion.Components;
 using Content.Shared.Interaction;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Projectiles;
+using Robust.Shared.Player;
 using Content.Shared.Radiation.Components;
 using Content.Shared.Tag;
 using Content.Shared.Whitelist;
@@ -36,7 +39,7 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Supermatter;
 
-public sealed class SupermatterSystem : SharedSupermatterSystem
+public sealed partial class SupermatterSystem : SharedSupermatterSystem
 {
     public override void Initialize()
     {
@@ -46,6 +49,7 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
         SubscribeLocalEvent<BkmSupermatterComponent, InteractHandEvent>(OnHandInteract);
         SubscribeLocalEvent<BkmSupermatterComponent, MapInitEvent>(OnMapInit);
         SubscribeLocalEvent<BkmSupermatterComponent, ComponentRemove>(OnComponentRemove);
+        SubscribeLocalEvent<BkmSupermatterComponent, BkmSupermatterProjectileHitEvent>(OnProjectileHit);
     }
 
     private const double PwrJobTime = 0.5;
@@ -115,6 +119,7 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
     {
         base.Update(frameTime);
         _pwrJobQueue.Process();
+        var now = _timing.CurTime;
 
         var q = EntityQueryEnumerator<BkmSupermatterComponent, ExplosiveComponent, RadiationSourceComponent, MetaDataComponent>();
 
@@ -126,36 +131,43 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
             var mixture = _atmosphere.GetContainingMixture(owner, true, true);
 
             {
-                supermatter.AtmosUpdateAccumulator += frameTime;
+                if (supermatter.AtmosUpdateAccumulator == TimeSpan.Zero)
+                    supermatter.AtmosUpdateAccumulator = now + supermatter.AtmosUpdateTimer;
 
-                if (supermatter.AtmosUpdateAccumulator > supermatter.AtmosUpdateTimer &&
+                if (now >= supermatter.AtmosUpdateAccumulator &&
                     mixture is { })
                 {
-                    supermatter.AtmosUpdateAccumulator -= supermatter.AtmosUpdateTimer;
+                    supermatter.AtmosUpdateAccumulator = now + supermatter.AtmosUpdateTimer;
                     _pwrJobQueue.EnqueueJob(new HandleOutputJob(frameTime, this, (owner, supermatter, xplode, rads), mixture, PwrJobTime));
                 }
             }
             {
-                supermatter.DamageUpdateAccumulator += frameTime;
+                if (supermatter.DamageUpdateAccumulator == TimeSpan.Zero)
+                    supermatter.DamageUpdateAccumulator = now + supermatter.DamageUpdateTimer;
 
-                if (supermatter.DamageUpdateAccumulator > supermatter.DamageUpdateTimer)
+                if (now >= supermatter.DamageUpdateAccumulator)
                 {
-                    supermatter.DamageUpdateAccumulator -= supermatter.DamageUpdateTimer;
+                    supermatter.DamageUpdateAccumulator = now + supermatter.DamageUpdateTimer;
                     _pwrJobQueue.EnqueueJob(new HandleDamageJob(frameTime, this, (owner, supermatter, xplode, rads), mixture, PwrJobTime));
                 }
             }
             {
-                if (supermatter.ZapAccumulator >= supermatter.ZapTimer)
+                if (supermatter.ZapAccumulator == TimeSpan.Zero)
+                    supermatter.ZapAccumulator = now + supermatter.ZapTimer;
+
+                if (now >= supermatter.ZapAccumulator)
                 {
-                    supermatter.ZapAccumulator -= supermatter.ZapTimer;
+                    supermatter.ZapAccumulator = now + supermatter.ZapTimer;
                     _pwrJobQueue.EnqueueJob(new HandleLightingJob(frameTime, this, (owner, supermatter), PwrJobTime));
                 }
             }
             {
-                supermatter.YellAccumulator += frameTime;
-                if (supermatter.YellAccumulator >= supermatter.YellTimer)
+                if (supermatter.YellAccumulator == TimeSpan.Zero)
+                    supermatter.YellAccumulator = now + supermatter.YellTimer;
+
+                if (now >= supermatter.YellAccumulator)
                 {
-                    supermatter.YellAccumulator -= supermatter.YellTimer;
+                    supermatter.YellAccumulator = now + supermatter.YellTimer;
                     AnnounceCoreDamage(owner, supermatter);
                 }
             }
@@ -288,6 +300,44 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
                 (energy + absorbedGas.Temperature * dynamicHeatModifier - Atmospherics.T0C) *
                 sMcomponent.OxygenReleaseEfficiencyModifier, 0f));
 
+        //ADT-Gas-Start: Additional gas production based on conditions
+        // Tritium production at high temperatures with plasma present
+        if (gasStorage[Gas.Plasma] > 0.1f && absorbedGas.Temperature > 500f)
+        {
+            var tritiumProduction = Math.Max(
+                energy * gasStorage[Gas.Plasma] * 0.0001f * dynamicHeatModifier,
+                0f);
+            absorbedGas.AdjustMoles(Gas.Tritium, tritiumProduction);
+        }
+
+        // Water vapor production at very high temperatures
+        if (absorbedGas.Temperature > 600f && gasStorage[Gas.Oxygen] > 0.2f)
+        {
+            var waterVaporProduction = Math.Max(
+                (absorbedGas.Temperature - 600f) * 0.00005f * gasStorage[Gas.Oxygen],
+                0f);
+            absorbedGas.AdjustMoles(Gas.WaterVapor, waterVaporProduction);
+        }
+
+        // Carbon dioxide as a byproduct of reactions
+        if (gasStorage[Gas.Oxygen] > 0.1f && energy > 1000f)
+        {
+            var co2Production = Math.Max(
+                energy * 0.00001f * gasStorage[Gas.Oxygen],
+                0f);
+            absorbedGas.AdjustMoles(Gas.CarbonDioxide, co2Production);
+        }
+
+        // Hydrogen production when plasma and tritium are present at high temperatures
+        if (gasStorage[Gas.Plasma] > 0.05f && gasStorage[Gas.Tritium] > 0.05f && absorbedGas.Temperature > 800f)
+        {
+            var hydrogenProduction = Math.Max(
+                energy * Math.Min(gasStorage[Gas.Plasma], gasStorage[Gas.Tritium]) * 0.00008f,
+                0f);
+            absorbedGas.AdjustMoles(Gas.Hydrogen, hydrogenProduction);
+        }
+        //ADT-Gas-End
+
         _atmosphere.Merge(mixture, absorbedGas);
 
         var powerReduction = (float) Math.Pow(sMcomponent.Power / 500, 3);
@@ -414,7 +464,7 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
         }
         finally
         {
-            Dirty(uid,sMcomponent);
+            DirtyField(uid, sMcomponent, nameof(BkmSupermatterComponent.Damage));
         }
     }
     #endregion
@@ -474,16 +524,18 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
         if (sMcomponent.Damage < sMcomponent.DamageDelaminationPoint && sMcomponent.Delamming)
         {
             sMcomponent.Delamming = false;
+            sMcomponent.DelamTimerAccumulator = TimeSpan.Zero;
             AnnounceCoreDamage(uid, sMcomponent);
             return;
         }
 
-        sMcomponent.DelamTimerAccumulator += frameTime + sMcomponent.DamageUpdateTimer;
+        if (sMcomponent.DelamTimerAccumulator == TimeSpan.Zero)
+            sMcomponent.DelamTimerAccumulator = _timing.CurTime + sMcomponent.DelamTimer;
 
 
         //TODO: make tesla(?) spawn at SupermatterComponent.PowerPenaltyThreshold and think up other delam types
         //times up, explode or make a singulo
-        if (!(sMcomponent.DelamTimerAccumulator >= sMcomponent.DelamTimer))
+        if (_timing.CurTime < sMcomponent.DelamTimerAccumulator)
             return;
 
         switch (sMcomponent.PreferredDelamType)
@@ -493,21 +545,34 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
             //    break;
 
             case DelamType.Singulo:
+                {
+                    var baseRadius = _explosion.IntensityToRadius(xplode.TotalIntensity, xplode.IntensitySlope, xplode.MaxIntensity);
+                    _explosion.TriggerExplosive(uid, xplode, radius: baseRadius * 100f);
+                }
                 Spawn(sMcomponent.SingularitySpawnPrototype, xform.Coordinates);
                 break;
 
             case DelamType.Tesla:
+                {
+                    var baseRadius = _explosion.IntensityToRadius(xplode.TotalIntensity, xplode.IntensitySlope, xplode.MaxIntensity);
+                    _explosion.TriggerExplosive(uid, xplode, radius: baseRadius * 100f, totalIntensity: xplode.TotalIntensity);
+                }
                 Spawn(sMcomponent.TeslaSpawnPrototype, xform.Coordinates);
                 break;
 
             default:
-                _explosion.TriggerExplosive(uid);
+                {
+                    // Exact scaling request: make the explosion radius 100x larger.
+                    var baseRadius = _explosion.IntensityToRadius(xplode.TotalIntensity, xplode.IntensitySlope, xplode.MaxIntensity);
+                    _explosion.TriggerExplosive(uid, xplode, radius: baseRadius * 100f, totalIntensity: xplode.TotalIntensity);
+                }
                 break;
         }
 
         sMcomponent.AudioStream = _audio.Stop(sMcomponent.AudioStream);
         _ambient.SetAmbience(uid, false);
         sMcomponent.Delamming = false;
+        sMcomponent.DelamTimerAccumulator = TimeSpan.Zero;
     }
 
     private void HandleSoundLoop(EntityUid uid, BkmSupermatterComponent sm)
@@ -566,7 +631,7 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
                 _alert.SetLevel((EntityUid) station, sm.AlertCodeDeltaId, true, true, true, false);
 
             sb.AppendLine(Loc.GetString(loc));
-            sb.AppendLine(Loc.GetString("supermatter-seconds-before-delam", ("seconds", sm.DelamTimer)));
+            sb.AppendLine(Loc.GetString("supermatter-seconds-before-delam", ("seconds", (int) sm.DelamTimer.TotalSeconds)));
 
             message = sb.ToString();
             global = true;
@@ -613,11 +678,26 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
 
     #endregion
 
+    private void OnProjectileHit(EntityUid uid, BkmSupermatterComponent supermatter, ref BkmSupermatterProjectileHitEvent args)
+    {
+        var coords = Transform(uid).Coordinates;
+
+        RaiseNetworkEvent(
+            new ImpactEffectEvent(supermatter.ProjectileHitEffect, GetNetCoordinates(coords)),
+            Filter.Pvs(coords, entityMan: EntityManager));
+    }
+
     private void OnHandInteract(EntityUid uid, BkmSupermatterComponent supermatter, InteractHandEvent args)
     {
         var target = args.User;
-        if (_supermatterImmuneQuery.HasComp(target))
+        var ev = new BkmSupermatterImmuneEvent(target, uid);
+        RaiseLocalEvent(target, ev);
+        RaiseLocalEvent(uid, ev);
+
+        if (ev.Cancelled)
             return;
+
+        args.Handled = true;
 
         supermatter.MatterPower += 200;
         Spawn(Ash, Transform(target).Coordinates);
@@ -644,15 +724,16 @@ public sealed class SupermatterSystem : SharedSupermatterSystem
     }
 
 
-    [Dependency] private readonly AtmosphereSystem _atmosphere = default!;
-    [Dependency] private readonly ChatSystem _chat = default!;
-    [Dependency] private readonly ExplosionSystem _explosion = default!;
-    [Dependency] private readonly TransformSystem _xform = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly AmbientSoundSystem _ambient = default!;
-    [Dependency] private readonly LightningSystem _lightning = default!;
-    [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly AlertLevelSystem _alert = default!;
-    [Dependency] private readonly StationSystem _station = default!;
+    [Dependency] private AtmosphereSystem _atmosphere = default!;
+    [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private ExplosionSystem _explosion = default!;
+    [Dependency] private TransformSystem _xform = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private AmbientSoundSystem _ambient = default!;
+    [Dependency] private LightningSystem _lightning = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private AlertLevelSystem _alert = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
 }

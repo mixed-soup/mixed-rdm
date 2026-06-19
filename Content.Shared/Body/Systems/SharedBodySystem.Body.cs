@@ -21,6 +21,7 @@ using Content.Shared.Popups;
 using Content.Shared.Rejuvenate;
 using Content.Shared.Silicons.Borgs.Components;
 using Content.Shared.Standing;
+using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Containers;
@@ -38,12 +39,12 @@ public partial class SharedBodySystem
      * - Each "connection" is a body part (e.g. arm, hand, etc.) and each part can also contain organs.
      */
 
-    [Dependency] private readonly WoundSystem _woundSystem = default!; // backmen edit
-    [Dependency] private readonly ItemSlotsSystem _slots = default!;
-    [Dependency] private readonly GibbingSystem _gibbingSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly TraumaSystem _trauma = default!; // backmen edit
+    [Dependency] private WoundSystem _woundSystem = default!; // backmen edit
+    [Dependency] private ItemSlotsSystem _slots = default!;
+    [Dependency] private GibbingSystem _gibbingSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private TraumaSystem _trauma = default!; // backmen edit
     private const float GibletLaunchImpulse = 8;
     private const float GibletLaunchImpulseVariance = 3;
 
@@ -244,14 +245,18 @@ public partial class SharedBodySystem
     }
 
     // backmen edit start
-    private void OnRejuvenate(EntityUid ent, BodyComponent body, ref RejuvenateEvent args)
+    [PublicAPI]
+    public void ForceRestoreBody(Entity<BodyComponent?> ent, bool removeWounds = true)
     {
-        if (body.Prototype == null)
+        if(!Resolve(ent, ref ent.Comp, logMissing: false))
             return;
 
-        var prototype = Prototypes.Index(body.Prototype.Value);
+        if (ent.Comp.Prototype == null)
+            return;
 
-        var rootPart = GetRootPartOrNull(ent, body);
+        var prototype = Prototypes.Index(ent.Comp.Prototype.Value);
+
+        var rootPart = GetRootPartOrNull(ent, ent);
         if (rootPart == null)
             return;
 
@@ -385,28 +390,35 @@ public partial class SharedBodySystem
             }
         }
 
-        if (_trauma.TryGetBodyTraumas(ent, out var traumas, bodyComp: body))
+        if (removeWounds)
         {
-            foreach (var trauma in traumas)
+            if (_trauma.TryGetBodyTraumas(ent, out var traumas, bodyComp: ent.Comp))
             {
-                _trauma.RemoveTrauma(trauma);
-            }
-        }
-
-        foreach (var bodyPart in GetBodyChildren(ent, body))
-        {
-            if (!TryComp<WoundableComponent>(bodyPart.Id, out var woundable))
-                continue;
-
-            var bone = woundable.Bone.ContainedEntities.FirstOrNull();
-            if (TryComp<BoneComponent>(bone, out var boneComp))
-            {
-                _trauma.SetBoneIntegrity(bone.Value, boneComp.IntegrityCap, boneComp);
+                foreach (var trauma in traumas)
+                {
+                    _trauma.RemoveTrauma(trauma);
+                }
             }
 
-            _woundSystem.TryHaltAllBleeding(bodyPart.Id, woundable);
-            _woundSystem.ForceHealWoundsOnWoundable(bodyPart.Id, out _);
+            foreach (var bodyPart in GetBodyChildren(ent, ent.Comp))
+            {
+                if (!TryComp<WoundableComponent>(bodyPart.Id, out var woundable))
+                    continue;
+
+                var bone = woundable.Bone.ContainedEntities.FirstOrNull();
+                if (TryComp<BoneComponent>(bone, out var boneComp))
+                {
+                    _trauma.SetBoneIntegrity(bone.Value, boneComp.IntegrityCap, boneComp);
+                }
+
+                _woundSystem.TryHaltAllBleeding(bodyPart.Id, woundable);
+                _woundSystem.ForceHealWoundsOnWoundable(bodyPart.Id, out _);
+            }
         }
+    }
+    private void OnRejuvenate(Entity<BodyComponent> ent, ref RejuvenateEvent args)
+    {
+        ForceRestoreBody(ent.AsNullable());
     }
     // backmen edit end
 

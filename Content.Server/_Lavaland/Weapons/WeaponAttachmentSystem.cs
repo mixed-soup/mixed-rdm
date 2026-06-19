@@ -1,16 +1,17 @@
 using Content.Server.Kitchen.Components;
 using Content.Shared._Lavaland.Weapons;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Kitchen.Components;
 using Content.Shared.Toggleable;
 using Content.Shared.Light;
 using Content.Shared.Light.Components;
 
 namespace Content.Server._Lavaland.Weapons;
 
-public sealed class WeaponAttachmentSystem : SharedWeaponAttachmentSystem
+public sealed partial class WeaponAttachmentSystem : SharedWeaponAttachmentSystem
 {
-    [Dependency] private readonly SharedHandheldLightSystem _handheldLight = default!;
-    [Dependency] private readonly ItemSlotsSystem _itemSlots = default!;
+    [Dependency] private SharedHandheldLightSystem _handheldLight = default!;
+    [Dependency] private ItemSlotsSystem _itemSlots = default!;
 
     public override void Initialize()
     {

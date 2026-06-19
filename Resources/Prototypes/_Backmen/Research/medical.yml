@@ -30,23 +30,9 @@
   - MedkitCombat
   - WhiteCane
   - BodyBag
+  - OffsetCane
+  - OffsetCaneWood
   position: 4,-5
-
-- type: technology
-  id: LauncherSyringe
-  name: research-technology-launcher-syringe
-  icon:
-    sprite: Objects/Weapons/Guns/Cannons/syringe_gun.rsi
-    state: syringe_gun
-  discipline: Medical
-  tier: 3
-  cost: 22000
-  recipeUnlocks:
-  - LauncherSyringe
-  - MiniSyringe
-  technologyPrerequisites:
-  - Medicine
-  position: 4,-7
 
 - type: technology
   id: Surgery
@@ -78,7 +64,7 @@
     sprite: _Shitmed/Objects/Specific/Medical/Surgery/e-scalpel.rsi
     state: e-scalpel-on
   discipline: Medical
-  tier: 1
+  tier: 2
   cost: 10000
   recipeUnlocks:
   - EnergyScalpel
@@ -95,7 +81,7 @@
     sprite: _Shitmed/Mobs/Species/IPC/organs.rsi
     state: eyes
   discipline: Medical
-  tier: 1
+  tier: 3
   cost: 15000
   recipeUnlocks:
   - JawsOfLifeLeftArm
@@ -116,7 +102,7 @@
     sprite: _Shitmed/Objects/Specific/Medical/Surgery/omnimed.rsi
     state: omnimed
   discipline: Medical
-  tier: 1
+  tier: 3
   cost: 15000
   recipeUnlocks:
   - OmnimedTool
@@ -143,40 +129,9 @@
   - PillCanister
   - ChemistryEmptyBottle01
   - Syringe
-  position: 2,-5
-
-- type: technology
-  id: ChemistryBluespace
-  name: research-technology-chemistry-bluespace
-  icon:
-    sprite: Objects/Specific/Chemistry/beaker_bluespace.rsi
-    state: beakerbluespace
-  discipline: Medical
-  tier: 3
-  cost: 12000
-  recipeUnlocks:
-  - BluespaceBeaker
-  - SyringeBluespace
-  - BluespacePillCanister # backmen
-  technologyPrerequisites:
-  - ChemistryMachines
-  position: 2,-7
-
-- type: technology
-  id: BiochemicalStasis
-  name: research-technology-biochemical-stasis
-  icon:
-    sprite: Objects/Specific/Chemistry/beaker_cryostasis.rsi
-    state: beakernoreact
-  discipline: Medical
-  tier: 1
-  cost: 7200
-  recipeUnlocks:
-  - CryostasisBeaker
-  - SyringeCryostasis
   technologyPrerequisites:
   - Medicine
-  position: 5,-5
+  position: 2,-5
 
 - type: technology
   id: BodyBags
@@ -202,7 +157,7 @@
     sprite: _CorvaxNext/Objects/Specific/Medical/BodyBags/bluespace.rsi
     state: bluespacebag_folded
   discipline: Medical
-  tier: 1
+  tier: 3
   cost: 9500
   recipeUnlocks:
   - BluespaceBodyBag

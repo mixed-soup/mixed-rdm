@@ -1,14 +1,15 @@
 using Content.Shared.Damage;
 using Content.Shared.Damage.Prototypes;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Mobs.Systems;
 using Robust.Shared.Prototypes;
 namespace Content.Server.Backmen.DelayedDeath;
 
 public partial class DelayedDeathSystem : EntitySystem
 {
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly IPrototypeManager _prototypes = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
     public override void Update(float frameTime)
     {
         base.Update(frameTime);
@@ -21,7 +22,7 @@ public partial class DelayedDeathSystem : EntitySystem
             if (component.DeathTimer >= component.DeathTime && !_mobState.IsDead(ent))
             {
                 var damage = new DamageSpecifier(_prototypes.Index<DamageTypePrototype>("Bloodloss"), 150);
-                _damageable.TryChangeDamage(ent, damage, partMultiplier: 0f);
+                _damageable.ChangeDamage(ent, damage, partMultiplier: 0f);
             }
         }
     }

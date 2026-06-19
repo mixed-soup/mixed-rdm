@@ -1,8 +1,9 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Text;
-using Content.Shared.Body.Part;
 using Content.Shared.Body.Systems;
+using Content.Shared.Clothing.Components;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Examine;
 using Content.Shared.Inventory;
 using Content.Shared.Silicons.Borgs;
@@ -14,10 +15,10 @@ namespace Content.Shared.Armor;
 /// <summary>
 ///     This handles logic relating to <see cref="ArmorComponent" />
 /// </summary>
-public abstract class SharedArmorSystem : EntitySystem
+public abstract partial class SharedArmorSystem : EntitySystem
 {
-    [Dependency] private readonly ExamineSystemShared _examine = default!;
-    [Dependency] private readonly SharedBodySystem _body = default!;
+    [Dependency] private ExamineSystemShared _examine = default!;
+    [Dependency] private SharedBodySystem _body = default!;
 
     /// <inheritdoc />
     public override void Initialize()
@@ -37,6 +38,9 @@ public abstract class SharedArmorSystem : EntitySystem
     /// <param name="args">The event, contains the running count of armor percentage as a coefficient</param>
     private void OnCoefficientQuery(Entity<ArmorComponent> ent, ref InventoryRelayedEvent<CoefficientQueryEvent> args)
     {
+        if (TryComp<MaskComponent>(ent, out var mask) && mask.IsToggled)
+            return;
+
         foreach (var armorCoefficient in ent.Comp.Modifiers.Coefficients)
         {
             args.Args.DamageModifiers.Coefficients[armorCoefficient.Key] = args.Args.DamageModifiers.Coefficients.TryGetValue(armorCoefficient.Key, out var coefficient) ? coefficient * armorCoefficient.Value : armorCoefficient.Value;
@@ -47,15 +51,25 @@ public abstract class SharedArmorSystem : EntitySystem
     {
         var (partType, _) = _body.ConvertTargetBodyPart(args.Args.TargetPart);
 
-        if (component.ArmorCoverage.Contains(partType))
+        // Check if this armor protects the targeted body part
+        if (!component.ArmorCoverage.Contains(partType))
         {
-            args.Args.Damage = DamageSpecifier.ApplyModifierSet(args.Args.Damage, component.Modifiers);
+            return;
         }
+
+        // If this is a mask and it's toggled (pulled down), it doesn't protect
+        if (TryComp<MaskComponent>(uid, out var mask) && mask.IsToggled)
+            return;
+
+        args.Args.Damage = DamageSpecifier.ApplyModifierSet(args.Args.Damage, component.Modifiers);
     }
 
     private void OnBorgDamageModify(EntityUid uid, ArmorComponent component,
         ref BorgModuleRelayedEvent<DamageModifyEvent> args)
     {
+        if (TryComp<MaskComponent>(uid, out var mask) && mask.IsToggled)
+            return;
+
         args.Args.Damage = DamageSpecifier.ApplyModifierSet(args.Args.Damage, component.Modifiers);
     }
 

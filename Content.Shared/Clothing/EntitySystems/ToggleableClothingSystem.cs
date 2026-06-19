@@ -8,6 +8,7 @@ using Content.Shared.Inventory.Events;
 using Content.Shared.Popups;
 using Content.Shared.Strip;
 using Content.Shared.Verbs;
+using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
@@ -16,17 +17,17 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Clothing.EntitySystems;
 
-public sealed class ToggleableClothingSystem : EntitySystem
+public sealed partial class ToggleableClothingSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly INetManager _netMan = default!;
-    [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-    [Dependency] private readonly SharedActionsSystem _actionsSystem = default!;
-    [Dependency] private readonly ActionContainerSystem _actionContainer = default!;
-    [Dependency] private readonly InventorySystem _inventorySystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
-    [Dependency] private readonly SharedStrippableSystem _strippable = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private INetManager _netMan = default!;
+    [Dependency] private SharedContainerSystem _containerSystem = default!;
+    [Dependency] private SharedActionsSystem _actionsSystem = default!;
+    [Dependency] private ActionContainerSystem _actionContainer = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedStrippableSystem _strippable = default!;
 
     public override void Initialize()
     {
@@ -213,13 +214,36 @@ public sealed class ToggleableClothingSystem : EntitySystem
         if (!TryComp(component.AttachedUid, out ToggleableClothingComponent? toggleComp))
             return;
 
-        if (toggleComp.LifeStage > ComponentLifeStage.Running)
+        if (LifeStage(component.AttachedUid) > EntityLifeStage.MapInitialized)
             return;
 
         // As unequipped gets called in the middle of container removal, we cannot call a container-insert without causing issues.
         // So we delay it and process it during a system update:
         if (toggleComp.ClothingUid != null && toggleComp.Container != null)
             _containerSystem.Insert(toggleComp.ClothingUid.Value, toggleComp.Container);
+    }
+
+    /// <summary>
+    ///     Stows attached clothing (e.g. a hardsuit helmet) back into its parent when it is worn in a toggle slot.
+    /// </summary>
+    [PublicAPI]
+    public bool TryStowAttached(EntityUid wearer, string slot)
+    {
+        if (!_inventorySystem.TryGetSlotEntity(wearer, slot, out var equipped) || equipped is not { } equippedUid)
+            return false;
+
+        if (!TryComp<AttachedClothingComponent>(equippedUid, out var attached))
+            return false;
+
+        if (!TryComp<ToggleableClothingComponent>(attached.AttachedUid, out var toggle)
+            || toggle.Container == null
+            || toggle.Container.ContainedEntity != null)
+        {
+            return false;
+        }
+
+        ToggleClothing(wearer, attached.AttachedUid, toggle);
+        return true;
     }
 
     /// <summary>

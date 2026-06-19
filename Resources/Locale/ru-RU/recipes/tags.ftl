@@ -8,6 +8,7 @@ construction-graph-tag-clown-bike-horn = велосипедный рог
 construction-graph-tag-clowne-horn = сломанный велосипедный рог
 construction-graph-tag-happy-honk-meal = счастливый обед с гудком
 construction-graph-tag-woeful-cluwne-meal = грустный обед клоуна
+construction-graph-tag-boxhug = коробка объятий
 # mime
 construction-graph-tag-suspenders = подтяжки
 construction-graph-tag-mime-meal = обед мима с счастливым гудком
@@ -25,6 +26,8 @@ construction-graph-tag-medical-hud = медицинский HUD
 # security
 construction-graph-tag-sun-glasses = солнечные очки
 construction-graph-tag-security-helmet = защитный шлем
+# materials
+construction-graph-tag-manipulator = модульная часть машины
 # materials
 construction-graph-tag-capacitor = конденсатор
 construction-graph-tag-voice-trigger = голосовой триггер
@@ -60,6 +63,10 @@ construction-graph-tag-rifle-stock = приклад винтовки
 construction-graph-tag-match-stick = спичка
 construction-graph-tag-potato = картофель
 construction-graph-tag-wheat-bushel = сноп пшеницы
+construction-graph-tag-apron = апрон
+construction-graph-tag-utility-belt = полезный пояс
+soil-construction-graph-any-mushroom = любая шляпка
+construction-graph-tag-mop-basic = протига
 construction-graph-tag-corgi-hide = шкура корги
 # toys
 construction-graph-tag-rubber-ducky = резиновая уточка
@@ -87,6 +94,7 @@ construction-graph-tag-ripley-peripherals-control-module = управляющи�
 # structures
 construction-graph-tag-door-electronics-circuit-board = платка электроники дверей
 construction-graph-tag-firelock-electronics-circuit-board = платка электроники огнезапора
+construction-graph-tag-station-ai-core-electronics = электроника ядра ИИ станции
 construction-graph-tag-conveyor-belt-assembly = сборка конвейерного пояса
 # tools
 construction-graph-tag-multitool = мультитул
@@ -107,6 +115,7 @@ construction-graph-tag-wallmount-apu-circuit-board = платка APU для м�
 construction-graph-tag-wallmount-substation-circuit-board = платка подстанции для монтажа на стене
 construction-graph-tag-surveillance-camera-monitor-board = плата монитора камеры наблюдения
 construction-graph-tag-television-board = плата телевизора
+construction-graph-tag-turret-control-electronics = электроника панели управления охранной турелью
 construction-graph-tag-freezer-electronics = электроника морозильной камеры
 # crystals
 construction-graph-tag-cyan-crystal-shard = циановый осколок кристалла
@@ -123,5 +132,7 @@ construction-graph-tag-torch = факел
 # atmos
 construction-graph-tag-fire-extinguisher = огнетушитель
 construction-graph-tag-fire-helmet = пожарный шлем
+# clothing
+construction-graph-tag-backpack = рюкзак
 # salvage
 construction-graph-tag-spationaut-hardsuit = скафандр утилизатора

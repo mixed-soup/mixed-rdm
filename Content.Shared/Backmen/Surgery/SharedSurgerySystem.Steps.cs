@@ -14,6 +14,7 @@ using Content.Shared.IdentityManagement;
 using Content.Shared.Inventory;
 using Content.Shared.Item;
 using Content.Shared.Popups;
+using Content.Shared.StatusEffectNew;
 using Robust.Shared.Prototypes;
 using System.Linq;
 using Content.Shared.Backmen.Mood;
@@ -26,6 +27,7 @@ using Content.Shared.Backmen.Surgery.Traumas;
 using Content.Shared.Backmen.Surgery.Traumas.Components;
 using Content.Shared.Backmen.Surgery.Wounds.Components;
 using Content.Shared.Containers.ItemSlots;
+using Content.Shared.Interaction;
 using Robust.Shared.Utility;
 
 namespace Content.Shared.Backmen.Surgery;
@@ -63,6 +65,13 @@ public abstract partial class SharedSurgerySystem
         });
     }
 
+    private bool CanReachSurgeryTarget(EntityUid user, EntityUid body)
+    {
+        // NOTE: Body parts / organs are frequently inside containers and may have Nullspace-ish transforms (e.g. 0,0).
+        // Checking reach against the patient body avoids the classic "can't access organs during surgery" bug.
+        return _interaction.InRangeAndAccessible((user, Transform(user)), (body, Transform(body)), range: 1.5f);
+    }
+
     private void SubSurgery<TComp>(EntityEventRefHandler<TComp, SurgeryStepEvent> onStep,
         EntityEventRefHandler<TComp, SurgeryStepCompleteCheckEvent> onComplete) where TComp : IComponent
     {
@@ -88,7 +97,9 @@ public abstract partial class SharedSurgerySystem
             }
         }
 
-        if (ent.Comp.Add != null)
+
+
+        if (ent.Comp.Add != null && _net.IsServer)
         {
             foreach (var reg in ent.Comp.Add.Values)
             {
@@ -99,7 +110,7 @@ public abstract partial class SharedSurgerySystem
             }
         }
 
-        if (ent.Comp.Remove != null)
+        if (ent.Comp.Remove != null && _net.IsServer)
         {
             foreach (var reg in ent.Comp.Remove.Values)
             {
@@ -107,7 +118,7 @@ public abstract partial class SharedSurgerySystem
             }
         }
 
-        if (ent.Comp.BodyAdd != null)
+        if (ent.Comp.BodyAdd != null && _net.IsServer)
         {
             foreach (var reg in ent.Comp.BodyAdd.Values)
             {
@@ -118,7 +129,7 @@ public abstract partial class SharedSurgerySystem
             }
         }
 
-        if (ent.Comp.BodyRemove != null)
+        if (ent.Comp.BodyRemove != null && _net.IsServer)
         {
             foreach (var reg in ent.Comp.BodyRemove.Values)
             {
@@ -126,7 +137,23 @@ public abstract partial class SharedSurgerySystem
             }
         }
 
-        if (!HasComp<ForcedSleepingComponent>(args.Body))
+        if (ent.Comp.BodyStatusEffectAdd != null)
+        {
+            foreach (var effect in ent.Comp.BodyStatusEffectAdd)
+            {
+                _statusEffects.TrySetStatusEffectDuration(args.Body, effect);
+            }
+        }
+
+        if (ent.Comp.BodyStatusEffectRemove != null)
+        {
+            foreach (var effect in ent.Comp.BodyStatusEffectRemove)
+            {
+                _statusEffects.TryRemoveStatusEffect(args.Body, effect);
+            }
+        }
+
+        if (!HasComp<ForcedSleepingStatusEffectComponent>(args.Body))
             RaiseLocalEvent(args.Body, new MoodEffectEvent("SurgeryPain"));
 
         if (!_inventory.TryGetSlotEntity(args.User, "gloves", out var _)
@@ -185,6 +212,30 @@ public abstract partial class SharedSurgerySystem
             foreach (var reg in ent.Comp.BodyRemove.Values)
             {
                 if (HasComp(args.Body, reg.Component.GetType()))
+                {
+                    args.Cancelled = true;
+                    return;
+                }
+            }
+        }
+
+        if (ent.Comp.BodyStatusEffectAdd != null)
+        {
+            foreach (var effect in ent.Comp.BodyStatusEffectAdd)
+            {
+                if (!_statusEffects.HasStatusEffect(args.Body, effect))
+                {
+                    args.Cancelled = true;
+                    return;
+                }
+            }
+        }
+
+        if (ent.Comp.BodyStatusEffectRemove != null)
+        {
+            foreach (var effect in ent.Comp.BodyStatusEffectRemove)
+            {
+                if (_statusEffects.HasStatusEffect(args.Body, effect))
                 {
                     args.Cancelled = true;
                     return;
@@ -663,7 +714,7 @@ public abstract partial class SharedSurgerySystem
                 healAmount -= bleeds.BleedingAmountRaw;
             }
 
-            Dirty(woundEnt, bleeds);
+            DirtyField(woundEnt, bleeds, nameof(BleedInflicterComponent.IsBleeding));
         }
     }
 
@@ -688,7 +739,7 @@ public abstract partial class SharedSurgerySystem
             return;
 
         var painToInflict = ent.Comp.Amount;
-        if (HasComp<ForcedSleepingComponent>(args.Body))
+        if (HasComp<ForcedSleepingStatusEffectComponent>(args.Body))
             painToInflict *= ent.Comp.SleepModifier;
 
         if (!_pain.TryChangePainModifier(
@@ -724,6 +775,7 @@ public abstract partial class SharedSurgerySystem
         var user = args.Actor;
         if (GetEntity(args.Entity) is not { Valid: true } body ||
             GetEntity(args.Part) is not { Valid: true } targetPart ||
+            !CanReachSurgeryTarget(user, body) ||
             !IsSurgeryValid(body, targetPart, args.Surgery, args.Step, user, out var surgery, out var part, out var step))
         {
             return;
@@ -780,6 +832,12 @@ public abstract partial class SharedSurgerySystem
             DuplicateCondition = DuplicateConditions.SameEvent,
             NeedHand = true,
             BreakOnHandChange = true,
+            // Surgery uses DoAfter.Args.Target == part, but parts/organs are often stored inside containers
+            // and may not have reliable world coordinates (Nullspace-ish / 0,0). Range/access checks in
+            // SharedDoAfterSystem.Update would cancel the do-after based on the part instead of the patient body.
+            // We already validate reachability against the body before starting the step.
+            DistanceThreshold = null,
+            RequireCanInteract = false,
         };
 
         if (_doAfter.TryStartDoAfter(doAfter))

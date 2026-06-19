@@ -1,6 +1,5 @@
 using Content.Shared.Actions;
 using Content.Shared.Coordinates;
-using Content.Shared.Damage;
 using Content.Shared.Hands;
 using Content.Shared.Interaction;
 using Content.Shared.Item;
@@ -14,6 +13,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using System.Diagnostics.CodeAnalysis;
+using Content.Shared.Damage.Systems;
 
 namespace Content.Shared.Polymorph.Systems;
 
@@ -21,19 +21,19 @@ namespace Content.Shared.Polymorph.Systems;
 /// Handles disguise validation, disguising and revealing.
 /// Most appearance copying is done clientside.
 /// </summary>
-public abstract class SharedChameleonProjectorSystem : EntitySystem
+public abstract partial class SharedChameleonProjectorSystem : EntitySystem
 {
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly EntityWhitelistSystem _whitelist = default!;
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly ISerializationManager _serMan = default!;
-    [Dependency] private readonly MetaDataSystem _meta = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedTransformSystem _xform = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private EntityWhitelistSystem _whitelist = default!;
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private ISerializationManager _serMan = default!;
+    [Dependency] private MetaDataSystem _meta = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedTransformSystem _xform = default!;
 
     public override void Initialize()
     {
@@ -191,7 +191,7 @@ public abstract class SharedChameleonProjectorSystem : EntitySystem
     public bool IsInvalid(ChameleonProjectorComponent comp, EntityUid target)
     {
         return _whitelist.IsWhitelistFail(comp.Whitelist, target)
-            || _whitelist.IsBlacklistPass(comp.Blacklist, target);
+            || _whitelist.IsWhitelistPass(comp.Blacklist, target);
     }
 
     /// <summary>

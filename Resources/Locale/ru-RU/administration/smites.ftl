@@ -13,6 +13,7 @@ admin-smite-stomach-removal-self = Вы ощущаете пустоту в же�
 admin-smite-run-walk-swap-prompt = Для бега вы должны нажать Shift!
 admin-smite-super-speed-prompt = Вы двигаетесь почти со скоростью звука!
 admin-smite-lung-removal-self = Вы не можете вдохнуть!
+admin-smite-silicon-laws-bound-self = Вы внезапно вынуждены следовать строгому набору законов!
 
 ## Smite names
 
@@ -35,6 +36,7 @@ admin-smite-buffering-name = Буферизация
 admin-smite-become-instrument-name = Сделать инструментом
 admin-smite-remove-gravity-name = Антиграв
 admin-smite-reptilian-species-swap-name = Сделать ящером
+admin-smite-vulpkanin-species-swap-name = Превратить в вульпканина
 admin-smite-locker-stuff-name = Сунуть в шкаф
 admin-smite-headstand-name = Стойка на голове
 admin-smite-become-mouse-name = Сделать мышью
@@ -56,7 +58,12 @@ admin-smite-vomit-organs-name = Рвота органами
 admin-smite-ghostkick-name = Кик втихаря
 admin-smite-nyanify-name = НЯфикация
 admin-smite-kill-sign-name = Знак смерти
+admin-smite-kill-sign-hidden-name = Скрытый знак смерти
 admin-smite-omni-accent-name = Омни-акцент
+admin-smite-crawler-name = Паука
+admin-smite-homing-rod-name = Самонаводящийся стержень
+admin-smite-homing-rod-slow-name = Медленный самонаводящийся стержень
+admin-smite-silicon-laws-bound-name = Превратить в борга
 
 ## Smite descriptions
 
@@ -76,6 +83,7 @@ admin-smite-ghostkick-description = Тихо кикает пользовател
 admin-smite-nyanify-description = Насильно добавляет кошачьи ушки, от которых никуда не деться.
 admin-smite-kill-sign-description = Накладывает на игрока метку смерти для его товарищей.
 admin-smite-cluwne-description = Превращает в клувеня. Костюм нельзя снять, и экипаж станции может беспрепятственно убивать их.
+admin-smite-kill-sign-hidden-description = Помечает игрока для смерти его товарищами. Скрыто от целевого игрока.
 admin-smite-anger-pointing-arrows-description = Разъяряет указательные стрелки, заставляя их атаковать цель взрывами.
 admin-smite-dust-description = Превращает цель в небольшую кучку пепла.
 admin-smite-buffering-description = Вызывает у цели случайный запуск буферизации, замораживая её на короткое время, пока она подгружается.
@@ -83,6 +91,7 @@ admin-smite-become-instrument-description = Превращает цель в с�
 admin-smite-remove-gravity-description = Наделяет цель антигравитацией.
 admin-smite-reptilian-species-swap-description = Меняет расу на Ящера. Пригодится для тех, кто ведёт себя как космический расист.
 admin-smite-locker-stuff-description = Помещает цель в (заваренный) шкафчик.
+admin-smite-vulpkanin-species-swap-description = Меняет их расу на Вульпканина. Полезно для тех, кто был космическим расистом.
 admin-smite-headstand-description = Переворачивает спрайт по вертикали.
 admin-smite-become-mouse-description = Цель станет мышью. Скуик.
 admin-smite-maid-description = Насильно превращает цель в кошко-служанку уборщицу. Это настоящая пытка для некоторых игроков, используйте её с умом.
@@ -101,6 +110,10 @@ admin-smite-super-bonk-description = Заставляет цель ударит�
 admin-smite-terminate-description = Создаёт экстерминатора с ролью призрака, с единственной задачей - убить выбранную цель.
 admin-smite-super-slip-description = Очень сильно поскальзывает цель.
 admin-smite-omni-accent-description = Заставляет цель говорить с почти каждым возможным акцентом.
+admin-smite-crawler-description = Делает цель падающей и неспособной встать. Убирает руки для усиления эффекта!
+admin-smite-homing-rod-description = Запускает самонаводящийся неподвижный стержень прямо в них.
+admin-smite-homing-rod-slow-description = Запускает медленно движущийся самонаводящийся неподвижный стержень прямо в них.
+admin-smite-silicon-laws-bound-description = Привязывает цель к законам кремния. Закон 2, выпрыгни из окна.
 admin-smite-super-bonk-lite-description = Заставляет цель удариться о каждый стол на станции и за её пределами. Прекращает действовать после смерти цели.
 
 ## Tricks descriptions

@@ -3,7 +3,6 @@ using Content.Server.Access.Systems;
 using Content.Server.Antag;
 using Content.Server.Backmen.Fugitive;
 using Content.Server.Forensics;
-using Content.Server.IdentityManagement;
 using Content.Server.Mind;
 using Content.Server.RandomMetadata;
 using Content.Server.Salvage.Expeditions;
@@ -19,36 +18,41 @@ using Content.Shared.Cargo.Components;
 using Content.Shared.CriminalRecords;
 using Content.Shared.Forensics.Components;
 using Content.Shared.Humanoid;
+using Content.Shared.IdentityManagement;
 using Content.Shared.Inventory;
 using Content.Shared.Mind.Components;
 using Content.Shared.PDA;
 using Content.Shared.Preferences;
 using Content.Shared.Roles;
 using Content.Shared.Roles.Jobs;
+using Content.Shared.Security.Components;
 using Content.Shared.StationRecords;
+using Content.Shared.Storage.Components;
 using Content.Shared.Wall;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
+using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Antag.SuperPsi;
 
-public sealed class AutoPsiSystem : EntitySystem
+public sealed partial class AutoPsiSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly AntagSelectionSystem _antag = default!;
-    [Dependency] private readonly StationSpawningSystem _stationSpawning = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IdentitySystem _identity = default!;
-    [Dependency] private readonly MetaDataSystem _metaData = default!;
-    [Dependency] private readonly RandomMetadataSystem _randomMetadata = default!;
-    [Dependency] private readonly StationRecordsSystem _recordsSystem = default!;
-    [Dependency] private readonly IdCardSystem _idCardSystem = default!;
-    [Dependency] private readonly AccessReaderSystem _accessReader = default!;
-    [Dependency] private readonly ISharedPlayerManager _playerMgr = default!;
-    [Dependency] private readonly MindSystem _mind = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private AntagSelectionSystem _antag = default!;
+    [Dependency] private StationSpawningSystem _stationSpawning = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IdentitySystem _identity = default!;
+    [Dependency] private MetaDataSystem _metaData = default!;
+    [Dependency] private RandomMetadataSystem _randomMetadata = default!;
+    [Dependency] private StationRecordsSystem _recordsSystem = default!;
+    [Dependency] private IdCardSystem _idCardSystem = default!;
+    [Dependency] private AccessReaderSystem _accessReader = default!;
+    [Dependency] private ISharedPlayerManager _playerMgr = default!;
+    [Dependency] private MindSystem _mind = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     public override void Initialize()
     {
@@ -66,8 +70,7 @@ public sealed class AutoPsiSystem : EntitySystem
             });
     }
 
-    [ValidatePrototypeId<JobPrototype>]
-    private const string JobPrisoner = "Prisoner";
+    private static readonly ProtoId<JobPrototype> JobPrisoner = "Prisoner";
 
     public IEnumerable<(EntityCoordinates Pos, EntityUid? Marker)> GetPrisonersSpawningEntities(EntityUid? stationId)
     {
@@ -167,10 +170,26 @@ public sealed class AutoPsiSystem : EntitySystem
         }
 
         args.SpawnResult = _stationSpawning.SpawnPlayerMob(spawnLoc.Pos, args.Job, args.HumanoidCharacterProfile, args.Station);
+        if(args.SpawnResult is {} ent)
+            ConfIdCard(ent);
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string JobPrisonerSuperPsi = "UristMcNars";
+    private void ConfIdCard(EntityUid ent)
+    {
+        if (_idCardSystem.TryFindIdCard(ent, out var idCard))
+        {
+            if (TryComp<GenpopIdCardComponent>(idCard, out var id))
+            {
+                id.Crime = Loc.GetString("genpop-prisoner-id-crime-default");
+                id.SentenceDuration = TimeSpan.FromMinutes(40);
+                Dirty(idCard, id);
+            }
+            _idCardSystem.SetPermanent(idCard.Owner, true);
+            _idCardSystem.SetExpireTime(idCard.Owner, TimeSpan.FromMinutes(40) + _timing.CurTime);
+        }
+    }
+
+    private readonly EntProtoId JobPrisonerSuperPsi = "UristMcNars";
     private EntityUid? SpawnSuperPsi(EntityCoordinates coordinates, JobPrototype job, HumanoidCharacterProfile? profile, EntityUid? station)
     {
         var ent = Spawn(JobPrisonerSuperPsi, coordinates);
@@ -197,6 +216,9 @@ public sealed class AutoPsiSystem : EntitySystem
             var startingGear = _prototypeManager.Index<StartingGearPrototype>(job.StartingGear);
             _stationSpawning.EquipStartingGear(ent, startingGear, raiseEvent: false);
         }
+
+        ConfIdCard(ent);
+
         _stationSpawning.SetPdaAndIdCardData(ent, Name(ent), job, station);
         foreach (var jobSpecial in job.Special)
         {
@@ -244,6 +266,7 @@ public sealed class AutoPsiSystem : EntitySystem
         }
         else if(station != null && _idCardSystem.TryFindIdCard(args.EntityUid, out var idCard))
         {
+            _idCardSystem.TryChangeFullName(idCard, Name(args.EntityUid));
             var jobPrototype = _prototypeManager.Index<JobPrototype>(JobPrisoner);
 
             var record = new GeneralStationRecord()
@@ -267,8 +290,7 @@ public sealed class AutoPsiSystem : EntitySystem
     }
 
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string DefaultSuperPsiRule = "SuperPsiRule";
+    private readonly EntProtoId DefaultSuperPsiRule = "SuperPsiRule";
 
     private void OnMindAdded(Entity<AutoPsiComponent> ent, ref MindAddedMessage args)
     {

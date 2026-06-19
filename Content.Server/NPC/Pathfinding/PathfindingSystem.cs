@@ -40,18 +40,18 @@ namespace Content.Server.NPC.Pathfinding
          * See PathfindingSystem.Grid for a description of the grid implementation.
          */
 
-        [Dependency] private readonly IAdminManager _adminManager = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IParallelManager _parallel = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly DestructibleSystem _destructible = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly FixtureSystem _fixtures = default!;
-        [Dependency] private readonly NPCSystem _npc = default!;
-        [Dependency] private readonly SharedMapSystem _maps = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private IAdminManager _adminManager = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private IParallelManager _parallel = default!;
+        [Dependency] private IPlayerManager _playerManager = default!;
+        [Dependency] private IRobustRandom _random = default!;
+        [Dependency] private DestructibleSystem _destructible = default!;
+        [Dependency] private EntityLookupSystem _lookup = default!;
+        [Dependency] private FixtureSystem _fixtures = default!;
+        [Dependency] private NPCSystem _npc = default!;
+        [Dependency] private SharedMapSystem _maps = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedTransformSystem _transform = default!;
 
         private readonly Dictionary<ICommonSession, PathfindingDebugMode> _subscribedSessions = new();
 
@@ -69,6 +69,8 @@ namespace Content.Server.NPC.Pathfinding
         private readonly Dictionary<int, PathPortal> _portals = new();
 
         private EntityQuery<Shared.Backmen.Blob.Components.BlobTileComponent> _tilesQuery; // backmen: blob
+        private EntityQuery<Shared.Backmen.Arachne.WebComponent> _webQuery; // backmen: web
+        private EntityQuery<Shared.Spider.SpiderWebObjectComponent> _spiderWebQuery; // backmen: web
         private EntityQuery<AccessReaderComponent> _accessQuery;
         private EntityQuery<DestructibleComponent> _destructibleQuery;
         private EntityQuery<DoorComponent> _doorQuery;
@@ -82,6 +84,8 @@ namespace Content.Server.NPC.Pathfinding
             base.Initialize();
 
             _tilesQuery = GetEntityQuery<Shared.Backmen.Blob.Components.BlobTileComponent>(); // backmen: blob
+            _webQuery = GetEntityQuery<Shared.Backmen.Arachne.WebComponent>(); // backmen: web
+            _spiderWebQuery = GetEntityQuery<Shared.Spider.SpiderWebObjectComponent>(); // backmen: web
             _accessQuery = GetEntityQuery<AccessReaderComponent>();
             _destructibleQuery = GetEntityQuery<DestructibleComponent>();
             _doorQuery = GetEntityQuery<DoorComponent>();
@@ -480,6 +484,18 @@ namespace Content.Server.NPC.Pathfinding
                 flags |= PathFlags.Blob;
             }
             // end-backmen: blob
+
+            // start-backmen: web
+            if (blackboard.TryGetValue<bool>(NPCBlackboard.NavWeb, out var web, EntityManager) && web)
+            {
+                flags |= PathFlags.Web;
+            }
+
+            if (blackboard.TryGetValue<bool>(NPCBlackboard.NavWebOnly, out var webOnly, EntityManager) && webOnly)
+            {
+                flags |= PathFlags.WebOnly;
+            }
+            // end-backmen: web
 
             return flags;
         }

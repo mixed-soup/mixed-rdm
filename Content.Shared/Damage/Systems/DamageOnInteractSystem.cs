@@ -1,5 +1,7 @@
 using Content.Shared.Administration.Logs;
 using Content.Shared.Backmen.Targeting;
+using Content.Shared.Body.Part;
+using Content.Shared.Body.Systems;
 using Content.Shared.Damage.Components;
 using Content.Shared.Database;
 using Content.Shared.Hands.Components;
@@ -14,21 +16,24 @@ using Robust.Shared.Timing;
 using Content.Shared.Random;
 using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Effects;
+using Content.Shared.Hands.EntitySystems;
 using Content.Shared.Stunnable;
 
 namespace Content.Shared.Damage.Systems;
 
-public sealed class DamageOnInteractSystem : EntitySystem
+public sealed partial class DamageOnInteractSystem : EntitySystem
 {
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-    [Dependency] private readonly InventorySystem _inventorySystem = default!;
-    [Dependency] private readonly ThrowingSystem _throwingSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedStunSystem _stun = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private SharedPopupSystem _popupSystem = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
+    [Dependency] private ThrowingSystem _throwingSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedStunSystem _stun = default!;
+    [Dependency] private SharedBodySystem _bodySystem = default!;
+    [Dependency] private SharedHandsSystem _handsSystem = default!;
 
     public override void Initialize()
     {
@@ -67,7 +72,7 @@ public sealed class DamageOnInteractSystem : EntitySystem
             // or checking the entity for  the comp itself if the inventory didn't work
             if (protectiveEntity.Comp == null && TryComp<DamageOnInteractProtectionComponent>(args.User, out var protectiveComp))
                 protectiveEntity = (args.User, protectiveComp);
-            
+
 
             // if protectiveComp isn't null after all that, it means the user has protection,
             // so let's calculate how much they resist
@@ -78,23 +83,27 @@ public sealed class DamageOnInteractSystem : EntitySystem
         }
         // start-backmen: surgery
 
+
         TargetBodyPart? targetPart = null;
-        var hands = CompOrNull<HandsComponent>(args.User);
-        if (hands is { ActiveHand: not null })
+
+        if (TryComp(args.User, out HandsComponent? hands))
         {
-            targetPart = hands.ActiveHand.Location switch
+            if (hands.ActiveHandId != null)
             {
-                HandLocation.Left => TargetBodyPart.LeftFullArm,
-                HandLocation.Right => TargetBodyPart.RightFullArm,
-                _ => null
-            };
+                var hand = hands.Hands[hands.ActiveHandId!];
+                targetPart = hand.Location switch
+                {
+                    HandLocation.Left => TargetBodyPart.LeftFullArm,
+                    HandLocation.Right => TargetBodyPart.RightFullArm,
+                    _ => null
+                };
+            }
         }
 
+        totalDamage = _damageableSystem.ChangeDamage(args.User, totalDamage,  origin: args.Target, targetPart: targetPart);
         // end-backmen: surgery
 
-        totalDamage = _damageableSystem.TryChangeDamage(args.User, totalDamage,  origin: args.Target, targetPart: targetPart);
-
-        if (totalDamage != null && totalDamage.AnyPositive())
+        if (totalDamage.AnyPositive())
         {
             // Record this interaction and determine when a user is allowed to interact with this entity again
             entity.Comp.LastInteraction = _gameTiming.CurTime;
@@ -109,7 +118,7 @@ public sealed class DamageOnInteractSystem : EntitySystem
 
             // Attempt to paralyze the user after they have taken damage
             if (_random.Prob(entity.Comp.StunChance))
-                _stun.TryParalyze(args.User, TimeSpan.FromSeconds(entity.Comp.StunSeconds), true);
+                _stun.TryUpdateParalyzeDuration(args.User, TimeSpan.FromSeconds(entity.Comp.StunSeconds));
         }
         // Check if the entity's Throw bool is false, or if the entity has the PullableComponent, then if the entity is currently being pulled.
         // BeingPulled must be checked because the entity will be spastically thrown around without this.

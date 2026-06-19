@@ -76,7 +76,6 @@
       - Bucket
       - Flare
       #- FlashlightLantern
-      - GlowstickBase
       - GlowstickRed
       - GlowstickPurple
       - GlowstickYellow
@@ -100,7 +99,7 @@
       - ClothingHandsGlovesPowerglove
       - ClothingHandsGlovesRobohands
       - ClothingHandsGlovesFingerless
-      - ClothingNeckHeadphones
+#      - ClothingNeckHeadphones
       - ClothingOuterHoodieGrey
       - ClothingOuterCardborg
       - ClothingOuterPonchoClassic

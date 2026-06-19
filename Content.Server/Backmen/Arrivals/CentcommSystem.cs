@@ -20,6 +20,7 @@ using Content.Shared.CCVar;
 using Content.Shared.Emag.Components;
 using Content.Shared.Emag.Systems;
 using Content.Shared.GameTicking;
+using Content.Shared.Maps;
 using Content.Shared.Random;
 using Content.Shared.Random.Helpers;
 using Content.Shared.Shuttles.Components;
@@ -40,26 +41,24 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.Arrivals;
 
-public sealed class CentcommSystem : EntitySystem
+public sealed partial class CentcommSystem : EntitySystem
 {
-    [Dependency] private readonly PopupSystem _popup = default!;
-    [Dependency] private readonly ShuttleSystem _shuttleSystem = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly GameTicker _gameTicker = default!;
-    [Dependency] private readonly ShuttleSystem _shuttle = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly ShuttleConsoleSystem _console = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly ChatSystem _chat = default!;
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly MapLoaderSystem _loader = default!;
-    [Dependency] private readonly  SharedMapSystem _mapSystem = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private GameTicker _gameTicker = default!;
+    [Dependency] private ShuttleSystem _shuttle = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private ShuttleConsoleSystem _console = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private PopupSystem _popup = default!;
+    [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private MapLoaderSystem _loader = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     public EntityUid CentComGrid { get; private set; } = EntityUid.Invalid;
     public MapId CentComMap { get; private set; } = MapId.Nullspace;
@@ -130,7 +129,7 @@ public sealed class CentcommSystem : EntitySystem
 
     private void OnCentComEndRound(RoundEndedEvent ev)
     {
-        if (CentComMapUid != null && _shuttleSystem.TryAddFTLDestination(CentComMap, true, out var ftl))
+        if (CentComMapUid != null && _shuttle.TryAddFTLDestination(CentComMap, true, out var ftl))
         {
             EnableFtl((CentComMapUid.Value, ftl));
         }
@@ -201,12 +200,11 @@ public sealed class CentcommSystem : EntitySystem
 
     private static readonly SoundSpecifier SparkSound = new SoundCollectionSpecifier("sparks");
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string StationShuttleConsole = "ComputerShuttle";
+    private readonly EntProtoId StationShuttleConsole = "ComputerShuttle";
 
     private void OnShuttleConsoleEmaged(Entity<ShuttleConsoleComponent> ent, ref GotEmaggedEvent args)
     {
-        if (Prototype(ent)?.ID != StationShuttleConsole)
+        if (Prototype(ent)?.ID != StationShuttleConsole.Id)
         {
             return;
         }
@@ -222,7 +220,7 @@ public sealed class CentcommSystem : EntitySystem
             return;
 
         _audio.PlayPvs(SparkSound, ent);
-        _popupSystem.PopupEntity(Loc.GetString("shuttle-console-component-upgrade-emag-requirement"), ent);
+        _popup.PopupEntity(Loc.GetString("shuttle-console-component-upgrade-emag-requirement"), ent);
         args.Handled = true;
         EnsureComp<AllowFtlToCentComComponent>(shuttle.Value); // для обновления консоли нужно чтобы компонент был до вызыва RefreshShuttleConsoles
         _console.RefreshShuttleConsoles();
@@ -250,11 +248,8 @@ public sealed class CentcommSystem : EntitySystem
         ShuttleIndex = 0;
     }
 
-    [ValidatePrototypeId<WeightedRandomPrototype>]
-    private const string StationCentComMapPool = "DefaultCentcomPool";
-
-    [ValidatePrototypeId<GameMapPrototype>]
-    private const string StationCentComMapDefault = "CentComm";
+    private static readonly ProtoId<WeightedRandomPrototype> StationCentComMapPool = "DefaultCentcomPool";
+    private static readonly ProtoId<GameMapPrototype> StationCentComMapDefault = "CentComm";
 
 
     public void EnsureCentcom(bool force = false)
@@ -435,12 +430,12 @@ public sealed class CentcommSystem : EntitySystem
             return;
         }
 */
-        if (!_shuttleSystem.CanFTL(shuttle.GridUid.Value, out var reason))
+        if (!_shuttle.CanFTL(shuttle.GridUid.Value, out var reason))
         {
             _popup.PopupEntity(reason, args.Performer, args.Performer);
             return;
         }
 
-        _shuttleSystem.FTLToDock(shuttle.GridUid.Value, comp, centcomm.Entity.Value);
+        _shuttle.FTLToDock(shuttle.GridUid.Value, comp, centcomm.Entity.Value);
     }
 }

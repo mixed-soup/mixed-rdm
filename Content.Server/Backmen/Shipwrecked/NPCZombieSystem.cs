@@ -1,10 +1,17 @@
-﻿using Content.Server.Backmen.Shipwrecked.Components;
+﻿using Content.Server.Backmen.Language;
+using Content.Server.Backmen.Shipwrecked.Components;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Ghost.Roles.Components;
 using Content.Server.Humanoid.Systems;
 using Content.Server.RandomMetadata;
 using Content.Server.Zombies;
+using Content.Shared.Backmen.Language.Components;
+using Content.Shared.Backmen.Language.Systems;
+using Content.Shared.Backmen.Surgery.Consciousness.Components;
 using Content.Shared.Damage;
+using Content.Shared.Standing;
+using Content.Shared.Stunnable;
+using Content.Shared.Trigger;
 using Content.Shared.Weapons.Melee;
 using Content.Shared.Zombies;
 using Robust.Shared.Prototypes;
@@ -18,9 +25,11 @@ public sealed class NpcZombieMakeEvent : EntityEventArgs
 }
 
 
-public sealed class NPCZombieSystem : EntitySystem
+public sealed partial class NPCZombieSystem : EntitySystem
 {
-    [Dependency] private readonly ZombieSystem _zombieSystem = default!;
+    [Dependency] private ZombieSystem _zombieSystem = default!;
+    [Dependency] private StandingStateSystem _stateSystem = default!;
+    [Dependency] private LanguageSystem _language = default!;
 
     public override void Initialize()
     {
@@ -37,9 +46,14 @@ public sealed class NPCZombieSystem : EntitySystem
         if (TerminatingOrDeleted(ev.Target))
             return;
 
+        _stateSystem.Stand(ev.Target);
         _zombieSystem.ZombifyEntity(ev.Target);
+        EnsureComp<UniversalLanguageSpeakerComponent>(ev.Target);
+        _language.SetLanguage(ev.Target, SharedLanguageSystem.Universal);
         RemComp<GhostTakeoverAvailableComponent>(ev.Target);
         RemComp<GhostRoleComponent>(ev.Target);
+        RemComp<ConsciousnessComponent>(ev.Target);
+        RemComp<StunnedComponent>(ev.Target);
 
         var z = EnsureComp<ZombieComponent>(ev.Target);
         z.BaseZombieInfectionChance = 0.0001f;
@@ -51,7 +65,6 @@ public sealed class NPCZombieSystem : EntitySystem
         melee.BluntStaminaDamageFactor = 0.5;
         melee.ClickDamageModifier = 1;
         melee.Range = 1.5f;
-
 
 
         if (!ev.IsBoss)
@@ -109,7 +122,7 @@ public sealed class NPCZombieSystem : EntitySystem
         });
     }
 
-    [ValidatePrototypeId<EntityPrototype>] private const string ZombieSurpriseDetector = "ZombieSurpriseDetector";
+    private static readonly EntProtoId ZombieSurpriseDetector = "ZombieSurpriseDetector";
     private void OnZombieSurpriseInit(EntityUid uid, ZombieSurpriseComponent component, MapInitEvent args)
     {
         if (TerminatingOrDeleted(uid))

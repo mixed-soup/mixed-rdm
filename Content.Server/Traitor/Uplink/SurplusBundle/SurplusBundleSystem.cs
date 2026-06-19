@@ -8,17 +8,17 @@ using Robust.Shared.Random;
 
 namespace Content.Server.Traitor.Uplink.SurplusBundle;
 
-public sealed class SurplusBundleSystem : EntitySystem
+public sealed partial class SurplusBundleSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly EntityStorageSystem _entityStorage = default!;
-    [Dependency] private readonly StoreSystem _store = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private EntityStorageSystem _entityStorage = default!;
+    [Dependency] private StoreSystem _store = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
-        SubscribeLocalEvent<SurplusBundleComponent, MapInitEvent>(OnMapInit);
+        SubscribeLocalEvent<SurplusBundleComponent, MapInitEvent>(OnMapInit, after: [typeof(StoreSystem)]);
     }
 
     private void OnMapInit(EntityUid uid, SurplusBundleComponent component, MapInitEvent args)
@@ -44,9 +44,13 @@ public sealed class SurplusBundleSystem : EntitySystem
     private List<ListingData> GetRandomContent(Entity<SurplusBundleComponent, StoreComponent> ent)
     {
         var ret = new List<ListingData>();
+        var store = ent.Owner;
 
-        var listings = _store.GetAvailableListings(ent, null, ent.Comp2.Categories)
-            .OrderBy(p => p.Cost.Values.Sum())
+        // storeEntity must be set or StoreWhitelistCondition rejects every listing.
+        var listings = _store
+            .GetAvailableListings(store, null, ent.Comp2.Categories, store)
+            .Where(p => p.Cost.Values.Sum() > FixedPoint2.Zero)
+            .OrderByDescending(p => p.Cost.Values.Sum())
             .ToList();
 
         if (listings.Count == 0)
@@ -57,8 +61,8 @@ public sealed class SurplusBundleSystem : EntitySystem
         while (totalCost < ent.Comp1.TotalPrice)
         {
             // All data is sorted in price descending order
-            // Find new item with the lowest acceptable price
-            // All expansive items will be before index, all acceptable after
+            // Find new item with the highest price that still fits the remaining budget
+            // Cheaper listings are after index
             var remainingBudget = ent.Comp1.TotalPrice - totalCost;
             while (listings[index].Cost.Values.Sum() > remainingBudget)
             {
@@ -75,8 +79,14 @@ public sealed class SurplusBundleSystem : EntitySystem
             // Select random listing and add into crate
             var randomIndex = _random.Next(index, listings.Count);
             var randomItem = listings[randomIndex];
+            var itemCost = randomItem.Cost.Values.Sum();
+
+            // Free listings never advance totalCost — this loop would run until OOM.
+            if (itemCost <= FixedPoint2.Zero)
+                return ret;
+
             ret.Add(randomItem);
-            totalCost += randomItem.Cost.Values.Sum();
+            totalCost += itemCost;
         }
 
         return ret;

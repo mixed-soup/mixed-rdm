@@ -10,26 +10,14 @@ using Robust.Shared.Audio.Systems;
 
 namespace Content.Server.Backmen.Abilities.Psionics;
 
-public sealed class PsychokinesisPowerSystem : SharedPsychokinesisPowerSystem
+public sealed partial class PsychokinesisPowerSystem : SharedPsychokinesisPowerSystem
 {
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly SharedPsionicAbilitiesSystem _psionics = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedInteractionSystem _interaction = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private SharedPsionicAbilitiesSystem _psionics = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<PsychokinesisPowerComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<PsychokinesisPowerComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<PsychokinesisPowerComponent, PsychokinesisPowerActionEvent>(OnPowerUsed);
-    }
-
-    [ValidatePrototypeId<EntityPrototype>] private const string ActionPsychokinesis = "ActionPsychokinesis";
-
-    private void OnInit(EntityUid uid, PsychokinesisPowerComponent component, ComponentInit args)
+    protected override void EnsurePowerActions(EntityUid uid, PsychokinesisPowerComponent component)
     {
         _actions.AddAction(uid, ref component.PsychokinesisPowerAction, ActionPsychokinesis);
 
@@ -41,12 +29,12 @@ public sealed class PsychokinesisPowerSystem : SharedPsychokinesisPowerSystem
             psionic.PsionicAbility = component.PsychokinesisPowerAction;
     }
 
-    private void OnShutdown(EntityUid uid, PsychokinesisPowerComponent component, ComponentShutdown args)
+    protected override void RemovePowerActions(EntityUid uid, PsychokinesisPowerComponent component)
     {
         _actions.RemoveAction(uid, component.PsychokinesisPowerAction);
     }
 
-    private void OnPowerUsed(EntityUid uid ,PsychokinesisPowerComponent comp, PsychokinesisPowerActionEvent args)
+    protected override void HandlePowerUse(EntityUid uid, PsychokinesisPowerComponent component, PsychokinesisPowerActionEvent args)
     {
         if(args.Handled)
             return;
@@ -59,14 +47,20 @@ public sealed class PsychokinesisPowerSystem : SharedPsychokinesisPowerSystem
         if(transform.GridUid != _transform.GetGrid(args.Target))
             return;
 
-
+        if(component.TeleportEffect != null)
+            SpawnAtPosition(component.TeleportEffect, transform.Coordinates);
         _transform.SetCoordinates(args.Performer, args.Target);
         _transform.AttachToGridOrMap(args.Performer);
-        _audio.PlayPvs(comp.WaveSound, args.Performer, AudioParams.Default.WithVolume(comp.WaveVolume));
+
+        if(component.TeleportOutEffect != null)
+            SpawnAtPosition(component.TeleportOutEffect, args.Target);
+        _audio.PlayPvs(component.WaveSound, args.Performer, AudioParams.Default.WithVolume(component.WaveVolume));
 
         _psionics.LogPowerUsed(uid, "psychokinesis");
 
         args.Handled = true;
     }
+
+    private readonly EntProtoId ActionPsychokinesis = "ActionPsychokinesis";
 }
 

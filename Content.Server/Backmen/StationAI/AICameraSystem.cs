@@ -8,6 +8,7 @@ using Content.Shared.Backmen.StationAI.Components;
 using Content.Shared.Eye.Blinding.Components;
 using Content.Shared.Popups;
 using Content.Shared.Silicons.StationAi;
+using Content.Shared.SurveillanceCamera.Components;
 using Content.Shared.Tag;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio.Systems;
@@ -19,17 +20,17 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.StationAI;
 
-public sealed class AICameraSystem : EntitySystem
+public sealed partial class AICameraSystem : EntitySystem
 {
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly InteractionSystem _interaction = default!;
-    [Dependency] private readonly SurveillanceCameraSystem _cameraSystem = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
-    [Dependency] private readonly GunSystem _gun = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly UserInterfaceSystem _uiSystem = default!;
-    [Dependency] private readonly SharedStationAiSystem _stationAi = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private InteractionSystem _interaction = default!;
+    [Dependency] private SurveillanceCameraSystem _cameraSystem = default!;
+    [Dependency] private PopupSystem _popup = default!;
+    [Dependency] private GunSystem _gun = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private UserInterfaceSystem _uiSystem = default!;
+    [Dependency] private SharedStationAiSystem _stationAi = default!;
 
 
      private const double MoverJobTime = 0.005;
@@ -87,7 +88,7 @@ public sealed class AICameraSystem : EntitySystem
                  continue;
              aiEye.FollowsCameras.Add((GetNetEntity(camUid), GetNetCoordinates(transformComponent.Coordinates)));
          }
-         Dirty(core.Comp.RemoteEntity.Value, aiEye);
+         DirtyField(core.Comp.RemoteEntity.Value, aiEye, nameof(AIEyeComponent.FollowsCameras));
      }
 
      private void OnOpenCamUi(Entity<StationAiHeldComponent> ent, ref AIEyeCampActionEvent args)
@@ -124,8 +125,7 @@ public sealed class AICameraSystem : EntitySystem
          _transform.AttachToGridOrMap(core.Comp.RemoteEntity.Value);
      }
 
-     [ValidatePrototypeId<EntityPrototype>]
-     private const string BulletDisabler = "BulletDisabler";
+     private readonly EntProtoId BulletDisabler = "BulletDisabler";
      private void OnShoot(Entity<StationAiHeldComponent> ent, ref AIEyeCampShootActionEvent args)
      {
          if (!_stationAi.TryGetCore(ent.Owner, out var core) || core.Comp?.RemoteEntity == null)
@@ -239,7 +239,7 @@ public sealed class AICameraSystem : EntitySystem
          _cameraSystem.UpdateVisuals(eye.Comp.Camera.Value, camera);
          EnsureComp<AICameraComponent>(eye.Comp.Camera.Value).ActiveViewers.Remove(eye);
          eye.Comp.Camera = null;
-         Dirty(eye,eye.Comp);
+         DirtyField(eye, eye.Comp, nameof(AIEyeComponent.Camera));
      }
      private void ChangeActiveCamera(Entity<AIEyeComponent> eye, EntityUid camUid, SurveillanceCameraComponent? cameraComponent = null)
      {
@@ -261,7 +261,7 @@ public sealed class AICameraSystem : EntitySystem
          var v = cameraComponent.ActiveViewers;
 
          eye.Comp.Camera = camUid;
-         Dirty(eye,eye.Comp);
+         DirtyField(eye, eye.Comp, nameof(AIEyeComponent.Camera));
          v.Add(eye);
          _cameraSystem.UpdateVisuals(camUid, cameraComponent);
          EnsureComp<AICameraComponent>(camUid).ActiveViewers.Add(eye);
@@ -297,6 +297,9 @@ public sealed class AICameraSystem : EntitySystem
          component.CameraCategories = camera.AvailableNetworks;
          component.Enabled = true;
 
-         Dirty(uid, component);
+         DirtyFields(uid, component, null,
+             nameof(AICameraComponent.Enabled),
+             nameof(AICameraComponent.CameraName),
+             nameof(AICameraComponent.CameraCategories));
      }
 }

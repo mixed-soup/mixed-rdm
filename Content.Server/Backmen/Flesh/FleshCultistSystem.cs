@@ -2,16 +2,12 @@
 using Content.Server.Actions;
 using Content.Server.Atmos.Components;
 using Content.Server.Backmen.Language;
-using Content.Server.Body.Components;
 using Content.Server.Body.Systems;
-using Content.Server.Chemistry.Containers.EntitySystems;
-using Content.Server.Flash.Components;
 using Content.Server.Fluids.EntitySystems;
 using Content.Server.Forensics;
 using Content.Server.Humanoid;
 using Content.Server.Mind;
 using Content.Server.Popups;
-using Content.Server.Store.Components;
 using Content.Server.Store.Systems;
 using Content.Server.Temperature.Components;
 using Content.Server.Weapons.Ranged.Systems;
@@ -26,8 +22,12 @@ using Content.Shared.Electrocution;
 using Content.Shared.FixedPoint;
 using Content.Shared.Backmen.Flesh;
 using Content.Shared.Backmen.Language;
+using Content.Shared.Body.Systems;
 using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Chemistry.Reagent;
 using Content.Shared.Cloning.Events;
+using Content.Shared.Damage.Systems;
+using Content.Shared.Flash.Components;
 using Content.Shared.Fluids.Components;
 using Content.Shared.Forensics.Components;
 using Content.Shared.Hands.Components;
@@ -42,6 +42,7 @@ using Content.Shared.Popups;
 using Content.Shared.Random;
 using Content.Shared.Store.Components;
 using Content.Shared.Tag;
+using Content.Shared.Temperature.Components;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Collections;
@@ -55,33 +56,30 @@ namespace Content.Server.Backmen.Flesh;
 
 public sealed partial class FleshCultistSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly ActionsSystem _action = default!;
-    [Dependency] private readonly AlertsSystem _alerts = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly StoreSystem _store = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly PuddleSystem _puddleSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
-    [Dependency] private readonly HumanoidAppearanceSystem _sharedHuApp = default!;
-    [Dependency] private readonly SharedAppearanceSystem _sharedAppearance = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly BodySystem _body = default!;
-    [Dependency] private readonly BloodstreamSystem _bloodstreamSystem = default!;
-    [Dependency] private readonly GunSystem _gunSystem = default!;
-    [Dependency] private readonly TagSystem _tagSystem = default!;
-    [Dependency] private readonly RandomHelperSystem _randomHelper = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
-    [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly LanguageSystem _language = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private ActionsSystem _action = default!;
+    [Dependency] private AlertsSystem _alerts = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private StoreSystem _store = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private PuddleSystem _puddleSystem = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private HumanoidAppearanceSystem _sharedHuApp = default!;
+    [Dependency] private SharedAppearanceSystem _sharedAppearance = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
+    [Dependency] private BodySystem _body = default!;
+    [Dependency] private SharedBloodstreamSystem _bloodstreamSystem = default!;
+    [Dependency] private GunSystem _gunSystem = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
+    [Dependency] private RandomHelperSystem _randomHelper = default!;
+    [Dependency] private SharedTransformSystem _transformSystem = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private LanguageSystem _language = default!;
 
-    [ValidatePrototypeId<LanguagePrototype>]
-    private const string FleshLang = "Flesh";
+    private static readonly ProtoId<LanguagePrototype> FleshLang = "Flesh";
 
     public override void Initialize()
     {
@@ -117,8 +115,8 @@ public sealed partial class FleshCultistSystem : EntitySystem
         if (!TryComp<HumanoidAppearanceComponent>(args.CloneUid, out var huAppComponent))
             return;
 
-        var speciesProto = _prototype.Index(huAppComponent.Species);
-        var skeletonSprites = _prototype.Index<HumanoidSpeciesBaseSpritesPrototype>(speciesProto.SpriteSet);
+        var speciesProto = _proto.Index(huAppComponent.Species);
+        var skeletonSprites = _proto.Index<HumanoidSpeciesBaseSpritesPrototype>(speciesProto.SpriteSet);
         foreach (var (key, id) in skeletonSprites.Sprites)
         {
             _sharedHuApp.SetBaseLayerId(args.CloneUid, key, id, humanoid: huAppComponent);
@@ -133,26 +131,23 @@ public sealed partial class FleshCultistSystem : EntitySystem
             case MobState.Critical:
             {
                 EnsureComp<CuffableComponent>(uid);
-                var hands = _handsSystem.EnumerateHands(uid);
-                var enumerateHands = hands as Hand[] ?? hands.ToArray();
-                foreach (var enumerateHand in enumerateHands)
+                var hands = _handsSystem.EnumerateHands(uid).ToArray();
+                foreach (var enumerateHand in hands)
                 {
-                    if (enumerateHand.Container == null)
+                    if (_handsSystem.TryGetHeldItem(uid, enumerateHand, out var item))
                         continue;
-                    foreach (var containerContainedEntity in enumerateHand.Container.ContainedEntities)
-                    {
-                        if (!TryComp(containerContainedEntity, out MetaDataComponent? metaData))
-                            continue;
-                        if (metaData.EntityPrototype == null)
-                            continue;
-                        if (metaData.EntityPrototype.ID != component.BladeSpawnId &&
-                            metaData.EntityPrototype.ID != component.ClawSpawnId &&
-                            metaData.EntityPrototype.ID != component.SpikeHandGunSpawnId &&
-                            metaData.EntityPrototype.ID != component.FistSpawnId)
-                            continue;
-                        QueueDel(containerContainedEntity);
-                        _audioSystem.PlayPvs(component.SoundMutation, uid, component.SoundMutation.Params);
-                    }
+
+                    if (!TryComp(item, out MetaDataComponent? metaData))
+                        continue;
+                    if (metaData.EntityPrototype == null)
+                        continue;
+                    if (metaData.EntityPrototype.ID != component.BladeSpawnId &&
+                        metaData.EntityPrototype.ID != component.ClawSpawnId &&
+                        metaData.EntityPrototype.ID != component.SpikeHandGunSpawnId &&
+                        metaData.EntityPrototype.ID != component.FistSpawnId)
+                        continue;
+                    QueueDel(item);
+                    _audio.PlayPvs(component.SoundMutation, uid, component.SoundMutation.Params);
                 }
 
                 break;
@@ -170,7 +165,7 @@ public sealed partial class FleshCultistSystem : EntitySystem
                             {
                                 EntityManager.DeleteEntity(shoes.Value);
                                 _movement.RefreshMovementSpeedModifiers(uid);
-                                _audioSystem.PlayPvs(component.SoundMutation, uid, component.SoundMutation.Params);
+                                _audio.PlayPvs(component.SoundMutation, uid, component.SoundMutation.Params);
                             }
                         }
                     }
@@ -187,7 +182,7 @@ public sealed partial class FleshCultistSystem : EntitySystem
                             {
                                 EntityManager.DeleteEntity(outerClothing.Value);
                                 _movement.RefreshMovementSpeedModifiers(uid);
-                                _audioSystem.PlayPvs(component.SoundMutation, uid, component.SoundMutation.Params);
+                                _audio.PlayPvs(component.SoundMutation, uid, component.SoundMutation.Params);
                             }
                         }
                     }
@@ -219,9 +214,9 @@ public sealed partial class FleshCultistSystem : EntitySystem
         args.Cancel();
     }
 
-    [ValidatePrototypeId<EntityPrototype>] private const string FleshCultistShop = "FleshCultistShop";
-    [ValidatePrototypeId<EntityPrototype>] private const string FleshCultistDevour = "FleshCultistDevour";
-    [ValidatePrototypeId<EntityPrototype>] private const string FleshCultistAbsorbBloodPool = "FleshCultistAbsorbBloodPool";
+    private readonly EntProtoId FleshCultistShop = "FleshCultistShop";
+    private readonly EntProtoId FleshCultistDevour = "FleshCultistDevour";
+    private readonly EntProtoId FleshCultistAbsorbBloodPool = "FleshCultistAbsorbBloodPool";
 
     private void OnStartup(EntityUid uid, FleshCultistComponent component, MapInitEvent args)
     {
@@ -276,8 +271,7 @@ public sealed partial class FleshCultistSystem : EntitySystem
         _store.ToggleUi(uid, uid, store);
     }
 
-    [ValidatePrototypeId<AlertPrototype>]
-    private const string MutationPoint = "MutationPoint";
+    private static readonly ProtoId<AlertPrototype> MutationPoint = "MutationPoint";
 
     private void ChangeParasiteHunger(EntityUid uid, FixedPoint2 amount, FleshCultistComponent? component = null)
     {
@@ -292,6 +286,7 @@ public sealed partial class FleshCultistSystem : EntitySystem
         _alerts.ShowAlert(uid, MutationPoint, (short) Math.Clamp(Math.Round(component.Hunger.Float() / 10f), 0, 16));
     }
 
+    private static readonly ReagentId BloodId = new("Blood", null);
     private void OnDevourAction(EntityUid uid, FleshCultistComponent component, FleshCultistDevourActionEvent args)
     {
         if (args.Handled)
@@ -301,7 +296,7 @@ public sealed partial class FleshCultistSystem : EntitySystem
 
         if (!TryComp<MobStateComponent>(target, out var targetState))
             return;
-        if (!TryComp<BloodstreamComponent>(target, out var bloodstream))
+        if (!TryComp<BloodstreamComponent>(target, out var bloodstream) || bloodstream.BloodSolution is not {} bloodSolution)
             return;
         var hasAppearance = false;
         {
@@ -333,14 +328,15 @@ public sealed partial class FleshCultistSystem : EntitySystem
                     }
                     else
                     {
-                        if (bloodstream.BloodReagent != "Blood")
+
+                        if (!bloodSolution.Comp.Solution.ContainsPrototype(BloodId.Prototype))
                         {
                             _popupSystem.PopupEntity(
                                 Loc.GetString("flesh-cultist-devout-target-not-have-flesh"),
                                 uid, uid);
                             return;
                         }
-                        if (bloodstream.BloodMaxVolume < 30)
+                        if (bloodSolution.Comp.Solution.MaxVolume < 30)
                         {
                             _popupSystem.PopupEntity(
                                 Loc.GetString("flesh-cultist-devout-target-invalid"),
@@ -348,7 +344,8 @@ public sealed partial class FleshCultistSystem : EntitySystem
                             return;
                         }
                     }
-                    var saturation = MatchSaturation(bloodstream.BloodMaxVolume.Value / 100, hasAppearance);
+
+                    var saturation = MatchSaturation(bloodSolution.Comp.Solution.MaxVolume.Value / 100, hasAppearance);
                     if (component.Hunger + saturation >= component.MaxHunger)
                     {
                         _popupSystem.PopupEntity(
@@ -385,7 +382,7 @@ public sealed partial class FleshCultistSystem : EntitySystem
         if (args.Args.Target == null)
             return;
 
-        if (!TryComp<BloodstreamComponent>(args.Args.Target.Value, out var bloodstream))
+        if (!TryComp<BloodstreamComponent>(args.Args.Target.Value, out var bloodstream) || bloodstream.BloodSolution is not { } bloodSolution)
             return;
 
         var hasAppearance = false;
@@ -466,12 +463,12 @@ public sealed partial class FleshCultistSystem : EntitySystem
             hasAppearance = true;
         }
 
-        var saturation = MatchSaturation(bloodstream.BloodMaxVolume.Value / 100, hasAppearance);
-        var evolutionPoint = MatchEvolutionPoint(bloodstream.BloodMaxVolume.Value / 100, hasAppearance);
-        var healPoint = MatchHealPoint(bloodstream.BloodMaxVolume.Value / 100, hasAppearance);
+        var saturation = MatchSaturation(bloodSolution.Comp.Solution.MaxVolume.Value / 100, hasAppearance);
+        var evolutionPoint = MatchEvolutionPoint(bloodSolution.Comp.Solution.MaxVolume.Value / 100, hasAppearance);
+        var healPoint = MatchHealPoint(bloodSolution.Comp.Solution.MaxVolume.Value / 100, hasAppearance);
         var tempSol = new Solution() { MaxVolume = 5 };
 
-        var bloodstreamSol = bloodstream.BloodSolution ?? bloodstream.ChemicalSolution ?? bloodstream.TemporarySolution;
+        var bloodstreamSol = bloodstream.BloodSolution ?? bloodstream.TemporarySolution;
         if(bloodstreamSol != null)
             tempSol.AddSolution(bloodstreamSol.Value.Comp.Solution, _proto);
 
@@ -489,14 +486,14 @@ public sealed partial class FleshCultistSystem : EntitySystem
             QueueDel(args.Args.Target.Value);
         }
 
-        if (_solutionSystem.TryGetInjectableSolution(uid, out var injectableSolution, out _))
+        if (_solution.TryGetInjectableSolution(uid, out var injectableSolution, out _))
         {
             var transferSolution = new Solution();
             foreach (var reagent in component.HealDevourReagents)
             {
                 transferSolution.AddReagent(reagent.Reagent, reagent.Quantity * healPoint);
             }
-            _solutionSystem.TryAddSolution(injectableSolution.Value, transferSolution);
+            _solution.TryAddSolution(injectableSolution.Value, transferSolution);
         }
 
         component.Hunger += saturation;
@@ -673,7 +670,7 @@ public sealed partial class FleshCultistSystem : EntitySystem
 
         foreach (var (puddle, solution) in puddles)
         {
-            if (!_solutionSystem.TryGetSolution(puddle, solution, out _, out var puddleSolution))
+            if (!_solution.TryGetSolution(puddle, solution, out _, out var puddleSolution))
             {
                 continue;
             }
@@ -703,7 +700,7 @@ public sealed partial class FleshCultistSystem : EntitySystem
             return;
         }
 
-        _audioSystem.PlayPvs(component.BloodAbsorbSound, uid, component.BloodAbsorbSound.Params);
+        _audio.PlayPvs(component.BloodAbsorbSound, uid, component.BloodAbsorbSound.Params);
         _popup.PopupEntity(Loc.GetString("flesh-cultist-absorb-puddle", ("Entity", uid)),
             uid, uid, PopupType.Large);
 
@@ -712,9 +709,9 @@ public sealed partial class FleshCultistSystem : EntitySystem
         {
             transferSolution.AddReagent(reagent.Reagent, reagent.Quantity * (totalBloodQuantity / 10));
         }
-        if (_solutionSystem.TryGetInjectableSolution(uid, out var injectableSolution, out _))
+        if (_solution.TryGetInjectableSolution(uid, out var injectableSolution, out _))
         {
-            _solutionSystem.TryAddSolution(injectableSolution.Value, transferSolution);
+            _solution.TryAddSolution(injectableSolution.Value, transferSolution);
         }
         args.Handled = true;
     }

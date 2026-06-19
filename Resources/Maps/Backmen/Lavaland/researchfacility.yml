@@ -1,10 +1,10 @@
 meta:
   format: 7
   category: Grid
-  engineVersion: 262.0.0
+  engineVersion: 271.1.0
   forkId: ""
   forkVersion: ""
-  time: 07/04/2025 07:47:10
+  time: 01/22/2026 16:17:01
   entityCount: 1303
 maps: []
 grids:
@@ -532,50 +532,32 @@ entities:
         - volume: 2500
           temperature: 293.15
           moles:
-          - 21.824879
-          - 82.10312
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
+            Oxygen: 21.824879
+            Nitrogen: 82.10312
         chunkSize: 4
     - type: GasTileOverlay
     - type: RadiationGridResistance
     - type: Roof
       data:
         -3,-1: 18446743802065502208
-        -2,-1: 18446744073709551360
-        -1,-1: 9169117185304295920
-        -2,0: 18446744073709518655
+        -2,-1: 18446744073709551615
+        -1,-1: 18446744073709551615
+        -2,0: 18446744073709551615
         -3,0: 18446744073709551615
         -4,-1: 9259541571362095104
         -4,0: 9259542123273814144
         -3,1: 16316664
         -2,1: 16777215
-        -1,1: 13889313184906543103
-        -1,0: 18446604302336720124
+        -1,1: 13889313184914866175
+        -1,0: 18446744073709551615
         0,1: 2242545361212669951
-        0,0: 18446681535756107772
-        0,-1: 17938102267936735039
+        0,0: 18446681535756107775
+        0,-1: 18444483477802811199
         0,-2: 2235763470010664959
         -1,-2: 16181363092398014399
         -1,2: 192
         0,2: 31
-        1,0: 18446743103564865246
+        1,0: 18446743107876675551
         1,1: 18446744073709551615
         1,2: 255
         2,2: 15
@@ -593,9 +575,9 @@ entities:
         1,-5: 2233785415175766016
         0,-4: 18446744073709551552
         0,-5: 13835058055282163712
-        -1,-4: 18446744060774120448
-        -2,-4: 16204197749883666432
-    - type: ImplicitRoof
+        -1,-4: 18446744073659022336
+        -2,-4: 16204198711956340736
+    - type: ExplosionAirtightGrid
 - proto: AirlockHatchBasik
   entities:
   - uid: 70
@@ -733,40 +715,54 @@ entities:
       rot: 3.141592653589793 rad
       pos: 2.5,11.5
       parent: 1
+    - type: Fixtures
+      fixtures: {}
   - uid: 769
     components:
     - type: Transform
       pos: -12.5,7.5
       parent: 1
+    - type: Fixtures
+      fixtures: {}
   - uid: 770
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: -5.5,0.5
       parent: 1
+    - type: Fixtures
+      fixtures: {}
   - uid: 771
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 8.5,12.5
       parent: 1
+    - type: Fixtures
+      fixtures: {}
   - uid: 772
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 14.5,0.5
       parent: 1
+    - type: Fixtures
+      fixtures: {}
   - uid: 773
     components:
     - type: Transform
       pos: -4.5,-10.5
       parent: 1
+    - type: Fixtures
+      fixtures: {}
   - uid: 774
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 6.5,-20.5
       parent: 1
+    - type: Fixtures
+      fixtures: {}
 - proto: BaseComputer
   entities:
   - uid: 5
@@ -4740,6 +4736,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -24.5,-0.5
       parent: 1
+    - type: Fixtures
+      fixtures: {}
 - proto: SinkStemless
   entities:
   - uid: 79

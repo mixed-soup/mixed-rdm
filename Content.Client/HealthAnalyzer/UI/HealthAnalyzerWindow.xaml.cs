@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Numerics;
+using Content.Client.Message;
 using Content.Shared.Atmos;
 using Content.Client.UserInterface.Controls;
 using Content.Shared.Backmen.Surgery.Consciousness.Components;
@@ -9,8 +10,10 @@ using Content.Shared.Backmen.Surgery.Wounds;
 using Content.Shared.Backmen.Surgery.Wounds.Components;
 using Content.Shared.Backmen.Surgery.Wounds.Systems;
 using Content.Shared.Backmen.Targeting;
+using Content.Shared.Backmen.Disease; // backmen
 using Content.Shared.Body.Components;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.FixedPoint;
 using Content.Shared.Humanoid;
@@ -25,6 +28,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -45,7 +49,6 @@ namespace Content.Client.HealthAnalyzer.UI
         public event Action<TargetBodyPart?, EntityUid>? OnBodyPartSelected;
         private EntityUid _spriteViewEntity;
 
-        [ValidatePrototypeId<EntityPrototype>]
         private readonly EntProtoId _bodyView = "AlertSpriteView";
 
         private readonly Dictionary<TargetBodyPart, TextureButton> _bodyPartControls;
@@ -275,15 +278,31 @@ namespace Content.Client.HealthAnalyzer.UI
                 DrawDiagnosticGroups(damageSortedGroups, damageSortedTypes);
             }
 
+            // Start-backmen: pain
+            // Pain Causes
+            var showPainCauses = (msg.PainCauses != null && msg.PainCauses.Count > 0) || msg.TotalPain.HasValue;
+
+            PainCausesDivider.Visible = showPainCauses;
+            PainCausesDisplay.Visible = showPainCauses;
+
+            if (showPainCauses)
+            {
+                PainCausesDisplay.UpdatePainCauses(msg.PainCauses, msg.TotalPain, _target);
+            }
+            // End-backmen: pain
+
             // Alerts
 
-            var showAlerts = msg.Unrevivable == true || msg.Bleeding == true;
+            var hasDisease = _entityManager.HasComponent<DiseasedComponent>(_target.Value); // backmen
+            var hasTrauma = _trauma.HasBodyTrauma(_target.Value, TraumaType.OrganDamage); // backmen
+            var hasBoneDmg = _trauma.HasBodyTrauma(_target.Value, TraumaType.BoneDamage); // backmenm
+            var showAlerts = msg.Unrevivable == true || msg.Bleeding == true || hasDisease || hasTrauma || hasBoneDmg || msg.PainImmune == true; // backmen
 
             AlertsDivider.Visible = showAlerts;
             AlertsContainer.Visible = showAlerts;
 
             if (showAlerts)
-                AlertsContainer.DisposeAllChildren();
+                AlertsContainer.RemoveAllChildren();
 
             if (msg.Unrevivable == true) // Right now this does nothing, but we have it just for parity :)
             {
@@ -307,8 +326,21 @@ namespace Content.Client.HealthAnalyzer.UI
                 AlertsContainer.AddChild(bleedingLabel);
             }
 
+            // Start-backmen: disease
+            if (hasDisease)
+            {
+                var diseaseLabel = new RichTextLabel
+                {
+                    Margin = new Thickness(0, 4),
+                    MaxWidth = 300,
+                };
+                diseaseLabel.SetMarkup(Loc.GetString("health-analyzer-window-entity-diseased-text"));
+                AlertsContainer.AddChild(diseaseLabel);
+            }
+            // End-backmen: disease
+
             // Backmen: traumas
-            if (_trauma.HasBodyTrauma(_target.Value, TraumaType.OrganDamage))
+            if (hasTrauma)
             {
                 var organTraumaLabel = new RichTextLabel
                 {
@@ -319,7 +351,7 @@ namespace Content.Client.HealthAnalyzer.UI
                 AlertsContainer.AddChild(organTraumaLabel);
             }
 
-            if (_trauma.HasBodyTrauma(_target.Value, TraumaType.BoneDamage))
+            if (hasBoneDmg)
             {
                 var boneTraumaLabel = new RichTextLabel
                 {
@@ -328,6 +360,17 @@ namespace Content.Client.HealthAnalyzer.UI
                 };
                 boneTraumaLabel.SetMessage(Loc.GetString("health-analyzer-window-bone-damage-present"), defaultColor: Color.Red);
                 AlertsContainer.AddChild(boneTraumaLabel);
+            }
+
+            if (msg.PainImmune == true)
+            {
+                var painImmuneLabel = new RichTextLabel
+                {
+                    Margin = new Thickness(0, 4),
+                    MaxWidth = 300,
+                };
+                painImmuneLabel.SetMarkup(Loc.GetString("health-analyzer-window-entity-pain-immune-text"));
+                AlertsContainer.AddChild(painImmuneLabel);
             }
         }
 
@@ -342,6 +385,7 @@ namespace Content.Client.HealthAnalyzer.UI
                 _ => Loc.GetString("health-analyzer-window-entity-unknown-text"),
             };
         }
+
 
         private void DrawDiagnosticGroups(
             Dictionary<string, FixedPoint2> groups,

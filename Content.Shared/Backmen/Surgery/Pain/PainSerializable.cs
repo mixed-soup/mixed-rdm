@@ -52,24 +52,14 @@ public sealed class PlayLoggedPainSoundEvent(NetEntity nerveSystem, SoundSpecifi
     public AudioParams? AudioParams { get; } = audioParams;
 }
 
-[Serializable, NetSerializable]
-public sealed class NerveComponentState : ComponentState
-{
-    public FixedPoint2 PainMultiplier;
-
-    public Dictionary<(NetEntity, string), PainFeelingModifier> PainFeelingModifiers = new();
-
-    public NetEntity ParentedNerveSystem;
-}
+[Serializable, DataRecord]
+public partial record struct PainMultiplier(FixedPoint2 Change, string Identifier = "Unspecified", PainType PainType = PainType.WoundPain, TimeSpan? Time = null);
 
 [Serializable, DataRecord]
-public record struct PainMultiplier(FixedPoint2 Change, string Identifier = "Unspecified", PainType PainType = PainType.WoundPain, TimeSpan? Time = null);
+public partial record struct PainFeelingModifier(FixedPoint2 Change, TimeSpan? Time = null);
 
 [Serializable, DataRecord]
-public record struct PainFeelingModifier(FixedPoint2 Change, TimeSpan? Time = null);
-
-[Serializable, DataRecord]
-public record struct PainModifier(FixedPoint2 Change, string Identifier = "Unspecified", PainType PainType = PainType.WoundPain, TimeSpan? Time = null); // Easier to manage pain with modifiers.
+public partial record struct PainModifier(FixedPoint2 Change, string Identifier = "Unspecified", PainType PainType = PainType.WoundPain, TimeSpan? Time = null); // Easier to manage pain with modifiers.
 
 [ByRefEvent]
 public record struct PainThresholdTriggered(Entity<NerveSystemComponent> NerveSystem, PainReflexType ReflexType, FixedPoint2 PainInput, bool Cancelled = false);

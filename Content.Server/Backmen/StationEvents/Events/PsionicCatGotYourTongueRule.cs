@@ -16,12 +16,14 @@ namespace Content.Server.Backmen.StationEvents.Events;
 /// <summary>
 /// Mutes everyone for a random amount of time.
 /// </summary>
-internal sealed class PsionicCatGotYourTongueRule : StationEventSystem<PsionicCatGotYourTongueRuleComponent>
+internal sealed partial class PsionicCatGotYourTongueRule : StationEventSystem<PsionicCatGotYourTongueRuleComponent>
 {
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly StatusEffectsSystem _statusEffectsSystem = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly SharedAudioSystem _sharedAudioSystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private SharedAudioSystem _sharedAudioSystem = default!;
+    [Dependency] private Shared.StatusEffectNew.StatusEffectsSystem _statusEffects = default!;
+
 
 
     protected override void Started(EntityUid uid, PsionicCatGotYourTongueRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
@@ -33,7 +35,7 @@ internal sealed class PsionicCatGotYourTongueRule : StationEventSystem<PsionicCa
         var query = EntityQueryEnumerator<PotentialPsionicComponent, MobStateComponent>();
         while (query.MoveNext(out var psion, out _, out var mobStateComponent))
         {
-            if (_mobStateSystem.IsAlive(psion, mobStateComponent) && !HasComp<PsionicInsulationComponent>(psion))
+            if (_mobStateSystem.IsAlive(psion, mobStateComponent) && !_statusEffects.HasEffectComp<PsionicInsulationComponent>(psion))
                 psionicList.Add(psion);
         }
 

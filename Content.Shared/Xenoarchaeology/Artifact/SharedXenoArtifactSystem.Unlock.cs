@@ -10,7 +10,7 @@ namespace Content.Shared.Xenoarchaeology.Artifact;
 
 public abstract partial class SharedXenoArtifactSystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
 
     private EntityQuery<XenoArtifactUnlockingComponent> _unlockingQuery;
 
@@ -45,7 +45,7 @@ public abstract partial class SharedXenoArtifactSystem
         if (!Resolve(ent, ref ent.Comp))
             return false;
 
-        var artifact = GetEntity(ent.Comp.Attached);
+        var artifact = ent.Comp.Attached;
         if (!TryComp<XenoArtifactComponent>(artifact, out var artiComp))
             return false;
 

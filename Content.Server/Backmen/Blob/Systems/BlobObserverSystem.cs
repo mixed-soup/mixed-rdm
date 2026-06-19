@@ -22,24 +22,24 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Blob.Systems;
 
-public sealed class BlobObserverSystem : SharedBlobObserverSystem
+public sealed partial class BlobObserverSystem : SharedBlobObserverSystem
 {
-    [Dependency] private readonly ActionsSystem _action = default!;
-    [Dependency] private readonly BlobCoreSystem _blobCoreSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly ActionBlockerSystem _blocker = default!;
-    [Dependency] private readonly UserInterfaceSystem _uiSystem = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly RoleSystem _roleSystem = default!;
-    [Dependency] private readonly IChatManager _chatManager = default!;
-    [Dependency] private readonly ISharedPlayerManager _actorSystem = default!;
-    [Dependency] private readonly ViewSubscriberSystem _viewSubscriberSystem = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
-    [Dependency] private readonly HandsSystem _hands = default!;
-    [Dependency] private readonly BlobTileSystem _blobTileSystem = default!;
+    [Dependency] private ActionsSystem _action = default!;
+    [Dependency] private BlobCoreSystem _blobCoreSystem = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private ActionBlockerSystem _blocker = default!;
+    [Dependency] private UserInterfaceSystem _uiSystem = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private ILogManager _logMan = default!;
+    [Dependency] private RoleSystem _roleSystem = default!;
+    [Dependency] private IChatManager _chatManager = default!;
+    [Dependency] private ISharedPlayerManager _actorSystem = default!;
+    [Dependency] private ViewSubscriberSystem _viewSubscriberSystem = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
+    [Dependency] private HandsSystem _hands = default!;
+    [Dependency] private BlobTileSystem _blobTileSystem = default!;
 
     private EntityQuery<BlobTileComponent> _tileQuery;
 
@@ -48,8 +48,8 @@ public sealed class BlobObserverSystem : SharedBlobObserverSystem
 
     private ISawmill _logger = default!;
 
-    [ValidatePrototypeId<EntityPrototype>] private const string BlobCaptureObjective = "BlobCaptureObjective";
-    [ValidatePrototypeId<EntityPrototype>] private const string MobObserverBlobController = "MobObserverBlobController";
+    private readonly EntProtoId BlobCaptureObjective = "BlobCaptureObjective";
+    private readonly EntProtoId MobObserverBlobController = "MobObserverBlobController";
 
     public override void Initialize()
     {
@@ -78,12 +78,12 @@ public sealed class BlobObserverSystem : SharedBlobObserverSystem
 
     private void OnStartup(Entity<BlobObserverComponent> ent, ref ComponentStartup args)
     {
-        _hands.AddHand(ent,"BlobHand",HandLocation.Middle);
+        _hands.AddHand(ent.Owner, "BlobHand", HandLocation.Middle);
 
         ent.Comp.VirtualItem = Spawn(MobObserverBlobController, Transform(ent).Coordinates);
         var comp = EnsureComp<BlobObserverControllerComponent>(ent.Comp.VirtualItem);
         comp.Blob = ent;
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(BlobObserverComponent.VirtualItem));
 
         if (!_hands.TryPickup(ent, ent.Comp.VirtualItem, "BlobHand", false, false, false))
         {
@@ -112,7 +112,6 @@ public sealed class BlobObserverSystem : SharedBlobObserverSystem
         }
 
         blobObserverComponent.Core = (blobCoreUid, core);
-        Dirty(observer,blobObserverComponent);
 
 
         var isNewMind = false;

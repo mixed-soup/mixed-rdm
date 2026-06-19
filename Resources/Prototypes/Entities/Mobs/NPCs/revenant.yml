@@ -6,20 +6,19 @@
   name: revenant
   description: A spooky ghostie.
   components:
+  - type: Emag
+    emagType: All
   - type: Input
     context: "ghost"
   - type: Spectral
   - type: MovementSpeedModifier
-    baseWalkSpeed: 6
-    baseSprintSpeed: 6
+    baseWalkSpeed: 5
+    baseSprintSpeed: 5
   - type: Sprite
     sprite: Mobs/Ghosts/revenant.rsi
     layers:
     - state: active
-  - type: StatusEffects
-    allowed:
-    - Stun
-    - Corporeal
+  - type: Hands
   - type: Damageable
     damageContainer: ManifestedSpirit
     damageModifierSet: ManifestedSpirit
@@ -83,6 +82,10 @@
     nameFormat: name-format-revenant
   - type: Speech
     speechVerb: Ghost
+  - type: ActionGrant
+    actions:
+    - ActionRevenantShop
+    - ActionRevenantHaunt
 # backmen
   - type: UniversalLanguageSpeaker
   - type: LanguageKnowledge
@@ -93,3 +96,7 @@
   - type: Reactive
     groups:
       Acidic: [Touch]
+  - type: Tag
+    tags:
+    - SlowImmune
+    - KnockdownImmune

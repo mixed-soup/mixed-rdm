@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Content.Server.Chat.Systems;
 using Content.Server.SS220.Chat.Systems;
 using Content.Server.Players.RateLimiting;
+using Content.Shared.Chat;
 using Content.Shared.Corvax.CCCVars;
 using Content.Shared.Corvax.TTS;
 using Content.Shared.GameTicking;
@@ -18,10 +19,10 @@ namespace Content.Server.Corvax.TTS;
 // ReSharper disable once InconsistentNaming
 public sealed partial class TTSSystem : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly TTSManager _ttsManager = default!;
-    [Dependency] private readonly SharedTransformSystem _xforms = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private TTSManager _ttsManager = default!;
+    [Dependency] private SharedTransformSystem _xforms = default!;
 
     private const int MaxMessageChars = 100 * 2; // same as SingleBubbleCharLimit * 2
     private bool _isEnabled = false;
@@ -40,6 +41,8 @@ public sealed partial class TTSSystem : EntitySystem
         SubscribeLocalEvent<TTSComponent, EntitySpokeLanguageEvent>(OnEntitySpoke);
 
         RegisterRateLimits();
+
+        InitializeRadio();
     }
 
     private void OnTtsInitialized(Entity<TTSComponent> ent, ref MapInitEvent args)

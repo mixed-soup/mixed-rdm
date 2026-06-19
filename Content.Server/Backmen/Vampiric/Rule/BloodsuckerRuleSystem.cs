@@ -5,6 +5,7 @@ using Content.Server.Body.Components;
 using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
 using Content.Server.Mind;
+using Content.Shared.Backmen.Vampiric.Components;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Humanoid;
 using Content.Shared.Mind;
@@ -16,14 +17,14 @@ using Robust.Shared.Random;
 
 namespace Content.Server.Backmen.Vampiric.Rule;
 
-public sealed class BloodsuckerRuleSystem : GameRuleSystem<BloodsuckerRuleComponent>
+public sealed partial class BloodsuckerRuleSystem : GameRuleSystem<BloodsuckerRuleComponent>
 {
-    [Dependency] private readonly BloodSuckerSystem _bloodSuckerSystem = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly SharedRoleSystem _roleSystem = default!;
-    [Dependency] private readonly SharedMindSystem _mind = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private BloodSuckerSystem _bloodSuckerSystem = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private SharedRoleSystem _roleSystem = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {

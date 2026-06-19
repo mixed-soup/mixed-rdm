@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   parent: [BaseItem, BaseXenoArtifact]
   id: BaseXenoArtifactItem
   name: artifact
@@ -22,7 +22,7 @@
       map: [ "enum.ArtifactsVisualLayers.ActivationEffect" ]
       visible: false
   - type: Physics
-    bodyType: Dynamic
+    bodyType: KinematicController
   - type: CollisionWake
     enabled: false
   - type: InteractionOutline

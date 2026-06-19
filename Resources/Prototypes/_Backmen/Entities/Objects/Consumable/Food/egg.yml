@@ -4,7 +4,7 @@
   description: An egg!
   abstract: true
   components:
-  - type: Food
+  - type: Edible
     trash:
     - Eggshells
   - type: Sprite
@@ -70,7 +70,6 @@
     radius: 1.5
     energy: 3
     color: "#4faffb"
-  - type: Timer
   - type: TimedSpawner
     prototypes:
     - MobGiantSpiderVampireAngry
@@ -81,3 +80,8 @@
     lifetime: 301
   - type: LimitedCharges
     maxCharges: 1
+  - type: PsionicInvisibleContacts
+    tileBased: true
+    whitelist:
+      tags:
+        - ArachneWeb

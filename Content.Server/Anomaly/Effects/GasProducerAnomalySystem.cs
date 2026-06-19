@@ -12,11 +12,11 @@ namespace Content.Server.Anomaly.Effects;
 /// <summary>
 /// This handles <see cref="GasProducerAnomalyComponent"/> and the events from <seealso cref="AnomalySystem"/>
 /// </summary>
-public sealed class GasProducerAnomalySystem : EntitySystem
+public sealed partial class GasProducerAnomalySystem : EntitySystem
 {
-    [Dependency] private readonly AtmosphereSystem _atmosphere = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
+    [Dependency] private AtmosphereSystem _atmosphere = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedMapSystem _map = default!;
 
     public override void Initialize()
     {
@@ -36,16 +36,18 @@ public sealed class GasProducerAnomalySystem : EntitySystem
     {
         base.Update(frameTime);
 
-        var query = EntityQueryEnumerator<GasProducerAnomalyComponent>();
-        while (query.MoveNext(out var ent, out var comp))
+        var query = EntityQueryEnumerator<GasProducerAnomalyComponent, AnomalyComponent>();
+        while (query.MoveNext(out var ent, out var comp, out var anom))
         {
             if (!comp.ReleasePassively)
                 continue;
 
-            // Yes this is unused code since there are no anomalies that
-            // release gas passively *yet*, but since I'm here I figured
-            // I'd save someone some time and just add it for the future
-            ReleaseGas(ent, comp.ReleasedGas, comp.PassiveMoleAmount * frameTime, comp.spawnRadius, comp.tileCount, comp.tempChange);
+            var moles = comp.PassiveMoleAmount * anom.Severity * frameTime;
+            if (moles <= 0)
+                continue;
+
+            // Passive release only affects the host tile; tempChange is reserved for supercritical bursts.
+            ReleaseGas(ent, comp.ReleasedGas, moles, comp.spawnRadius, 0, 0);
         }
     }
 

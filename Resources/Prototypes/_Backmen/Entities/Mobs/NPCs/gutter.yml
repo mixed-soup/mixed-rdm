@@ -39,8 +39,10 @@
     speedModifierThresholds:
       100: 1
   - type: Bloodstream
-    bloodReagent: Oil
-    bloodMaxVolume: 30
+    bloodReferenceSolution:
+      reagents:
+      - ReagentId: Oil
+        Quantity: 30
     bloodlossThreshold: 0
   - type: Destructible
     thresholds:
@@ -69,6 +71,9 @@
   - type: Transform
   - type: Damageable
     damageModifierSet: MachineArmor
+  - type: StaminaResistance
+    damageCoefficient: 0.65
+    worn: false
   - type: RequireProjectileTarget
     active: true
 
@@ -79,72 +84,23 @@
     Heat: 0.01
     Radiation: 0.01
     Caustic: 0.01
-    Stun: 0.1
 
-#StreetCleaner
 - type: entity
   id: DropPodMarkerStreetCleaner
-  parent: DropPodMarker
   suffix: Спавнер машины, Стритклинер
+  save: false
   components:
-  - type: TimedSpawner
-    prototypes:
-      -  DropPodLaunchAnimationStreetCleaner
-    intervalSeconds: 2
-  - type: TimedDespawn
-    lifetime: 3
+  - type: AirDrop
+    supplyDropTable: DropPodStreetCleaner
+    forceOpenSupplyDrop: true
 
-- type: entity
-  id: DropPodLaunchAnimationStreetCleaner
-  parent: DropPodLaunchAnimation
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Backmen/Effects/droppod_falling.rsi
-    layers:
-    - state: supplypod_falling_animation
-      offset: "0,3.3"
-  - type: TimedSpawner
-    prototypes:
-      - SupplyDropPodStreetCleaner
-
-- type: entity
-  id: SupplyDropPodStreetCleaner
-  parent: MissileBase
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Backmen/Structures/Storage/supplypod.rsi
-    layers:
-    - state: supplypod
-  - type: Fixtures
-    fixtures:
-      fix1:
-        shape:
-          !type:PhysShapeCircle
-          radius: 0.2
-        density: 100
-        mask:
-        - TableMask
-  - type: ConditionalSpawner
-    prototypes:
-    - StreetCleanerTeamSpawner
-
-- type: entity
-  id: StreetCleanerTeamSpawner
-  parent: MarkerBase
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: TimedSpawner
-    prototypes:
-      - MobStreetCleaner
-    chance: 1
-    intervalSeconds: 1
-    minimumEntitiesSpawned: 3
-    maximumEntitiesSpawned: 3
-  - type: Timer
-  - type: TimedDespawn
-    lifetime: 1.2
+- type: entityTable
+  id: DropPodStreetCleaner
+  table: !type:AllSelector
+    children:
+    - id: MobStreetCleaner
+    - id: MobStreetCleaner
+    - id: MobStreetCleaner
 
 - type: entity
   name: Street soldier
@@ -208,51 +164,17 @@
 #Gutterman
 - type: entity
   id: DropPodMarkerGutterman
-  parent: DropPodMarker
   suffix: Спавнер машины, Гаттерман
   components:
-  - type: TimedSpawner
-    prototypes:
-      -  DropPodLaunchAnimationGutterman
-    intervalSeconds: 2
-  - type: TimedDespawn
-    lifetime: 3
+  - type: AirDrop
+    supplyDropTable: DropPodGutterman
+    forceOpenSupplyDrop: true
 
-- type: entity
-  id: DropPodLaunchAnimationGutterman
-  parent: DropPodLaunchAnimation
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Backmen/Effects/droppod_falling.rsi
-    layers:
-    - state: supplypod_falling_animation
-      offset: "0,3.3"
-  - type: TimedSpawner
-    prototypes:
-      - SupplyDropPodGutterman
-
-- type: entity
-  id: SupplyDropPodGutterman
-  parent: MissileBase
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Backmen/Structures/Storage/supplypod.rsi
-    layers:
-    - state: supplypod
-  - type: Fixtures
-    fixtures:
-      fix1:
-        shape:
-          !type:PhysShapeCircle
-          radius: 0.2
-        density: 100
-        mask:
-        - TableMask
-  - type: ConditionalSpawner
-    prototypes:
-    - MobGutterman
+- type: entityTable
+  id: DropPodGutterman
+  table: !type:AllSelector
+    children:
+    - id: MobGutterman
 
 - type: entity
   name: Gutterman
@@ -393,85 +315,14 @@
   - type: Polymorphable
     innatePolymorphs:
     - GuttermanShooter
-  - type: Timer
-  - type: TimedSpawner
+  - type: TimedPolymorph
     prototypes:
-      - MobGuttermanWisp
+      - GuttermanShooter
     chance: 1
     intervalSeconds: 5
-    minimumEntitiesSpawned: 1
-    maximumEntitiesSpawned: 1
-
-- type: entity
-  id: MobGuttermanWisp
-  parent: BaseAngelWisp
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Backmen/test/base/rsi/Textures/Effects/none.rsi
-    layers:
-      - state: NoId
-  - type: MovementSpeedModifier
-    baseSprintSpeed: 1
-  - type: HTN
-    rootTask:
-      task: SimpleRangedHostileCompound
-    blackboard:
-      VisionRadius: !type:Single
-        16
-      AggroVisionRadius: !type:Single
-        20
-      NavClimb: !type:Bool
-        true
-      NavInteract: !type:Bool
-        true
-      NavPry: !type:Bool
-        true
-      NavSmash: !type:Bool
-        true
-  - type: NpcFactionMember
-    factions:
-      - MalfunctioningRobot
-  - type: BasicEntityAmmoProvider
-    proto: GuttermanShooter
-    capacity: 1
-    count: 1
-  - type: Gun
-    fireRate: 1
-    projectileSpeed: 0
-    soundGunshot:
-      path: /Audio/Weapons/Guns/MagIn/kinetic_reload.ogg
-      params:
-        volume: -100
-  - type: TimedDespawn
-    lifetime: 1
 
 - type: Tag
   id: Gutterman
-
-- type: entity
-  id: GuttermanShooter
-  parent: ProjectilePolyboltFly
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Physics
-    bodyType: KinematicController
-  - type: PolymorphOnTrigger
-    polymorph: GuttermanShooter
-  - type: TriggerWhitelist
-    whitelist:
-      tags:
-      - Gutterman
-  - type: Fixtures
-    fixtures:
-      projectile:
-        shape:
-          !type:PhysShapeAabb
-          bounds: "-0.85,-0.85,0.85,0.85"
-        mask:
-        - Impassable
-        - BulletImpassable
-        hard: false
 
 - type: polymorph
   id: GuttermanShooter
@@ -482,6 +333,8 @@
     revertOnDeath: true
     revertOnCrit: true
     duration: 5
+    polymorphPopup: null
+    exitPolymorphPopup: null
 
 - type: entity
   parent: MobGuttermanShooter
@@ -594,6 +447,9 @@
   - type: NoRotateOnMove
   - type: Damageable
     damageModifierSet: MachineGuttermanArmor
+  - type: StaminaResistance
+    damageCoefficient: 0.65
+    worn: false
 
 - type: damageModifierSet
   id: MachineGuttermanArmor
@@ -603,7 +459,6 @@
     Heat: 0.01
     Radiation: 0.01
     Caustic: 0.01
-    Stun: 0.1
 
 - type: entity
   id: BulletRifleGutterman
@@ -619,33 +474,17 @@
 #Guttertank - miniboss
 - type: entity
   id: DropPodMarkerGuttertank
-  parent: DropPodMarker
   suffix: Спавнер машины, Гаттертанк
   components:
-  - type: TimedSpawner
-    prototypes:
-      - DropPodLaunchAnimationGuttertank
-    intervalSeconds: 2
-  - type: TimedDespawn
-    lifetime: 3
+  - type: AirDrop
+    supplyDropTable: DropPodGuttertank
+    forceOpenSupplyDrop: true
 
-- type: entity
-  id: DropPodLaunchAnimationGuttertank
-  parent: DropPodLaunchAnimationGutterman
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: TimedSpawner
-    prototypes:
-      - SupplyDropPodGuttertank
-
-- type: entity
-  id: SupplyDropPodGuttertank
-  parent: SupplyDropPodGutterman
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: ConditionalSpawner
-    prototypes:
-    - MobGuttertank
+- type: entityTable
+  id: DropPodGuttertank
+  table: !type:AllSelector
+    children:
+    - id: MobGuttertank
 
 - type: entity
   name: Guttertank
@@ -734,42 +573,17 @@
   - type: Polymorphable
     innatePolymorphs:
     - GuttertankShooter
-  - type: Timer
-  - type: TimedSpawner
+  - type: TimedPolymorph
     prototypes:
-      - MobGuttertankWisp
-      - MobGuttertankWispSpeedster
+      - GuttertankShooter
+      - GuttertankSpeedster
     chance: 1
     intervalSeconds: 3
-    minimumEntitiesSpawned: 1
-    maximumEntitiesSpawned: 1
 
 #guttertank-shooter
 
-- type: entity
-  id: MobGuttertankWisp
-  parent: MobGuttermanWisp
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: BasicEntityAmmoProvider
-    proto: GuttertankShooter
-    capacity: 1
-    count: 1
-
 - type: Tag
   id: Guttertank
-
-- type: entity
-  id: GuttertankShooter
-  parent: GuttermanShooter
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: PolymorphOnTrigger
-    polymorph: GuttertankShooter
-  - type: TriggerWhitelist
-    whitelist:
-      tags:
-      - Guttertank
 
 - type: polymorph
   id: GuttertankShooter
@@ -780,6 +594,8 @@
     revertOnDeath: true
     revertOnCrit: true
     duration: 2
+    polymorphPopup: null
+    exitPolymorphPopup: null
 
 - type: entity
   parent: MobGuttertankBase
@@ -842,28 +658,6 @@
 
 #guttertank-speedster
 
-- type: entity
-  id: MobGuttertankWispSpeedster
-  parent: MobGuttermanWisp
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: BasicEntityAmmoProvider
-    proto: GuttertankSpeedster
-    capacity: 1
-    count: 1
-
-- type: entity
-  id: GuttertankSpeedster
-  parent: GuttermanShooter
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: PolymorphOnTrigger
-    polymorph: GuttertankSpeedster
-  - type: TriggerWhitelist
-    whitelist:
-      tags:
-      - Guttertank
-
 - type: polymorph
   id: GuttertankSpeedster
   configuration:
@@ -873,6 +667,8 @@
     revertOnDeath: true
     revertOnCrit: true
     duration: 3
+    polymorphPopup: null
+    exitPolymorphPopup: null
 
 - type: entity
   parent: MobGuttertankBase

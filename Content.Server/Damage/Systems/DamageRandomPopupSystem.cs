@@ -2,6 +2,7 @@ using Content.Server.Damage.Components;
 using Content.Server.Popups;
 using Content.Shared.Backmen.Surgery.Wounds;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Random;
 
@@ -10,10 +11,10 @@ namespace Content.Server.Damage.Systems;
 /// <summary>
 /// Outputs a random pop-up from the strings list when an object receives damage
 /// </summary>
-public sealed class DamageRandomPopupSystem : EntitySystem
+public sealed partial class DamageRandomPopupSystem : EntitySystem
 {
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {

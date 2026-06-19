@@ -8,13 +8,12 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Overlays;
 
-public sealed class ShowJobIconsSystem : EquipmentHudSystem<ShowJobIconsComponent>
+public sealed partial class ShowJobIconsSystem : EquipmentHudSystem<ShowJobIconsComponent>
 {
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
-    [Dependency] private readonly AccessReaderSystem _accessReader = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private AccessReaderSystem _accessReader = default!;
 
-    [ValidatePrototypeId<JobIconPrototype>]
-    private const string JobIconForNoId = "JobIconNoId";
+    private static readonly ProtoId<JobIconPrototype> JobIconForNoId = "JobIconNoId";
 
     public override void Initialize()
     {
@@ -52,7 +51,7 @@ public sealed class ShowJobIconsSystem : EquipmentHudSystem<ShowJobIconsComponen
             }
         }
 
-        if (_prototype.TryIndex<JobIconPrototype>(iconId, out var iconPrototype))
+        if (_prototype.Resolve(iconId, out var iconPrototype))
             ev.StatusIcons.Add(iconPrototype);
         else
             Log.Error($"Invalid job icon prototype: {iconPrototype}");

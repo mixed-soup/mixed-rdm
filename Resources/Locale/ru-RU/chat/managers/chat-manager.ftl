@@ -26,8 +26,11 @@ chat-manager-wrap-language-color = [color={ $color }]{ $message }[/color]
 chat-manager-entity-say-wrap-message = [BubbleHeader][Name]{ $entityName }[/Name][/BubbleHeader] { $verb }, "[BubbleContent]{ $message }[/BubbleContent]"
 chat-manager-entity-say-bold-wrap-message = [BubbleHeader][Name]{ $entityName }[/Name][/BubbleHeader] { $verb }, "[BubbleContent][bold]{ $message }[/bold][/font][/BubbleContent]"
 chat-manager-entity-whisper-wrap-message = [font size=11][italic][BubbleHeader][Name]{ $entityName }[/Name][/BubbleHeader] шепчет, "[BubbleContent]{ $message }[/BubbleContent]"[/italic][/font]
-chat-manager-entity-whisper-unknown-wrap-message = [font size=11][italic][BubbleHeader]Someone[/BubbleHeader] шепчет, "[BubbleContent]{ $message }[/BubbleContent]"[/italic][/font]
-chat-manager-entity-me-wrap-message = [italic]{ CAPITALIZE($entityName) } { $message }[/italic]
+chat-manager-entity-whisper-unknown-wrap-message = [font size=11][italic][BubbleHeader]Кто-то[/BubbleHeader] шепчет, "[BubbleContent]{ $message }[/BubbleContent]"[/italic][/font]
+chat-manager-entity-me-wrap-message = [italic]{ PROPER($entity) ->
+    *[false] { $entityName } { $message }[/italic]
+     [true] { CAPITALIZE($entityName) } { $message }[/italic]
+    }
 chat-manager-entity-looc-wrap-message = LOOC: [bold]{ $entityName }:[/bold] { $message }
 chat-manager-send-ooc-wrap-message = OOC: [bold]{ $playerName }:[/bold] { $message }
 chat-manager-send-ooc-patron-wrap-message = OOC: [bold][color={ $patronColor }]{ $playerName }[/color]:[/bold] { $message }
@@ -36,6 +39,7 @@ chat-manager-send-admin-dead-chat-wrap-message = { $adminChannelName }: [bold]([
 chat-manager-send-admin-chat-wrap-message = { $adminChannelName }: [bold]{ $playerName }:[/bold] { $message }
 chat-manager-send-admin-announcement-wrap-message = [bold]{ $adminChannelName }: { $message }[/bold]
 chat-manager-send-hook-ooc-wrap-message = OOC: [bold](D){ $senderName }:[/bold] { $message }
+chat-manager-send-hook-admin-wrap-message = АДМИН: [bold](D){ $senderName }:[/bold] { $message }
 chat-manager-dead-channel-name = МЁРТВЫЕ
 chat-manager-admin-channel-name = АДМИН
 chat-manager-rate-limited = Вы отправляете сообщения слишком быстро!
@@ -124,3 +128,13 @@ chat-speech-verb-name-electricity = Электричество
 chat-speech-verb-electricity-1 = трещит
 chat-speech-verb-electricity-2 = гудит
 chat-speech-verb-electricity-3 = скрипит
+chat-speech-verb-name-wawa = Вава
+chat-speech-verb-vulpkanin-1 = рычит
+chat-speech-verb-vulpkanin-2 = лает
+chat-speech-verb-vulpkanin-3 = урчит
+chat-speech-verb-vulpkanin-4 = тявкает
+chat-speech-verb-vulpkanin = Вульпканин
+chat-speech-verb-wawa-1 = произносит
+chat-speech-verb-wawa-2 = заявляет
+chat-speech-verb-wawa-3 = объявляет
+chat-speech-verb-wawa-4 = размышляет

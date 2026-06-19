@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   parent: SimpleMobBase
   id: BaseMobFleshCult
   name: извращенная плоть
@@ -34,7 +34,7 @@
         0: Alive
         75: Dead
     - type: Stamina
-      critThreshold: 50
+      baseCritThreshold: 50
     - type: Appearance
     - type: Butcherable
       spawned:
@@ -116,8 +116,10 @@
         0: Alive
         100: Dead
     - type: Bloodstream
-      bloodMaxVolume: 100
-      bloodReagent: Blood
+      bloodReferenceSolution:
+        reagents:
+        - ReagentId: Blood
+          Quantity: 100
     - type: MovementSpeedModifier
       baseWalkSpeed: 2
       baseSprintSpeed: 3
@@ -184,12 +186,14 @@
         Dead:
           Base: dead
     - type: Bloodstream
-      bloodMaxVolume: 300
-      bloodReagent: Blood
+      bloodReferenceSolution:
+        reagents:
+        - ReagentId: Blood
+          Quantity: 300
     - type: InputMover
     - type: MobMover
     - type: Physics
-      bodyType: Dynamic
+      bodyType: KinematicController
     - type: MovementSpeedModifier
       baseWalkSpeed: 1.5
       baseSprintSpeed: 2
@@ -204,7 +208,7 @@
         - Critical
         - Dead
     - type: Stamina
-      critThreshold: 300
+      baseCritThreshold: 300
     - type: MeleeWeapon
       hidden: true
       soundHit:
@@ -287,12 +291,14 @@
         Dead:
           Base: dead
     - type: Bloodstream
-      bloodMaxVolume: 300
-      bloodReagent: Blood
+      bloodReferenceSolution:
+        reagents:
+        - ReagentId: Blood
+          Quantity: 300
     - type: InputMover
     - type: MobMover
     - type: Physics
-      bodyType: Dynamic
+      bodyType: KinematicController
     - type: MovementSpeedModifier
       baseWalkSpeed: 1.5
       baseSprintSpeed: 2
@@ -302,7 +308,7 @@
         300: Critical
         350: Dead
     - type: Stamina
-      critThreshold: 300
+      baseCritThreshold: 300
     - type: MeleeWeapon
       hidden: true
       range: 2
@@ -397,10 +403,10 @@
     - type: MovementSpeedModifier
       baseWalkSpeed: 1.5
       baseSprintSpeed: 2
-    - type: TriggerOnMobstateChange #Chains with OnUseTimerTrigger
+    - type: TriggerOnMobstateChange #Chains with TimerTrigger
       mobState:
         - Dead
-    - type: TriggerImplantAction
+    - type: TriggerOnActivateImplant
     - type: ExplodeOnTrigger
     - type: Explosive
       explosionType: Flesh
@@ -433,8 +439,10 @@
         Dead:
           Base: bat_dead
     - type: Bloodstream
-      bloodMaxVolume: 50
-      bloodReagent: Blood
+      bloodReferenceSolution:
+        reagents:
+        - ReagentId: Blood
+          Quantity: 50
     - type: Vocal
       sounds:
         Unsexed: FleshWormEmote
@@ -484,16 +492,25 @@
   name: мясной червь
   id: MobFleshWorm
   components:
+    - type: HTN
+      rootTask:
+        task: FleshWormCompound
     - type: FleshMob
       soundDeath: "/Audio/Animals/Flesh/flesh_worm_dead.ogg"
       deathMobSpawnId: "MobFleshWorm"
       deathMobSpawnCount: 0
+    - type: DoAfter
     - type: FleshWorm
       paralyzeTime: 3
       chansePounce: 33
+      removeDelay: 3
+      selfRemoveDelayMultiplier: 1.5
+      selfRemoveStaminaCost: 20
       damage:
         types:
-          Piercing: 2
+          Piercing: 6
+      headTraumaChance: 0.25
+      traumaSeverity: 12
       actionWormJump: ActionWormJump
     - type: Sprite
       sprite: Mobs/Aliens/FleshCult/flesh_cult_mobs.rsi
@@ -521,10 +538,15 @@
       quickEquip: false
       sprite: Mobs/Aliens/FleshCult/flesh_cult_mobs.rsi
       equippedPrefix: worm
+      clothingVisuals:
+        mask:
+          - state: worm-equipped-MASK
+      unequipDelay: 3
+      stripDelay: 3
       slots:
         - MASK
     - type: Physics
-      bodyType: Dynamic
+      bodyType: KinematicController
     - type: Fixtures
       fixtures:
         fix1:
@@ -538,8 +560,10 @@
             - SmallMobLayer
     - type: Speech
     - type: Bloodstream
-      bloodMaxVolume: 10
-      bloodReagent: Blood
+      bloodReferenceSolution:
+        reagents:
+        - ReagentId: Blood
+          Quantity: 10
     - type: GhostRole
       allowMovement: true
       allowSpeech: true

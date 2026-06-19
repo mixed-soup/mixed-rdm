@@ -14,6 +14,7 @@ using Content.Shared.Backmen.Mood;
 using Content.Shared.Backmen.Overlays;
 using Content.Shared.Popups;
 using Content.Server.Backmen.Traits.Assorted;
+using Content.Server.Body.Systems;
 using Robust.Shared.Prototypes;
 using Timer = Robust.Shared.Timing.Timer;
 using Robust.Shared.Player;
@@ -22,25 +23,31 @@ using Content.Shared.Backmen.CCVar;
 using Content.Shared.Backmen.Surgery.Wounds;
 using Content.Shared.Backmen.Surgery.Wounds.Systems;
 using Content.Shared.Body.Components;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Examine;
 using Content.Shared.Humanoid;
+using Robust.Shared.Maths;
 
 namespace Content.Server.Backmen.Mood;
 
-public sealed class MoodSystem : EntitySystem
+public sealed partial class MoodSystem : EntitySystem
 {
-    [Dependency] private readonly AlertsSystem _alerts = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly MovementSpeedModifierSystem _movementSpeedModifier = default!;
-    [Dependency] private readonly SharedJetpackSystem _jetpack = default!;
-    [Dependency] private readonly MobThresholdSystem _mobThreshold = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
-    [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly IChatManager _chat = default!;
-    [Dependency] private readonly WoundSystem _wound = default!;
+    [Dependency] private AlertsSystem _alerts = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private MovementSpeedModifierSystem _movementSpeedModifier = default!;
+    [Dependency] private SharedJetpackSystem _jetpack = default!;
+    [Dependency] private MobThresholdSystem _mobThreshold = default!;
+    [Dependency] private PopupSystem _popup = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private IChatManager _chat = default!;
+    [Dependency] private WoundSystem _wound = default!;
+    [Dependency] private EntityQuery<GodmodeComponent> _godmodeQuery = default!;
 
-    [ValidatePrototypeId<AlertCategoryPrototype>]
-    private const string MoodCategory = "Mood";
+    private bool _enabled = false;
+    private bool _modifiesThresholds = false;
+
+    private static readonly ProtoId<AlertCategoryPrototype> MoodCategory = "Mood";
 
     public override void Initialize()
     {
@@ -48,6 +55,7 @@ public sealed class MoodSystem : EntitySystem
 
         SubscribeLocalEvent<MoodComponent, ComponentStartup>(OnInit);
         SubscribeLocalEvent<MoodComponent, MobStateChangedEvent>(OnMobStateChanged);
+        SubscribeLocalEvent<MoodComponent, SuffocationEvent>(OnSuffocation);
         SubscribeLocalEvent<MoodComponent, MoodEffectEvent>(OnMoodEffect);
         SubscribeLocalEvent<MoodComponent, WoundsChangedEvent>(OnWoundsChange);
         SubscribeLocalEvent<MoodComponent, DamageChangedEvent>(OnDamageChange);
@@ -58,6 +66,15 @@ public sealed class MoodSystem : EntitySystem
 
         SubscribeLocalEvent<MoodComponent, MoodCheckAlertEvent>(OnAlertClicked);
         SubscribeLocalEvent<MoodComponent, ExaminedEvent>(OnExamined);
+        Subs.CVar(_config, CCVars.MoodEnabled,v=> _enabled = v, true);
+        Subs.CVar(_config, CCVars.MoodModifiesThresholds,v=> _modifiesThresholds = v, true);
+    }
+
+    private void OnSuffocation(Entity<MoodComponent> ent, ref SuffocationEvent args)
+    {
+        if(!_enabled)
+            return;
+        RaiseLocalEvent(ent, new MoodEffectEvent("Suffocating")); // backmen: mood
     }
 
     private void OnExamined(EntityUid uid, MoodComponent component, ExaminedEvent args)
@@ -120,6 +137,9 @@ public sealed class MoodSystem : EntitySystem
 
     private void OnRemoveEffect(EntityUid uid, MoodComponent component, MoodRemoveEffectEvent args)
     {
+        if(!_enabled)
+            return;
+
         if (component.UncategorisedEffects.TryGetValue(args.EffectId, out _))
             RemoveTimedOutEffect(uid, args.EffectId);
         else
@@ -137,6 +157,9 @@ public sealed class MoodSystem : EntitySystem
 
     private void OnRefreshMoveSpeed(EntityUid uid, MoodComponent component, RefreshMovementSpeedModifiersEvent args)
     {
+        if(!_enabled)
+            return;
+
         if (component.CurrentMoodThreshold is > MoodThreshold.Meh and < MoodThreshold.Good or MoodThreshold.Dead
             || _jetpack.IsUserFlying(uid))
             return;
@@ -159,6 +182,9 @@ public sealed class MoodSystem : EntitySystem
 
     private void OnTraitStartup(EntityUid uid, MoodModifyTraitComponent component, ComponentStartup args)
     {
+        if(!_enabled)
+            return;
+
         if (!TryComp<MoodComponent>(uid, out var mood))
             return;
 
@@ -169,7 +195,8 @@ public sealed class MoodSystem : EntitySystem
 
     private void OnMoodEffect(EntityUid uid, MoodComponent component, MoodEffectEvent args)
     {
-        if (!_config.GetCVar(CCVars.MoodEnabled)
+        if (!_enabled
+            || _godmodeQuery.HasComp(uid)
             || !_prototypeManager.TryIndex<MoodEffectPrototype>(args.EffectId, out var prototype))
             return;
 
@@ -268,11 +295,13 @@ public sealed class MoodSystem : EntitySystem
             return;
 
         var ev = new MoodEffectEvent(proto.MoodletOnEnd);
-        EntityManager.EventBus.RaiseLocalEvent(uid, ev);
+        RaiseLocalEvent(uid, ev);
     }
 
     private void OnMobStateChanged(EntityUid uid, MoodComponent component, MobStateChangedEvent args)
     {
+        if(!_enabled)
+            return;
         if (args.NewMobState == MobState.Dead && args.OldMobState != MobState.Dead)
         {
             var ev = new MoodEffectEvent("Dead");
@@ -335,7 +364,10 @@ public sealed class MoodSystem : EntitySystem
 
     private void OnInit(EntityUid uid, MoodComponent component, ComponentStartup args)
     {
-        if (_config.GetCVar(CCVars.MoodModifiesThresholds)
+        if(!_enabled)
+            return;
+
+        if (_modifiesThresholds
             && TryComp<MobThresholdsComponent>(uid, out var mobThresholdsComponent)
             && _mobThreshold.TryGetThresholdForState(uid, MobState.Critical, out var critThreshold, mobThresholdsComponent))
             component.CritThresholdBeforeModify = critThreshold.Value;
@@ -345,12 +377,14 @@ public sealed class MoodSystem : EntitySystem
 
     private void SetMood(EntityUid uid, float amount, MoodComponent? component = null, bool force = false, bool refresh = false)
     {
-        if (!_config.GetCVar(CCVars.MoodEnabled)
+        if (!_enabled
             || !Resolve(uid, ref component)
+            || _godmodeQuery.HasComp(uid)
             || component.CurrentMoodThreshold == MoodThreshold.Dead && !refresh)
             return;
 
         var neutral = component.MoodThresholds[MoodThreshold.Neutral];
+        var oldMoodLevel = component.CurrentMoodLevel;
         var ev = new OnSetMoodEvent(uid, amount, false);
         RaiseLocalEvent(uid, ref ev);
 
@@ -373,8 +407,12 @@ public sealed class MoodSystem : EntitySystem
         component.CurrentMoodLevel = newMoodLevel;
 
         component.NeutralMoodThreshold = component.MoodThresholds.GetValueOrDefault(MoodThreshold.Neutral);
-        Dirty(uid, component);
+        DirtyFields(uid, component, null, nameof(MoodComponent.CurrentMoodLevel), nameof(MoodComponent.NeutralMoodThreshold));
         UpdateCurrentThreshold(uid, component);
+
+        // Speed modifier uses CurrentMoodLevel, not just the threshold band — refresh on any mood change.
+        if (!MathHelper.CloseTo(oldMoodLevel, newMoodLevel))
+            _movementSpeedModifier.RefreshMovementSpeedModifiers(uid);
     }
 
     private void UpdateCurrentThreshold(EntityUid uid, MoodComponent? component = null)
@@ -427,6 +465,7 @@ public sealed class MoodSystem : EntitySystem
     private void SetCritThreshold(EntityUid uid, MoodComponent component, int modifier)
     {
         if (!_config.GetCVar(CCVars.MoodModifiesThresholds)
+            || _godmodeQuery.HasComp(uid)
             || !TryComp<MobThresholdsComponent>(uid, out var mobThresholds)
             || !_mobThreshold.TryGetThresholdForState(uid, MobState.Critical, out var key))
             return;
@@ -499,6 +538,9 @@ public sealed class MoodSystem : EntitySystem
 
     private void OnWoundsChange(EntityUid uid, MoodComponent component, WoundsChangedEvent args)
     {
+        if(!_enabled)
+            return;
+
         if (!TryComp<BodyComponent>(uid, out var body))
             return;
 
@@ -531,6 +573,9 @@ public sealed class MoodSystem : EntitySystem
 
     private void OnDamageChange(EntityUid uid, MoodComponent component, DamageChangedEvent args)
     {
+        if(!_enabled)
+            return;
+
         if (!_mobThreshold.TryGetPercentageForState(uid, MobState.Critical, args.Damageable.TotalDamage, out var damage))
             return;
 

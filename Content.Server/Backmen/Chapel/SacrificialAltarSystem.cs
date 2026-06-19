@@ -32,21 +32,21 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Chapel;
 
-public sealed class SacrificialAltarSystem : SharedSacrificialAltarSystem
+public sealed partial class SacrificialAltarSystem : SharedSacrificialAltarSystem
 {
-    [Dependency] private readonly StunSystem _stunSystem = default!;
-    [Dependency] private readonly DoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly PopupSystem _popups = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly BodySystem _bodySystem = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
-    [Dependency] private readonly EntityTableSystem _entityTable = default!;
+    [Dependency] private StunSystem _stunSystem = default!;
+    [Dependency] private DoAfterSystem _doAfterSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private GlimmerSystem _glimmerSystem = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private PopupSystem _popups = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private BodySystem _bodySystem = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private EntityTableSystem _entityTable = default!;
 
     public override void Initialize()
     {
@@ -56,11 +56,8 @@ public sealed class SacrificialAltarSystem : SharedSacrificialAltarSystem
 
     }
 
-    [ValidatePrototypeId<EntityTablePrototype>]
-    private const string DropTable = "AltarStandartTable";
-
-    [ValidatePrototypeId<EntityTablePrototype>]
-    private const string DropChapelTable = "AltarHolyTable";
+    private static readonly ProtoId<EntityTablePrototype> DropTable = "AltarStandartTable";
+    private static readonly ProtoId<EntityTablePrototype> DropChapelTable = "AltarHolyTable";
 
     private void OnDoAfter(EntityUid uid, SacrificialAltarComponent component, SacrificeDoAfterEvent args)
     {
@@ -158,7 +155,7 @@ public sealed class SacrificialAltarSystem : SharedSacrificialAltarSystem
         {
             if (component.StunTime == null || _timing.CurTime > component.StunTime)
             {
-                _stunSystem.TryParalyze(patient, component.SacrificeTime + TimeSpan.FromSeconds(1), true);
+                _stunSystem.TryUpdateParalyzeDuration(patient, component.SacrificeTime + TimeSpan.FromSeconds(1));
                 component.StunTime = _timing.CurTime + component.StunCD;
             }
         }

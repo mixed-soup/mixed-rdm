@@ -7,10 +7,10 @@ using Robust.Shared.Audio.Systems;
 
 namespace Content.Shared.Backmen.Weapons.Ranged;
 
-public abstract class SharedPumpActionSystem : EntitySystem
+public abstract partial class SharedPumpActionSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
 
     public override void Initialize()
     {
@@ -35,7 +35,7 @@ public abstract class SharedPumpActionSystem : EntitySystem
     private void OnGunShot(Entity<PumpActionComponent> ent, ref GunShotEvent args)
     {
         ent.Comp.Pumped = false;
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PumpActionComponent.Pumped));
     }
 
     private void OnUniqueAction(Entity<PumpActionComponent> ent, ref UniqueActionEvent args)
@@ -57,7 +57,7 @@ public abstract class SharedPumpActionSystem : EntitySystem
             return;
 
         ent.Comp.Pumped = true;
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PumpActionComponent.Pumped));
 
         args.Handled = true;
 

@@ -1,28 +1,38 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Content.Server._Lavaland.Procedural.Components;
+using Content.Server.Light.EntitySystems;
 using Content.Server.Temperature.Systems;
 using Content.Server.Weather;
 using Content.Shared._Lavaland.Procedural.Components;
 using Content.Shared._Lavaland.Weather;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Humanoid;
+using Content.Shared.Light.Components;
 using Content.Shared.Popups;
 using Robust.Shared.CPUJob.JobQueues;
 using Robust.Shared.CPUJob.JobQueues.Queues;
+using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Content.Server._Lavaland.Weather;
 
-public sealed class LavalandWeatherSystem : EntitySystem
+public sealed partial class LavalandWeatherSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly WeatherSystem _weather = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly TemperatureSystem _temperature = default!;
-    [Dependency] private readonly DamageableSystem _damage = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private WeatherSystem _weather = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private IPrototypeManager _proto = default!;
+    [Dependency] private TemperatureSystem _temperature = default!;
+    [Dependency] private DamageableSystem _damage = default!;
+    [Dependency] private RoofSystem _roof = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedMapSystem _mapSystem = default!;
 
     private const double LavalandWeatherJobTime = 0.005;
     private readonly JobQueue _lavalandWeatherJobQueue = new(LavalandWeatherJobTime);
@@ -50,9 +60,19 @@ public sealed class LavalandWeatherSystem : EntitySystem
         if (xform.GridUid != lavaland.Owner)
             return;
 
+
+        if (
+            _mapSystem.TryGetTileRef(lavaland.Owner, Comp<MapGridComponent>(lavaland.Owner), xform.Coordinates, out var tile) &&
+            _roof.IsRooved(
+                (lavaland.Owner, Comp<MapGridComponent>(lavaland.Owner), Comp<RoofComponent>(lavaland.Owner)),
+                tile.GridIndices))
+        {
+            return;
+        }
+
         var proto = _proto.Index(lavaland.Comp.CurrentWeather);
         _temperature.ChangeHeat(entity, proto.TemperatureChange, ignoreHeatResistance: true);
-        _damage.TryChangeDamage(entity, proto.Damage);
+        _damage.ChangeDamage(entity.AsNullable(), proto.Damage);
     }
 
     public override void Update(float frameTime)

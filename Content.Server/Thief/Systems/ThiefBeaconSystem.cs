@@ -1,12 +1,12 @@
 using Content.Server.Mind;
 using Content.Server.Objectives.Components;
-using Content.Server.Roles;
 using Content.Server.Thief.Components;
 using Content.Shared.Examine;
 using Content.Shared.Foldable;
 using Content.Shared.Popups;
 using Content.Shared.Verbs;
 using Content.Shared.Roles;
+using Content.Shared.Roles.Components;
 using Robust.Shared.Audio.Systems;
 
 namespace Content.Server.Thief.Systems;
@@ -14,12 +14,12 @@ namespace Content.Server.Thief.Systems;
 /// <summary>
 /// <see cref="ThiefBeaconComponent"/>
 /// </summary>
-public sealed class ThiefBeaconSystem : EntitySystem
+public sealed partial class ThiefBeaconSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly MindSystem _mind = default!;
-    [Dependency] private readonly SharedRoleSystem _roles = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private MindSystem _mind = default!;
+    [Dependency] private SharedRoleSystem _roles = default!;
     public override void Initialize()
     {
         base.Initialize();

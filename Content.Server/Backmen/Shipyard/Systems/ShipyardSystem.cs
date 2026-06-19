@@ -13,6 +13,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Content.Shared.Backmen.Shipyard.Components;
 using Content.Shared.Backmen.Shipyard.Prototypes;
+using Content.Shared.Station.Components;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.Map.Components;
@@ -22,14 +23,14 @@ namespace Content.Server.Backmen.Shipyard.Systems;
 
 public sealed partial class ShipyardSystem : SharedShipyardSystem
 {
-    [Dependency] private readonly IConfigurationManager _configManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly PricingSystem _pricing = default!;
-    [Dependency] private readonly ShuttleSystem _shuttle = default!;
-    [Dependency] private readonly StationSystem _station = default!;
-    [Dependency] private readonly MapLoaderSystem _map = default!;
-    [Dependency] private readonly ShipyardConsoleSystem _shipyardConsole = default!;
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private IConfigurationManager _configManager = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private PricingSystem _pricing = default!;
+    [Dependency] private ShuttleSystem _shuttle = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private MapLoaderSystem _map = default!;
+    [Dependency] private ShipyardConsoleSystem _shipyardConsole = default!;
+    [Dependency] private MetaDataSystem _metaDataSystem = default!;
 
     public MapId? ShipyardMap { get; private set; }
     private float _shuttleIndex;
@@ -94,12 +95,12 @@ public sealed partial class ShipyardSystem : SharedShipyardSystem
         }
 
         var price = _pricing.AppraiseGrid((EntityUid) shuttleGrid, null);
-        var targetGrid = _station.GetLargestGrid(stationData);
+        var targetGrid = _station.GetLargestGrid((stationUid,stationData));
 
 
         if (targetGrid == null) //how are we even here with no station grid
         {
-            _mapManager.DeleteGrid((EntityUid) shuttleGrid);
+            Del(shuttleGrid);
             shuttle = null;
             return false;
         }

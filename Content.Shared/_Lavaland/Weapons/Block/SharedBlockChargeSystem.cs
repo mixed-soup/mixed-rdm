@@ -1,5 +1,6 @@
 using Content.Shared._Lavaland.Mobs;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Examine;
 using Content.Shared.Hands;
 using Content.Shared.Popups;
@@ -10,8 +11,8 @@ namespace Content.Shared._Lavaland.Weapons.Block;
 
 public abstract partial class SharedBlockChargeSystem : EntitySystem
 {
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
 
     public override void Initialize()
     {
@@ -47,8 +48,7 @@ public abstract partial class SharedBlockChargeSystem : EntitySystem
     {
         if (!TryComp<BlockChargeComponent>(component.BlockingWeapon, out var blockComp)
             || !HasComp<FaunaComponent>(args.Origin)
-            || !blockComp.HasCharge
-            || !args.CanBeCancelled)
+            || !blockComp.HasCharge)
             return;
 
         _popup.PopupPredicted(Loc.GetString("block-attack-notice", ("user", uid), ("blocked", args.Origin)), uid, null);

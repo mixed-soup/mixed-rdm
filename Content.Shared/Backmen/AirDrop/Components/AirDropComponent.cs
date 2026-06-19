@@ -2,6 +2,7 @@
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Shared.Backmen.AirDrop;
 
@@ -24,9 +25,36 @@ public sealed partial class AirDropItemComponent : Component
     public bool LavaLandOnly { get; private set; } = false;
 }
 
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true), AutoGenerateComponentPause]
 public sealed partial class AirDropComponent : Component
 {
+    [DataField, AutoNetworkedField]
+    public AirDropPhase Phase = AirDropPhase.Inactive;
+
+    /// <summary>
+    /// When the current <see cref="Phase"/> ends.
+    /// </summary>
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField, AutoNetworkedField]
+    public TimeSpan PhaseEndTime = TimeSpan.Zero;
+
+    /// <summary>
+    /// Grid-anchored holographic target marker. Server-spawned; supply pod lands here.
+    /// </summary>
+    [AutoNetworkedField, ViewVariables]
+    public EntityUid? TargetMarker;
+
+    /// <summary>
+    /// Grid-anchored falling pod animation entity.
+    /// </summary>
+    [AutoNetworkedField, ViewVariables]
+    public EntityUid? InAirMarker;
+
+    /// <summary>
+    /// Last <see cref="Phase"/> processed by client visuals.
+    /// </summary>
+    [ViewVariables]
+    public AirDropPhase ClientLastPhase = AirDropPhase.Inactive;
+
     [DataField]
     public EntProtoId DropTargetProto { get; private set; } = "DropPodMarkerSimple";
 
@@ -39,7 +67,7 @@ public sealed partial class AirDropComponent : Component
     /// в секундах
     /// </summary>
     [DataField]
-    public float TimeOfTarget { get; set; } = 2;
+    public float TimeOfTarget { get; set; } = 1;
 
     /// <summary>
     /// Время анимации панедения до спавна пода
@@ -47,6 +75,13 @@ public sealed partial class AirDropComponent : Component
     /// </summary>
     [DataField]
     public float TimeToDrop { get; set; } = 2;
+
+    /// <summary>
+    /// Дальность (в метрах) рассылки <see cref="AirDropStartEvent"/> сверх стандартного PVS.
+    /// Игроки, подбежавшие позже, всё равно получат визуал через синхронизированную <see cref="Phase"/> в Update.
+    /// </summary>
+    [DataField]
+    public float VisualNotifyRange = 60f;
 
     [DataField]
     public EntProtoId InAirProto { get; private set; } = "DropPodLaunchAnimationSimple";

@@ -8,9 +8,9 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Backmen.Vampiric;
 
-public sealed class BloodSuckerSystem : SharedBloodSuckerSystem
+public sealed partial class BloodSuckerSystem : SharedBloodSuckerSystem
 {
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     private StatusIconPrototype _statusIconPrototype = default!;
     public override void Initialize()
@@ -21,8 +21,7 @@ public sealed class BloodSuckerSystem : SharedBloodSuckerSystem
         SubscribeLocalEvent<BkmVampireComponent, GetStatusIconsEvent>(OnShowVampireIcon);
     }
 
-    [ValidatePrototypeId<FactionIconPrototype>]
-    private const string VampireFaction = "VampireFaction";
+    private static readonly ProtoId<FactionIconPrototype> VampireFaction = "VampireFaction";
 
     private void OnShowVampireIcon(Entity<BkmVampireComponent> ent, ref GetStatusIconsEvent args)
     {

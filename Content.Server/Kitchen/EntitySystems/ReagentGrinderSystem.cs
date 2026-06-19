@@ -28,20 +28,20 @@ using Content.Shared.Power;
 namespace Content.Server.Kitchen.EntitySystems
 {
     [UsedImplicitly]
-    internal sealed class ReagentGrinderSystem : EntitySystem
+    internal sealed partial class ReagentGrinderSystem : EntitySystem
     {
-        [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly SharedSolutionContainerSystem _solutionContainersSystem = default!;
-        [Dependency] private readonly ItemSlotsSystem _itemSlotsSystem = default!;
-        [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-        [Dependency] private readonly UserInterfaceSystem _userInterfaceSystem = default!;
-        [Dependency] private readonly StackSystem _stackSystem = default!;
-        [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-        [Dependency] private readonly SharedAppearanceSystem _appearanceSystem = default!;
-        [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
-        [Dependency] private readonly SharedDestructibleSystem _destructible = default!;
-        [Dependency] private readonly RandomHelperSystem _randomHelper = default!;
-        [Dependency] private readonly JitteringSystem _jitter = default!;
+        [Dependency] private IGameTiming _timing = default!;
+        [Dependency] private SharedSolutionContainerSystem _solutionContainersSystem = default!;
+        [Dependency] private ItemSlotsSystem _itemSlotsSystem = default!;
+        [Dependency] private SharedPopupSystem _popupSystem = default!;
+        [Dependency] private UserInterfaceSystem _userInterfaceSystem = default!;
+        [Dependency] private StackSystem _stackSystem = default!;
+        [Dependency] private SharedAudioSystem _audioSystem = default!;
+        [Dependency] private SharedAppearanceSystem _appearanceSystem = default!;
+        [Dependency] private SharedContainerSystem _containerSystem = default!;
+        [Dependency] private SharedDestructibleSystem _destructible = default!;
+        [Dependency] private RandomHelperSystem _randomHelper = default!;
+        [Dependency] private JitteringSystem _jitter = default!;
 
         public override void Initialize()
         {
@@ -88,11 +88,14 @@ namespace Content.Server.Kitchen.EntitySystems
                 if (outputContainer is null || !_solutionContainersSystem.TryGetFitsInDispenser(outputContainer.Value, out var containerSoln, out var containerSolution))
                     continue;
 
+                var toDelete = new List<EntityUid>();
+                var toSet = new List<(EntityUid Item, int Amount)>();
+
                 foreach (var item in inputContainer.ContainedEntities.ToList())
                 {
                     var solution = active.Program switch
                     {
-                        GrinderProgram.Grind => GetGrindSolution(item),
+                        GrinderProgram.Grind => TryGrindSolution(item, (uid, reagentGrinder), inputContainer.ContainedEntities),
                         GrinderProgram.Juice => CompOrNull<ExtractableComponent>(item)?.JuiceSolution,
                         _ => null,
                     };
@@ -118,18 +121,26 @@ namespace Content.Server.Kitchen.EntitySystems
                         scaledSolution.ScaleSolution(fitsCount);
                         solution = scaledSolution;
 
-                        _stackSystem.SetCount(item, stack.Count - fitsCount); // Setting to 0 will QueueDel
+                        toSet.Add((item, stack.Count - fitsCount));
                     }
                     else
                     {
                         if (solution.Volume > containerSolution.AvailableVolume)
                             continue;
 
-                        _destructible.DestroyEntity(item);
+                        var dev = new DestructionEventArgs();
+                        RaiseLocalEvent(item, dev);
+                        toDelete.Add(item);
                     }
 
                     _solutionContainersSystem.TryAddSolution(containerSoln.Value, solution);
                 }
+
+                foreach (var item in toDelete)
+                    Del(item);
+
+                foreach (var (item, amount) in toSet)
+                    _stackSystem.SetCount(item, amount);
 
                 _userInterfaceSystem.ServerSendUiMessage(uid, ReagentGrinderUiKey.Key,
                     new ReagentGrinderWorkCompleteMessage());
@@ -318,16 +329,28 @@ namespace Content.Server.Kitchen.EntitySystems
             _audioSystem.PlayPvs(reagentGrinder.Comp.ClickSound, reagentGrinder.Owner, AudioParams.Default.WithVolume(-2f));
         }
 
-        private Solution? GetGrindSolution(EntityUid uid)
+        private Solution? TryGrindSolution(EntityUid uid, Entity<ReagentGrinderComponent> grinder, IReadOnlyList<EntityUid> contents)
         {
             if (TryComp<ExtractableComponent>(uid, out var extractable)
                 && extractable.GrindableSolution is not null
                 && _solutionContainersSystem.TryGetSolution(uid, extractable.GrindableSolution, out _, out var solution))
             {
+                var ev = new GrindAttemptEvent(grinder, contents);
+                RaiseLocalEvent(uid, ev);
+
+                if (ev.Cancelled)
+                    return null;
+
                 return solution;
             }
-            else
-                return null;
+
+            return null;
+        }
+
+        public sealed class GrindAttemptEvent(Entity<ReagentGrinderComponent> grinder, IReadOnlyList<EntityUid> reagents) : CancellableEntityEventArgs
+        {
+            public Entity<ReagentGrinderComponent> Grinder = grinder;
+            public IReadOnlyList<EntityUid> Reagents = reagents;
         }
 
         private bool CanGrind(EntityUid uid)

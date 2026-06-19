@@ -29,7 +29,7 @@
     - type: MobMover
     - type: HTN
       rootTask:
-        task: HeadCrabCompound
+        task: FleshWormCompound
       blackboard:
         SoundTargetInLOS: !type:SoundPathSpecifier
           path: /Audio/Backmen/test/base/ogg/blackmesa/headcrab/alert1.ogg
@@ -64,7 +64,7 @@
       price: 50
     - type: Puller
       needsHands: false
-    - type: Food
+    - type: Edible
     - type: Hunger
       thresholds:
         Overfed: 35
@@ -95,7 +95,6 @@
       - id: FoodMeatChicken
         amount: 2
     - type: DamageStateVisuals
-      rotate: false
       states:
         Alive:
           Base: headcrab
@@ -114,28 +113,52 @@
       layers:
       - map: [ "enum.DamageStateVisualLayers.Base" ]
         state: headcrab
+    - type: Item
+      sprite: Backmen/test/base/rsi/Textures/Mob/headcrab.rsi
+      size: Normal
+    - type: Clothing
+      quickEquip: false
+      sprite: Backmen/test/base/rsi/Textures/Mob/headcrab.rsi
+      equippedState: equipped-HELMET
+      clothingVisuals:
+        mask:
+          - state: equipped-HELMET
+      slots:
+        - MASK
     - type: FleshWorm
       paralyzeTime: 3
       soundWormJump:
         collection: HeadcrabAttack
       chansePounce: 33
+      removeDelay: 3
+      selfRemoveDelayMultiplier: 1.5
+      selfRemoveStaminaCost: 20
       damage:
         types:
           Piercing: 10
-      actionWormJump: ActionHeadcrabJump
+      headTraumaChance: 0.25
+      traumaSeverity: 12
+      actionWormJump: ActionXenHeadcrabJump
 
-- type: htnCompound
-  id: HeadCrabCompound
-  branches:
-    - tasks:
-        - !type:HTNCompoundTask
-          task: MeleeCombatCompound
-    - tasks:
-        - !type:HTNCompoundTask
-          task: FoodCompound
-    - tasks:
-        - !type:HTNCompoundTask
-          task: IdleCompound
+- type: entity
+  id: ActionXenHeadcrabJump
+  parent: BaseAction
+  name: Jump
+  description: Leap at a target and latch onto an unprotected face.
+  categories: [ HideSpawnMenu ]
+  components:
+    - type: Action
+      icon:
+        sprite: _White/Interface/Actions/headcrab.rsi
+        state: jump-off
+      iconOn:
+        sprite: _White/Interface/Actions/headcrab.rsi
+        state: jump-on
+      useDelay: 6
+    - type: WorldTargetAction
+      event: !type:FleshWormJumpActionEvent
+    - type: TargetAction
+      range: 160
 
 - type: entity
   name: зомбированный
@@ -241,7 +264,6 @@
     Heat: 0.05
     Radiation: 0
     Caustic: 0
-    Stun: 0
 
 - type: entity
   name: US marine
@@ -619,7 +641,6 @@
       groups:
         Brute: 12
   - type: DamageStateVisuals
-    rotate: false
     states:
       Alive:
         Base: bullsquid
@@ -636,7 +657,10 @@
     capacity: 1
     count: 1
   - type: Bloodstream
-    bloodMaxVolume: 30
+    bloodReferenceSolution:
+      reagents:
+      - ReagentId: Blood
+        Quantity: 30
     bloodlossThreshold: 0
   - type: Gun
     fireRate: 0.75
@@ -650,6 +674,9 @@
     damageCap: 0
   - type: Damageable
     damageModifierSet: CombineArmor
+  - type: StaminaResistance
+    damageCoefficient: 0.75
+    worn: false
 
 - type: entity
   name: bullsquid
@@ -691,17 +718,15 @@
       0: Alive
       100: Dead
   - type: DamageStateVisuals
-    rotate: false
     states:
       Alive:
         Base: vortigaunt
       Dead:
         Base: vortigaunt
-  - type: HitscanBatteryAmmoProvider
+  - type: BatteryAmmoProvider
     proto: Lightning
     fireCost: 50
   - type: BatterySelfRecharger
-    autoRecharge: true
     autoRechargeRate: 50
   - type: Battery
     maxCharge: 1000
@@ -741,6 +766,9 @@
     damageCap: 0
   - type: Damageable
     damageModifierSet: CombineArmor
+  - type: StaminaResistance
+    damageCoefficient: 0.75
+    worn: false
 
 - type: entity
   name: Vortigaunt
@@ -757,19 +785,25 @@
     description: Monster from Xen
   - type: GhostTakeoverAvailable
 
-- type: hitscan
-  maxLength: 7
-  id: Lightning
-  damage:
-    groups:
-      Brute: 5
-      Burn: 20
-  muzzleFlash:
-    sprite: Backmen/test/base/rsi/Textures/Effects/ligthning.rsi
-    state: blue_lightning
-  travelFlash:
-    sprite: Backmen/test/base/rsi/Textures/Effects/ligthning.rsi
-    state: blue_lightning
-  impactFlash:
-    sprite: Backmen/test/base/rsi/Textures/Effects/ligthning.rsi
-    state: blue_lightning
+#- type: entity
+#  parent: BasicHitscan
+#  id: Lightning
+#  categories: [ HideSpawnMenu ]
+#  components:
+#  - type: HitscanBasicRaycast
+#    maxDistance: 7
+#  - type: HitscanBasicDamage
+#    damage:
+#      groups:
+#        Brute: 5
+#        Burn: 20
+#  - type: HitscanBasicVisuals
+#    muzzleFlash:
+#      sprite: Backmen/test/base/rsi/Textures/Effects/ligthning.rsi
+#      state: blue_lightning
+#    travelFlash:
+#      sprite: Backmen/test/base/rsi/Textures/Effects/ligthning.rsi
+#      state: blue_lightning
+#    impactFlash:
+#      sprite: Backmen/test/base/rsi/Textures/Effects/ligthning.rsi
+#      state: blue_lightning

@@ -15,6 +15,7 @@ using Content.Shared.Backmen.Psionics.Events;
 using Content.Shared.Mind.Components;
 using Content.Shared.Silicons.Laws;
 using Content.Shared.Silicons.Laws.Components;
+using Content.Shared.Speech;
 using Robust.Server.Audio;
 using Robust.Shared.Containers;
 using Robust.Shared.Random;
@@ -25,20 +26,19 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.Soul;
 
-public sealed class GolemSystem : SharedGolemSystem
+public sealed partial class GolemSystem : SharedGolemSystem
 {
-    [Dependency] private readonly ItemSlotsSystem _slotsSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly ThrowingSystem _throwing = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly UserInterfaceSystem _uiSystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototypes = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly UserInterfaceSystem _userInterfaceSystem = default!;
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
-    [Dependency] private readonly SharedPointLightSystem _lightSystem = default!;
+    [Dependency] private ItemSlotsSystem _slotsSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private ThrowingSystem _throwing = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private UserInterfaceSystem _uiSystem = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private SharedPointLightSystem _lightSystem = default!;
 
     private const string CrystalSlot = "crystal_slot";
 
@@ -115,11 +115,8 @@ public sealed class GolemSystem : SharedGolemSystem
         EnsureComp<GhostTakeoverAvailableComponent>(uid);
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string AdminObserver = "AdminObserver";
-
-    [ValidatePrototypeId<LocalizedDatasetPrototype>]
-    private const string GolemNames = "NamesGolem";
+    private readonly EntProtoId AdminObserver = "AdminObserver";
+    private static readonly ProtoId<LocalizedDatasetPrototype> GolemNames = "NamesGolem";
     private void OnAfterInteract(EntityUid uid, SoulCrystalComponent component, AfterInteractEvent args)
     {
         if (!args.CanReach)
@@ -131,7 +128,7 @@ public sealed class GolemSystem : SharedGolemSystem
         if (_slotsSystem.GetItemOrNull(args.Target.Value, CrystalSlot) != null)
             return;
 
-        if (!(HasComp<HumanoidAppearanceComponent>(args.User) || Prototype(args.User)?.ID == AdminObserver))
+        if (!(HasComp<HumanoidAppearanceComponent>(args.User) || Prototype(args.User)?.ID == AdminObserver.Id))
             return;
 
         if (!_uiSystem.TryOpenUi(args.Target.Value, GolemUiKey.Key, args.User))
@@ -147,7 +144,7 @@ public sealed class GolemSystem : SharedGolemSystem
         golem.Master = Name(args.User);
 
         var state = new GolemBoundUserInterfaceState(golem.GolemName, golem.Master);
-        _userInterfaceSystem.SetUiState(args.Target.Value, GolemUiKey.Key, state);
+        _uiSystem.SetUiState(args.Target.Value, GolemUiKey.Key, state);
     }
 
     public bool EjectSoul(Entity<GolemComponent> ent)
@@ -181,8 +178,7 @@ public sealed class GolemSystem : SharedGolemSystem
         args.Handled = EjectSoul((uid, component));
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string Ash = "Ash";
+    private readonly EntProtoId Ash = "Ash";
 
     private void OnMobStateChanged(EntityUid uid, GolemComponent component, MobStateChangedEvent args)
     {
@@ -231,7 +227,7 @@ public sealed class GolemSystem : SharedGolemSystem
         }
         else
         {
-            if (_prototypes.TryIndex<DatasetPrototype>(GolemNames, out var names))
+            if (_prototypes.TryIndex<LocalizedDatasetPrototype>(GolemNames, out var names))
             {
                 _metaDataSystem.SetEntityName(uid, _robustRandom.Pick(names.Values));
             }

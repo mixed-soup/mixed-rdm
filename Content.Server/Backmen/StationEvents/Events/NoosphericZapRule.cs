@@ -8,20 +8,23 @@ using Content.Shared.Backmen.Psionics.Components;
 using Content.Shared.GameTicking.Components;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Systems;
-using Content.Shared.StatusEffect;
+using Content.Shared.StatusEffectNew;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.StationEvents.Events;
 
 /// <summary>
 /// Zaps everyone, rolling psionics and disorienting them
 /// </summary>
-internal sealed class NoosphericZapRule : StationEventSystem<NoosphericZapRuleComponent>
+internal sealed partial class NoosphericZapRule : StationEventSystem<NoosphericZapRuleComponent>
 {
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly StunSystem _stunSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly PsionicsSystem _psionicsSystem = default!;
-    [Dependency] private readonly StatusEffectsSystem _statusEffectsSystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private StunSystem _stunSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private PsionicsSystem _psionicsSystem = default!;
+    [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
+
+    public static readonly EntProtoId Stuttering = "StatusEffectStutter";
 
     protected override void Started(EntityUid uid, NoosphericZapRuleComponent component, GameRuleComponent gameRule, GameRuleStartedEvent args)
     {
@@ -31,11 +34,11 @@ internal sealed class NoosphericZapRule : StationEventSystem<NoosphericZapRuleCo
 
         while (query.MoveNext(out var psion, out var potentialPsionicComponent, out var mobStateComponent))
         {
-            if (!_mobStateSystem.IsAlive(psion, mobStateComponent) || HasComp<PsionicInsulationComponent>(psion))
+            if (!_mobStateSystem.IsAlive(psion, mobStateComponent) || _statusEffectsSystem.HasEffectComp<PsionicInsulationComponent>(psion))
                 continue;
 
-            _stunSystem.TryParalyze(psion, TimeSpan.FromSeconds(5), false);
-            _statusEffectsSystem.TryAddStatusEffect(psion, "Stutter", TimeSpan.FromSeconds(10), false, "StutteringAccent");
+            _stunSystem.TryUpdateParalyzeDuration(psion, TimeSpan.FromSeconds(5));
+            _statusEffectsSystem.TryAddStatusEffectDuration(psion, Stuttering, TimeSpan.FromSeconds(10));
 
             if (HasComp<PsionicComponent>(psion))
                 _popupSystem.PopupEntity(Loc.GetString("noospheric-zap-seize"), psion, psion, Shared.Popups.PopupType.LargeCaution);

@@ -8,14 +8,13 @@ using Content.Server.Ninja.Events;
 using Content.Server.Popups;
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
-using Content.Server.PowerCell;
-using Content.Server.Radio.Components;
 using Content.Server.Radio.EntitySystems;
 using Content.Server.Tools.Innate;
 using Content.Shared.Actions;
 using Content.Shared.Alert;
 using Content.Shared.Backmen.Drone;
 using Content.Shared.Body.Components;
+using Content.Shared.Chat;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.Emoting;
 using Content.Shared.Examine;
@@ -23,8 +22,12 @@ using Content.Shared.Mind.Components;
 using Content.Shared.Mobs;
 using Content.Shared.Ninja.Systems;
 using Content.Shared.Popups;
+using Content.Shared.Power.Components;
+using Content.Shared.Power.EntitySystems;
+using Content.Shared.PowerCell;
 using Content.Shared.PowerCell.Components;
 using Content.Shared.Radio;
+using Content.Shared.Radio.Components;
 using Content.Shared.Rounding;
 using Content.Shared.Throwing;
 using Robust.Shared.Containers;
@@ -32,24 +35,22 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Drone;
 
-public sealed class BSSDroneSystem : SharedDroneSystem
+public sealed partial class BSSDroneSystem : SharedDroneSystem
 {
-    [Dependency] private readonly BodySystem _bodySystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly InnateToolSystem _innateToolSystem = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedActionsSystem _action = default!;
-    [Dependency] private readonly HandsSystem _handsSystem = default!;
-    [Dependency] private readonly RadioSystem _radioSystem = default!;
-    [Dependency] private readonly PowerCellSystem _powerCell = default!;
-    [Dependency] private readonly BatterySystem _battery = default!;
-    [Dependency] private readonly AlertsSystem _alerts = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedBatteryDrainerSystem _batteryDrainer = default!;
+    [Dependency] private BodySystem _bodySystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private InnateToolSystem _innateToolSystem = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedActionsSystem _action = default!;
+    [Dependency] private HandsSystem _handsSystem = default!;
+    [Dependency] private RadioSystem _radioSystem = default!;
+    [Dependency] private PowerCellSystem _powerCell = default!;
+    [Dependency] private SharedBatterySystem _predictedBattery = default!;
+    [Dependency] private AlertsSystem _alerts = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedBatteryDrainerSystem _batteryDrainer = default!;
 
-
-    [ValidatePrototypeId<RadioChannelPrototype>]
-    public const string BinaryChannel = "Binary";
+    public readonly ProtoId<RadioChannelPrototype> BinaryChannel = "Binary";
 
     public override void Initialize()
     {
@@ -70,7 +71,7 @@ public sealed class BSSDroneSystem : SharedDroneSystem
 
     private void OnMapInit(Entity<BSSDroneComponent> ent, ref MapInitEvent args)
     {
-        if (GetDroneBattery(ent, out var battery, out _))
+        if (GetDroneBattery(ent, out var battery))
         {
             _batteryDrainer.SetBattery(ent.Owner, battery);
         }
@@ -104,9 +105,9 @@ public sealed class BSSDroneSystem : SharedDroneSystem
             return;
         }
 
-        if (GetDroneBattery(uid, out _, out var battery))
+        if (GetDroneBattery(uid, out var battery))
         {
-            var severity = ContentHelpers.RoundToLevels(MathF.Max(0f, battery.CurrentCharge), battery.MaxCharge, 8);
+            var severity = ContentHelpers.RoundToLevels(MathF.Max(0f, _predictedBattery.GetCharge(battery.Value.AsNullable())), battery.Value.Comp.MaxCharge, 8);
             _alerts.ShowAlert(uid, comp.DronePowerAlert, (short) severity);
         }
         else
@@ -123,7 +124,7 @@ public sealed class BSSDroneSystem : SharedDroneSystem
             return;
 
         // no power cell for some reason??? allow it
-        if (!_powerCell.TryGetBatteryFromSlot(uid, out var batteryUid, out var battery))
+        if (!_powerCell.TryGetBatteryFromSlot(uid, out var battery))
             return;
 
         if (!TryComp<BatteryComponent>(args.EntityUid, out var inserting))
@@ -135,21 +136,20 @@ public sealed class BSSDroneSystem : SharedDroneSystem
         _batteryDrainer.SetBattery(uid, args.EntityUid);
     }
 
-    public bool GetDroneBattery(EntityUid user, [NotNullWhen(true)] out EntityUid? uid, [NotNullWhen(true)] out BatteryComponent? battery)
+    public bool GetDroneBattery(EntityUid user, [NotNullWhen(true)] out Entity<BatteryComponent>? ent)
     {
-        if (_powerCell.TryGetBatteryFromSlot(user, out uid, out battery))
+        if (_powerCell.TryGetBatteryFromSlot(user, out ent))
         {
             return true;
         }
 
-        uid = null;
-        battery = null;
+        ent = null;
         return false;
     }
 
     public bool TryUseCharge(EntityUid user, float charge)
     {
-        return GetDroneBattery(user, out var uid, out var battery) && _battery.TryUseCharge(uid.Value, charge, battery);
+        return GetDroneBattery(user, out var ent) && _predictedBattery.TryUseCharge(ent.Value.AsNullable(), charge);
     }
 
     private void OnDroneSpeak(EntityUid uid, EntitySpokeEvent args, IntrinsicRadioTransmitterComponent? component = null)

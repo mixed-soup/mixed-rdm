@@ -32,16 +32,16 @@ namespace Content.Client.Lobby;
 
 public sealed partial class LobbyUIController : UIController, IOnStateEntered<LobbyState>, IOnStateExited<LobbyState>
 {
-    [Dependency] private readonly IClientPreferencesManager _preferencesManager = default!;
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IFileDialogManager _dialogManager = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IStateManager _stateManager = default!;
-    [Dependency] private readonly JobRequirementsManager _requirements = default!;
-    [Dependency] private readonly MarkingManager _markings = default!;
-    [Dependency] private readonly ISharedSponsorsManager _clientSponsorsManager = default!;
+    [Dependency] private IClientPreferencesManager _preferencesManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IFileDialogManager _dialogManager = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IStateManager _stateManager = default!;
+    [Dependency] private JobRequirementsManager _requirements = default!;
+    [Dependency] private MarkingManager _markings = default!;
+    [Dependency] private ISharedSponsorsManager _clientSponsorsManager = default!;
     [UISystemDependency] private readonly HumanoidAppearanceSystem _humanoid = default!;
     [UISystemDependency] private readonly ClientInventorySystem _inventory = default!;
     [UISystemDependency] private readonly StationSpawningSystem _spawn = default!;
@@ -76,6 +76,7 @@ public sealed partial class LobbyUIController : UIController, IOnStateEntered<Lo
         });
 
         _configurationManager.OnValueChanged(CCVars.GameRoleTimers, _ => RefreshProfileEditor());
+        _configurationManager.OnValueChanged(CCVars.GameRoleLoadoutTimers, _ => RefreshProfileEditor());
 
         _configurationManager.OnValueChanged(CCVars.GameRoleWhitelist, _ => RefreshProfileEditor());
     }
@@ -363,7 +364,7 @@ public sealed partial class LobbyUIController : UIController, IOnStateEntered<Lo
         {
             foreach (var loadout in group)
             {
-                if (!_prototypeManager.TryIndex(loadout.Prototype, out var loadoutProto))
+                if (!_prototypeManager.Resolve(loadout.Prototype, out var loadoutProto))
                     continue;
 
                 _spawn.EquipStartingGear(uid, loadoutProto);
@@ -386,14 +387,14 @@ public sealed partial class LobbyUIController : UIController, IOnStateEntered<Lo
             {
                 foreach (var loadout in loadouts)
                 {
-                    if (!_prototypeManager.TryIndex(loadout.Prototype, out var loadoutProto))
+                    if (!_prototypeManager.Resolve(loadout.Prototype, out var loadoutProto))
                         continue;
 
                     // TODO: Need some way to apply starting gear to an entity and replace existing stuff coz holy fucking shit dude.
                     foreach (var slot in slots)
                     {
                         // Try startinggear first
-                        if (_prototypeManager.TryIndex(loadoutProto.StartingGear, out var loadoutGear))
+                        if (_prototypeManager.Resolve(loadoutProto.StartingGear, out var loadoutGear))
                         {
                             var itemType = ((IEquipmentLoadout) loadoutGear).GetGear(slot.Name);
 
@@ -428,7 +429,7 @@ public sealed partial class LobbyUIController : UIController, IOnStateEntered<Lo
             }
         }
 
-        if (!_prototypeManager.TryIndex(job.StartingGear, out var gear))
+        if (!_prototypeManager.Resolve(job.StartingGear, out var gear))
             return;
 
         foreach (var slot in slots)

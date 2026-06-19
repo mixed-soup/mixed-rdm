@@ -97,3 +97,6 @@ reagent-physical-desc-ethereal = неземное
 reagent-physical-desc-slimy = склизкое
 reagent-physical-desc-neural = нейронное
 reagent-physical-desc-unidentifiable = неидентифицируемое
+reagent-physical-desc-non-newtonian = не Ньютонийский
+reagent-physical-desc-thin = жидкое
+reagent-physical-desc-arcryox = ледяно-синее

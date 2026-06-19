@@ -17,21 +17,23 @@ using Content.Shared.Mobs;
 using Content.Shared.Popups;
 using Content.Shared.Resist;
 using Content.Shared.Storage;
+using Content.Shared.Storage.Components;
 using Content.Shared.Throwing;
+using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Shared.Containers;
 using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Item.PseudoItem;
 
-public sealed class PseudoItemSystem : SharedPseudoItemSystem
+public sealed partial class PseudoItemSystem : SharedPseudoItemSystem
 {
-    [Dependency] private readonly StorageSystem _storageSystem = default!;
-    [Dependency] private readonly ItemSystem _itemSystem = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly PopupSystem _popup = default!;
-
-    [Dependency] private readonly EntityStorageSystem _entityStorage = default!;
+    [Dependency] private StorageSystem _storageSystem = default!;
+    [Dependency] private ItemSystem _itemSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private PopupSystem _popup = default!;
+    [Dependency] private EntityStorageSystem _entityStorage = default!;
+    [Dependency] private ContainerSystem _containerSystem = default!;
 
     public override void Initialize()
     {
@@ -45,6 +47,7 @@ public sealed class PseudoItemSystem : SharedPseudoItemSystem
         SubscribeLocalEvent<PseudoItemComponent, MobStateChangedEvent>(OnMobStateChanged);
         SubscribeLocalEvent<PseudoItemComponent, ExaminedEvent>(OnExamine);
     }
+
 
     private void OnExamine(Entity<PseudoItemComponent> ent, ref ExaminedEvent args)
     {
@@ -75,13 +78,23 @@ public sealed class PseudoItemSystem : SharedPseudoItemSystem
         ClearState((uid,component));
     }
 
-    private void ClearState(Entity<PseudoItemComponent> uid)
+    private void ClearState(Entity<PseudoItemComponent> ent)
     {
-        uid.Comp.Active = false;
-        Dirty(uid, uid.Comp);
-        RemComp<ItemComponent>(uid);
-        RemComp<CanEscapeInventoryComponent>(uid);
-        _transformSystem.AttachToGridOrMap(uid);
+        if (!ent.Comp.Active)
+            return;
+
+        var parentUid = _transformSystem.GetParentUid(ent);
+
+        if (TryComp<StorageComponent>(parentUid, out var storage))
+        {
+            _containerSystem.Remove(ent.Owner, storage.Container);
+        }
+
+        ent.Comp.Active = false;
+        DirtyField(ent, ent.Comp, nameof(PseudoItemComponent.Active));
+
+        RemCompDeferred<ItemComponent>(ent.Owner);
+        RemCompDeferred<CanEscapeInventoryComponent>(ent.Owner);
     }
 
     private void OnEscape(Entity<PseudoItemComponent> uid, ref EscapeInventoryEvent args)
@@ -189,7 +202,7 @@ public sealed class PseudoItemSystem : SharedPseudoItemSystem
 
         _itemSystem.SetSize(toInsert, toInsert.Comp.SizeInBackpack, item);
         toInsert.Comp.Active = true;
-        Dirty(toInsert);
+        DirtyField(toInsert, toInsert.Comp, nameof(PseudoItemComponent.Active));
         _transformSystem.AttachToGridOrMap(storageUid);
         return true;
     }

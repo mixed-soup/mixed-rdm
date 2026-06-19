@@ -1,4 +1,4 @@
-﻿#HighSecDoors CC
+#HighSecDoors CC
 - type: entity
   parent: HighSecDoor
   id: HighSecCentComLocked
@@ -8,9 +8,6 @@
     - type: ContainerFill
       containers:
         board: [ DoorElectronicsCentCom ]
-    - type: PaintableAirlock
-      group: Glass
-      department: null
     - type: Door
       occludes: false
     - type: Occluder
@@ -28,9 +25,6 @@
     - type: ContainerFill
       containers:
         board: [ DoorElectronicsCCArmory ]
-    - type: PaintableAirlock
-      group: Glass
-      department: null
     - type: Door
       occludes: false
     - type: Occluder
@@ -48,9 +42,6 @@
     - type: ContainerFill
       containers:
         board: [ DoorElectronicsCCOfficer ]
-    - type: PaintableAirlock
-      group: Glass
-      department: null
     - type: Door
       occludes: false
     - type: Occluder
@@ -70,9 +61,6 @@
     - type: ContainerFill
       containers:
         board: [ DoorElectronicsCCAdmiral ]
-    - type: PaintableAirlock
-      group: Glass
-      department: null
     - type: Door
       occludes: false
     - type: Occluder
@@ -172,16 +160,6 @@
   - type: ContainerFill
     containers:
       board: [ DoorElectronicsMaintenance ]
-
-- type: entity
-  parent: AirlockHatchCentcomm
-  id: AirlockHatchSyndicateLocked
-  name: Syndicate Hatch
-  suffix: Syndicate, Locked
-  components:
-  - type: ContainerFill
-    containers:
-      board: [ DoorElectronicsSyndicateAgent ]
 
 #DoubleAirlocks
 

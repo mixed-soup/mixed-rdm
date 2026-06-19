@@ -10,31 +10,31 @@ using Content.Shared.Anomaly.Components;
 using Content.Shared.Backmen.Abilities.Psionics;
 using Content.Shared.Backmen.Psionics.Components;
 using Content.Shared.Backmen.Psionics.Glimmer;
-using Content.Shared.Mobs.Systems;
 using Content.Shared.Power;
-using Content.Shared.StatusEffect;
+using Content.Shared.Station.Components;
 using Content.Shared.Xenoarchaeology.Artifact;
 using Content.Shared.Xenoarchaeology.Artifact.Components;
-using Robust.Shared.Random;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Psionics.Glimmer;
 
 /// <summary>
 /// Handles structures which add/subtract glimmer.
 /// </summary>
-public sealed class GlimmerStructuresSystem : EntitySystem
+public sealed partial class GlimmerStructuresSystem : EntitySystem
 {
-    [Dependency] private readonly PowerReceiverSystem _powerReceiverSystem = default!;
-    [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-    [Dependency] private readonly StunSystem _stunSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly PsionicsSystem _psionicsSystem = default!;
-    [Dependency] private readonly StatusEffectsSystem _statusEffectsSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
+    [Dependency] private PowerReceiverSystem _powerReceiverSystem = default!;
+    [Dependency] private GlimmerSystem _glimmerSystem = default!;
+    [Dependency] private StunSystem _stunSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private PsionicsSystem _psionicsSystem = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private Shared.StatusEffectNew.StatusEffectsSystem _statusEffects = default!;
 
-    private EntityQuery<ApcPowerReceiverComponent> _apcPower;
-    private EntityQuery<XenoArtifactComponent> _artQuery;
+
+    [Dependency] private EntityQuery<ApcPowerReceiverComponent> _apcPower;
+    [Dependency] private EntityQuery<XenoArtifactComponent> _artQuery;
 
     public override void Initialize()
     {
@@ -45,15 +45,12 @@ public sealed class GlimmerStructuresSystem : EntitySystem
         SubscribeLocalEvent<GlimmerSourceComponent, AnomalyPulseEvent>(OnAnomalyPulse);
         SubscribeLocalEvent<GlimmerSourceComponent, AnomalySupercriticalEvent>(OnAnomalySupercritical);
         SubscribeLocalEvent<GlimmerSourceComponent, XenoArtifactActivatedEvent>(OnArtifactActivated);
-
-        _apcPower = GetEntityQuery<ApcPowerReceiverComponent>();
-        _artQuery = GetEntityQuery<XenoArtifactComponent>();
     }
 
     private void OnArtifactActivated(Entity<GlimmerSourceComponent> ent, ref XenoArtifactActivatedEvent args)
     {
         if (args.User != null &&
-            !HasComp<PsionicInsulationComponent>(args.User) &&
+            !_statusEffects.HasEffectComp<PsionicInsulationComponent>(args.User) &&
             TryComp<PotentialPsionicComponent>(args.User, out var potentialPsionicComponent))
         {
             ZapTarget((args.User.Value, potentialPsionicComponent));
@@ -66,17 +63,19 @@ public sealed class GlimmerStructuresSystem : EntitySystem
         }
     }
 
+    private static readonly EntProtoId StatusEffectStutter = "StatusEffectStutter";
+
     private void ZapTarget(Entity<PotentialPsionicComponent> target)
     {
-        if(HasComp<PsionicInsulationComponent>(target))
+        if(_statusEffects.HasEffectComp<PsionicInsulationComponent>(target))
             return;
 
-        _stunSystem.TryParalyze(target, TimeSpan.FromSeconds(5), false);
-        _statusEffectsSystem.TryAddStatusEffect(target, "Stutter", TimeSpan.FromSeconds(10), false, "StutteringAccent");
+        _stunSystem.TryUpdateParalyzeDuration(target, TimeSpan.FromSeconds(5));
+        _statusEffects.TryAddStatusEffectDuration(target, StatusEffectStutter, TimeSpan.FromSeconds(10));
 
         if (HasComp<PsionicComponent>(target))
         {
-            _popupSystem.PopupEntity(Loc.GetString("noospheric-zap-seize"), target, target, Shared.Popups.PopupType.LargeCaution);
+            _popupSystem.PopupEntity(Loc.GetString("noospheric-zap-seize"), target, Shared.Popups.PopupType.LargeCaution);
             _glimmerSystem.Glimmer += 25;
         }
         else

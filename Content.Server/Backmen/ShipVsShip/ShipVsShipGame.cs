@@ -17,11 +17,14 @@ using Content.Shared.Construction.Components;
 using Content.Shared.Destructible;
 using Content.Shared.GameTicking;
 using Content.Shared.GameTicking.Components;
+using Content.Shared.Maps;
 using Content.Shared.Mind;
 using Content.Shared.Mobs;
 using Content.Shared.Roles;
+using Content.Shared.Roles.Components;
 using Content.Shared.Roles.Jobs;
 using Content.Shared.Shuttles.Components;
+using Content.Shared.Station.Components;
 using Content.Shared.Timing;
 using Robust.Server.Containers;
 using Robust.Shared.Map.Components;
@@ -34,25 +37,25 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.ShipVsShip;
 
-public sealed class ShipVsShipGame : GameRuleSystem<ShipVsShipGameComponent>
+public sealed partial class ShipVsShipGame : GameRuleSystem<ShipVsShipGameComponent>
 {
     //private ISawmill _sawmill = default!;
-    //[Dependency] private readonly StationSystem _stationSystem = default!;
-    [Dependency] private readonly WhitelistSystem _whitelistSystem = default!;
-    [Dependency] private readonly StationJobsSystem _stationJobs = default!;
-    [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
-    [Dependency] private readonly SharedMindSystem _mind = default!;
-    [Dependency] private readonly StationSpawningSystem _stationSpawning = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly ShuttleConsoleSystem _console = default!;
-    [Dependency] private readonly RoundEndSystem _endSystem = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly SharedTdmTeamSystem _teamSystem = default!;
-    [Dependency] private readonly ContainerSystem _container = default!;
-    [Dependency] private readonly SharedRoleSystem _roleSystem = default!;
-    [Dependency] private readonly StationSystem _station = default!;
-    [Dependency] private readonly SharedMapSystem _map = default!;
+    //[Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private WhitelistSystem _whitelistSystem = default!;
+    [Dependency] private StationJobsSystem _stationJobs = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
+    [Dependency] private SharedMindSystem _mind = default!;
+    [Dependency] private StationSpawningSystem _stationSpawning = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private ShuttleConsoleSystem _console = default!;
+    [Dependency] private RoundEndSystem _endSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private SharedTdmTeamSystem _teamSystem = default!;
+    [Dependency] private ContainerSystem _container = default!;
+    [Dependency] private SharedRoleSystem _roleSystem = default!;
+    [Dependency] private StationSystem _station = default!;
+    [Dependency] private SharedMapSystem _map = default!;
 
     public override void Initialize()
     {
@@ -80,15 +83,12 @@ public sealed class ShipVsShipGame : GameRuleSystem<ShipVsShipGameComponent>
         _teamSystem.SetFaction((ent,EnsureComp<TdmMemberComponent>(ent)), team);
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string PlayerStationAi = "PlayerStationAiSAI";
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string StationAiBrain = "StationAiBrain";
-    [ValidatePrototypeId<JobPrototype>]
-    private const string StationAiJob = "SAIShip";
+    private readonly EntProtoId PlayerStationAi = "PlayerStationAiSAI";
+    private readonly EntProtoId StationAiBrain = "StationAiBrain";
+    private static readonly ProtoId<JobPrototype> StationAiJob = "SAIShip";
     private EntityUid FixStationAi(EntityUid mob)
     {
-        if(Prototype(mob)?.ID != StationAiBrain)
+        if(Prototype(mob)?.ID != StationAiBrain.Id)
             return mob;
 
         var xform = Transform(mob);

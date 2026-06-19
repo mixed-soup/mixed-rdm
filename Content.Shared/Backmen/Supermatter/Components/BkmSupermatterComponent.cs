@@ -4,10 +4,11 @@ using Content.Shared.Whitelist;
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 namespace Content.Shared.Backmen.Supermatter.Components;
 
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true), AutoGenerateComponentPause]
 public sealed partial class BkmSupermatterComponent : Component
 {
     [ViewVariables(VVAccess.ReadWrite)]
@@ -52,7 +53,20 @@ public sealed partial class BkmSupermatterComponent : Component
         {Gas.Tritium, 0f},
         {Gas.WaterVapor, 0f},
         {Gas.Frezon, 0f},
-        {Gas.Ammonia, 0f}
+        {Gas.Ammonia, 0f},
+        //ADT-Gas-Start
+        {Gas.BZ, 0f},
+        {Gas.Pluoxium, 0f},
+        {Gas.Hydrogen, 0f},
+        {Gas.Nitrium, 0f},
+        {Gas.Healium, 0f},
+        {Gas.HyperNoblium, 0f},
+        {Gas.ProtoNitrate, 0f},
+        {Gas.Zauker, 0f},
+        {Gas.Halon, 0f},
+        {Gas.Helium, 0f},
+        {Gas.AntiNoblium, 0f}
+        //ADT-Gas-End
     };
 
     /// <summary>
@@ -68,7 +82,20 @@ public sealed partial class BkmSupermatterComponent : Component
         [Gas.Tritium] = (TransmitModifier: 30f, HeatPenalty: 10f, PowerMixRatio: 1f),
         [Gas.WaterVapor] = (TransmitModifier: 2f, HeatPenalty: 12f, PowerMixRatio: 1f),
         [Gas.Frezon] = (TransmitModifier: 3f, HeatPenalty: -9f, PowerMixRatio: -1f),
-        [Gas.Ammonia] = (TransmitModifier: 1.5f, HeatPenalty: 1.5f, PowerMixRatio: 1.5f)
+        [Gas.Ammonia] = (TransmitModifier: 1.5f, HeatPenalty: 1.5f, PowerMixRatio: 1.5f),
+        //ADT-Gas-Start
+        [Gas.BZ] = (TransmitModifier: 2f, HeatPenalty: 3f, PowerMixRatio: 0.8f), // Токсичный газ, умеренное влияние
+        [Gas.Pluoxium] = (TransmitModifier: 0.5f, HeatPenalty: -2f, PowerMixRatio: 0.5f), // Охлаждающий эффект, низкая мощность
+        [Gas.Hydrogen] = (TransmitModifier: 5f, HeatPenalty: 8f, PowerMixRatio: 1.2f), // Горючий, высокий нагрев
+        [Gas.Nitrium] = (TransmitModifier: 1.5f, HeatPenalty: 2f, PowerMixRatio: 1.1f), // Лечебный, умеренное влияние
+        [Gas.Healium] = (TransmitModifier: 1f, HeatPenalty: -1f, PowerMixRatio: 0.9f), // Лечебный, охлаждающий
+        [Gas.HyperNoblium] = (TransmitModifier: 0f, HeatPenalty: -15f, PowerMixRatio: -2f), // Останавливает реакции, сильное охлаждение
+        [Gas.ProtoNitrate] = (TransmitModifier: 3f, HeatPenalty: 5f, PowerMixRatio: 1.3f), // Умеренный нагрев, хорошая передача
+        [Gas.Zauker] = (TransmitModifier: 1f, HeatPenalty: 20f, PowerMixRatio: 0.5f), // Крайне ядовитый, очень высокий нагрев
+        [Gas.Halon] = (TransmitModifier: 0.5f, HeatPenalty: -5f, PowerMixRatio: -0.5f), // Поглощает тепло и кислород
+        [Gas.Helium] = (TransmitModifier: 0f, HeatPenalty: -1f, PowerMixRatio: -0.5f), // Инертный, слабое охлаждение
+        [Gas.AntiNoblium] = (TransmitModifier: 0f, HeatPenalty: 25f, PowerMixRatio: -3f) // Экстремально опасный, очень высокий нагрев
+        //ADT-Gas-End
     };
 
     public EntProtoId[] LightningPrototypes =
@@ -195,6 +222,12 @@ public sealed partial class BkmSupermatterComponent : Component
 
     [DataField("dustSound")]
     public SoundSpecifier DustSound = new SoundPathSpecifier("/Audio/Backmen/Supermatter/dust.ogg");
+
+    [DataField]
+    public EntProtoId ProjectileHitEffect = "SupermatterProjectileHitEffect";
+
+    [DataField]
+    public SoundSpecifier ProjectileHitSound = new SoundCollectionSpecifier("sparks");
 
     [DataField("delamSound")]
     public SoundSpecifier DelamSound = new SoundPathSpecifier("/Audio/Backmen/Supermatter/delamming.ogg");
@@ -335,68 +368,68 @@ public sealed partial class BkmSupermatterComponent : Component
     /// we yell if over 50 damage every YellTimer Seconds
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    public float YellTimer = 30f;
+    public TimeSpan YellTimer = TimeSpan.FromSeconds(30);
 
     /// <summary>
-    /// set to YellTimer at first so it doesnt yell a minute after being hit
+    /// Next time to announce core damage status.
     /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
-    public float YellAccumulator = 30f;
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan YellAccumulator = TimeSpan.Zero;
 
     /// <summary>
     /// YellTimer before the SM is about the delam
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    public float YellDelam = 5f;
+    public TimeSpan YellDelam = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    ///  Timer for Damage
+    /// Next time to process damage updates.
     /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
-    public float DamageUpdateAccumulator;
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan DamageUpdateAccumulator = TimeSpan.Zero;
 
     /// <summary>
     /// update environment damage every 1 second
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    public float DamageUpdateTimer = 1f;
+    public TimeSpan DamageUpdateTimer = TimeSpan.FromSeconds(1);
 
     /// <summary>
-    /// Timer for delam
+    /// Time when delamination should finalize if not cancelled.
     /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
-    public float DelamTimerAccumulator;
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan DelamTimerAccumulator = TimeSpan.Zero;
 
     /// <summary>
     ///     Time until delam
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite)]
     [DataField]
-    public float DelamTimer = 120f;
+    public TimeSpan DelamTimer = TimeSpan.FromSeconds(120);
 
     /// <summary>
-    ///  The message timer
+    /// Reserved timer for optional speech behavior.
     /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
-    public float SpeakAccumulator = 5f;
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan SpeakAccumulator = TimeSpan.Zero;
 
     /// <summary>
-    /// Atmos update timer
+    /// Next time to process atmosphere interaction.
     /// </summary>
-    [ViewVariables(VVAccess.ReadOnly)]
-    public float AtmosUpdateAccumulator;
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan AtmosUpdateAccumulator = TimeSpan.Zero;
 
     /// <summary>
     /// update atmos every 1 second
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    public float AtmosUpdateTimer = 1f;
+    public TimeSpan AtmosUpdateTimer = TimeSpan.FromSeconds(1);
+
+    [DataField(customTypeSerializer: typeof(TimeOffsetSerializer)), AutoPausedField]
+    public TimeSpan ZapAccumulator = TimeSpan.Zero;
 
     [DataField]
-    public float ZapAccumulator = 0f;
-
-    [DataField]
-    public float ZapTimer = 10f;
+    public TimeSpan ZapTimer = TimeSpan.FromSeconds(10);
 
     #endregion
 

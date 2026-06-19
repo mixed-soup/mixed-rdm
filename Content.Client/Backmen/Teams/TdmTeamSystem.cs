@@ -6,9 +6,9 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Backmen.Teams;
 
-public sealed class TdmTeamSystem : SharedTdmTeamSystem
+public sealed partial class TdmTeamSystem : SharedTdmTeamSystem
 {
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     public override void Initialize()
     {
@@ -22,12 +22,9 @@ public sealed class TdmTeamSystem : SharedTdmTeamSystem
         // do nothing on client
     }
 
-    [ValidatePrototypeId<FactionIconPrototype>]
-    private const string TeamA = "TeamAFaction";
-    [ValidatePrototypeId<FactionIconPrototype>]
-    private const string TeamB = "TeamBFaction";
-    [ValidatePrototypeId<FactionIconPrototype>]
-    private const string TeamNoTeam = "Team0Faction";
+    private static readonly ProtoId<FactionIconPrototype> TeamA = "TeamAFaction";
+    private static readonly ProtoId<FactionIconPrototype> TeamB = "TeamBFaction";
+    private static readonly ProtoId<FactionIconPrototype> TeamNoTeam = "Team0Faction";
 
     private void OnGetTeamIcon(Entity<TdmMemberComponent> ent, ref GetStatusIconsEvent args)
     {

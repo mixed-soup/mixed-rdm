@@ -1,4 +1,4 @@
-﻿- type: htnCompound
+- type: htnCompound
   id: BehemothFoodCompound
   branches:
   # Picks a nearby food, moves into range, then eats it and waits the idle time.
@@ -14,6 +14,9 @@
         targetKey: TargetCoordinates
         pathfindKey: TargetPathfind
         rangeKey: MeleeRange
+
+    - !type:HTNPrimitiveTask
+      operator: !type:ClearIngestionBlockersOperator
 
     - !type:HTNPrimitiveTask
       preconditions:
@@ -41,6 +44,9 @@
         targetKey: TargetCoordinates
         pathfindKey: TargetPathfind
         rangeKey: MeleeRange
+
+    - !type:HTNPrimitiveTask
+      operator: !type:ClearIngestionBlockersOperator
 
     - !type:HTNPrimitiveTask
       preconditions:

@@ -1,17 +1,4 @@
 - type: technology
-  id: SalvageWeapons
-  name: research-technology-salvage-weapons
-  icon:
-    sprite: Objects/Weapons/Guns/Basic/kinetic_accelerator.rsi
-    state: icon
-  discipline: Shaft
-  tier: 1
-  cost: 3500
-  recipeUnlocks:
-  - WeaponProtoKineticAccelerator
-  position: 11,1
-
-- type: technology
   id: SalvageEquipment
   name: research-technology-salvage-equipment
   icon:
@@ -25,6 +12,7 @@
   - MineralScannerEmpty
   - WeaponPlasmaCutter # Goobstation
   - ClothingMaskWeldingGas
+  - ClothingShoesBootsJump
   position: 10,1
 
 - type: technology
@@ -34,7 +22,7 @@
     sprite: Objects/Specific/Mining/ore_bag_holding.rsi
     state: orebag_on
   discipline: Shaft
-  tier: 1
+  tier: 2
   cost: 7500
   recipeUnlocks:
 #   - WeaponPlasmaCutterAdvanced

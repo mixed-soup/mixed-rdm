@@ -8,6 +8,9 @@ using Content.Server.Popups;
 using Content.Shared.Backmen.Abilities.Psionics;
 using Content.Shared.Backmen.Psionics;
 using Content.Shared.Backmen.Psionics.Events;
+using Content.Shared.Damage.Systems;
+using Content.Shared.StatusEffectNew;
+using Content.Shared.StatusEffectNew.Components;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Player;
@@ -16,25 +19,22 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Abilities.Psionics;
 
-public sealed class DispelPowerSystem : SharedDispelPowerSystem
+public sealed partial class DispelPowerSystem : SharedDispelPowerSystem
 {
-    [Dependency] private readonly StatusEffectsSystem _statusEffects = default!;
-    [Dependency] private readonly ActionsSystem _actions = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly GuardianSystem _guardianSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly SharedPsionicAbilitiesSystem _psionics = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private Content.Shared.StatusEffect.StatusEffectsSystem _statusEffects = default!;
+    [Dependency] private ActionsSystem _actions = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private GuardianSystem _guardianSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private SharedPsionicAbilitiesSystem _psionics = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
 
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<DispelPowerComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<DispelPowerComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<DispelPowerActionEvent>(OnPowerUsed);
 
         SubscribeLocalEvent<DispellableComponent, DispelledEvent>(OnDispelled);
         SubscribeLocalEvent<DamageOnDispelComponent, DispelledEvent>(OnDmgDispelled);
@@ -44,9 +44,9 @@ public sealed class DispelPowerSystem : SharedDispelPowerSystem
         SubscribeLocalEvent<RevenantComponent, DispelledEvent>(OnRevenantDispelled);
     }
 
-    [ValidatePrototypeId<EntityPrototype>] private const string ActionDispel = "ActionDispel";
+    private readonly EntProtoId ActionDispel = "ActionDispel";
 
-    private void OnInit(EntityUid uid, DispelPowerComponent component, ComponentInit args)
+    protected override void EnsurePowerActions(EntityUid uid, DispelPowerComponent component)
     {
         _actions.AddAction(uid, ref component.DispelPowerAction, ActionDispel);
 
@@ -58,17 +58,20 @@ public sealed class DispelPowerSystem : SharedDispelPowerSystem
             psionic.PsionicAbility = component.DispelPowerAction;
     }
 
-    private void OnShutdown(EntityUid uid, DispelPowerComponent component, ComponentShutdown args)
+    protected override void RemovePowerActions(EntityUid uid, DispelPowerComponent component)
     {
         _actions.RemoveAction(uid, component.DispelPowerAction);
     }
 
-    private void OnPowerUsed(DispelPowerActionEvent args)
+    protected override void HandlePowerUse(EntityUid uid, DispelPowerComponent component, DispelPowerActionEvent args)
     {
-        if(args.Handled)
+        if (args.Handled)
             return;
 
-        var ev = new DispelledEvent();
+        var ev = new DispelledEvent
+        {
+            Source = args.Performer
+        };
         RaiseLocalEvent(args.Target, ev, false);
 
         if (ev.Handled)
@@ -78,8 +81,7 @@ public sealed class DispelPowerSystem : SharedDispelPowerSystem
         }
     }
 
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string Ash = "Ash";
+    private readonly EntProtoId Ash = "Ash";
 
     private void OnDispelled(EntityUid uid, DispellableComponent component, DispelledEvent args)
     {

@@ -6,9 +6,9 @@ using Robust.Shared.Prototypes;
 namespace Content.Client.BarSign.Ui;
 
 [UsedImplicitly]
-public sealed class BarSignBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
+public sealed partial class BarSignBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
 
     private BarSignMenu? _menu;
 
@@ -35,7 +35,7 @@ public sealed class BarSignBoundUserInterface(EntityUid owner, Enum uiKey) : Bou
 
     public void Update(ProtoId<BarSignPrototype>? sign)
     {
-        if (_prototype.TryIndex(sign, out var signPrototype))
+        if (_prototype.Resolve(sign, out var signPrototype))
             _menu?.UpdateState(signPrototype);
     }
 

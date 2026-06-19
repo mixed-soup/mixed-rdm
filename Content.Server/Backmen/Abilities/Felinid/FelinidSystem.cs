@@ -15,8 +15,11 @@ using Content.Server.Medical;
 using Content.Server.Nutrition.Components;
 using Content.Server.Popups;
 using Content.Shared.Backmen.Psionics.Events;
+using Content.Shared.Body.Components;
+using Content.Shared.Body.Systems;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Hands.EntitySystems;
+using Content.Shared.Medical;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Random;
@@ -25,20 +28,21 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Abilities.Felinid;
 
-public sealed class FelinidSystem : EntitySystem
+public sealed partial class FelinidSystem : EntitySystem
 {
 
-    [Dependency] private readonly SharedActionsSystem _actionsSystem = default!;
-    [Dependency] private readonly HungerSystem _hungerSystem = default!;
-    [Dependency] private readonly VomitSystem _vomitSystem = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly InventorySystem _inventorySystem = default!;
-    [Dependency] private readonly ActionsSystem _actions = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly ChargesSystem _chargesSystem = default!;
+    [Dependency] private SharedActionsSystem _actionsSystem = default!;
+    [Dependency] private HungerSystem _hungerSystem = default!;
+    [Dependency] private VomitSystem _vomitSystem = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionSystem = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
+    [Dependency] private ActionsSystem _actions = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private ChargesSystem _chargesSystem = default!;
+    [Dependency] private SharedBloodstreamSystem _bloodstream = default!;
 
     public override void Initialize()
     {
@@ -69,8 +73,8 @@ public sealed class FelinidSystem : EntitySystem
         }
     }
 
-    [ValidatePrototypeId<EntityPrototype>] private const string ActionHairball = "ActionHairball";
-    [ValidatePrototypeId<EntityPrototype>] private const string ActionEatMouse = "ActionEatMouse";
+    private readonly EntProtoId ActionHairball = "ActionHairball";
+    private readonly EntProtoId ActionEatMouse = "ActionEatMouse";
 
     private void OnInit(EntityUid uid, FelinidComponent component, ComponentInit args)
     {
@@ -166,12 +170,11 @@ public sealed class FelinidSystem : EntitySystem
         var hairball = EntityManager.SpawnEntity(component.HairballPrototype, Transform(uid).Coordinates);
         var hairballComp = Comp<HairballComponent>(hairball);
 
-        if (TryComp<BloodstreamComponent>(uid, out var bloodstream) && bloodstream.ChemicalSolution != null)
+        if (TryComp<BloodstreamComponent>(uid, out var bloodstream))
         {
+            var temp = _bloodstream.FlushChemicals((uid, bloodstream), 20);
 
-            var temp = _solutionSystem.SplitSolution(bloodstream.ChemicalSolution.Value, 20);
-
-            if (_solutionSystem.TryGetSolution(hairball, hairballComp.SolutionName, out var hairballSolution))
+            if (temp != null && _solutionSystem.TryGetSolution(hairball, hairballComp.SolutionName, out var hairballSolution))
             {
                 _solutionSystem.TryAddSolution(hairballSolution.Value, temp);
             }

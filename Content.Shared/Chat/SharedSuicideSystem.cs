@@ -1,8 +1,10 @@
+using System.Linq;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Mobs.Components;
 using Robust.Shared.Prototypes;
-using System.Linq;
 using Content.Shared.Backmen.Surgery.Consciousness;
 using Content.Shared.Backmen.Surgery.Consciousness.Components;
 using Content.Shared.Backmen.Surgery.Consciousness.Systems;
@@ -11,11 +13,13 @@ using Content.Shared.Body.Components;
 
 namespace Content.Shared.Chat;
 
-public sealed class SharedSuicideSystem : EntitySystem
+public sealed partial class SharedSuicideSystem : EntitySystem
 {
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly ConsciousnessSystem _consciousness = default!;
+    private static readonly ProtoId<DamageTypePrototype> FallbackDamageType = "Blunt";
+
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private ConsciousnessSystem _consciousness = default!;
 
     /// <summary>
     /// Applies lethal damage spread out across the damage types given.
@@ -52,7 +56,7 @@ public sealed class SharedSuicideSystem : EntitySystem
             appliedDamageSpecifier.DamageDict[key] = Math.Ceiling((double) (value * lethalAmountOfDamage / totalDamage));
         }
 
-        _damageableSystem.TryChangeDamage(target, appliedDamageSpecifier, true, origin: target, targetPart: TargetBodyPart.Head); // backmen
+        _damageableSystem.ChangeDamage(target.AsNullable(), appliedDamageSpecifier, true, origin: target, targetPart: TargetBodyPart.Head); // backmen
     }
 
     /// <summary>
@@ -80,12 +84,12 @@ public sealed class SharedSuicideSystem : EntitySystem
         // We don't want structural damage for the same reasons listed above
         if (!_prototypeManager.TryIndex(damageType, out var damagePrototype) || damagePrototype.ID == "Structural")
         {
-            Log.Error($"{nameof(SharedSuicideSystem)} could not find the damage type prototype associated with {damageType}. Falling back to Blunt");
-            damagePrototype = _prototypeManager.Index<DamageTypePrototype>("Blunt");
+            Log.Error($"{nameof(SharedSuicideSystem)} could not find the damage type prototype associated with {damageType}. Falling back to {FallbackDamageType}");
+            damagePrototype = _prototypeManager.Index(FallbackDamageType);
         }
 
         var damage = new DamageSpecifier(damagePrototype, lethalAmountOfDamage);
-        _damageableSystem.TryChangeDamage(target, damage, true, origin: target, targetPart: TargetBodyPart.Head); // backmen
+        _damageableSystem.ChangeDamage(target.AsNullable(), damage, true, origin: target, targetPart: TargetBodyPart.Head); // backmen
     }
 
     /// <summary>
@@ -94,18 +98,23 @@ public sealed class SharedSuicideSystem : EntitySystem
     /// </summary>
     public void KillConsciousness(Entity<ConsciousnessComponent> target)
     {
-        _consciousness.ClearForceEffects(target, target);
-        foreach (var modifier in target.Comp.Modifiers)
+        _consciousness.ClearForceEffects(target.AsNullable());
+
+        // Start-backmen: create copies of keys to avoid InvalidOperationException when modifying collection during iteration
+        var modifierKeys = target.Comp.Modifiers.Keys.ToList();
+        foreach (var (k1,k2) in modifierKeys)
         {
-            _consciousness.RemoveConsciousnessModifier(target, modifier.Key.Item1, modifier.Key.Item2);
+            _consciousness.RemoveConsciousnessModifier(target.AsNullable(), k1, k2);
         }
 
-        foreach (var multiplier in target.Comp.Multipliers)
+        var multiplierKeys = target.Comp.Multipliers.Keys.ToList();
+        foreach (var (k1,k2) in multiplierKeys)
         {
-            _consciousness.RemoveConsciousnessMultiplier(target, multiplier.Key.Item1, multiplier.Key.Item2, target);
+            _consciousness.RemoveConsciousnessMultiplier(target.AsNullable(), k1, k2);
         }
+        // End-backmen: create copies of keys to avoid InvalidOperationException
 
-        _consciousness.AddConsciousnessModifier(target, target, -target.Comp.Cap, "Suicide", ConsciousnessModType.Pain, consciousness: target);
-        _consciousness.AddConsciousnessMultiplier(target, target, 0f, "Suicide", ConsciousnessModType.Pain, consciousness: target);
+        _consciousness.AddConsciousnessModifier(target.AsNullable(), target, -target.Comp.Cap, "Suicide", ConsciousnessModType.Pain);
+        _consciousness.AddConsciousnessMultiplier(target.AsNullable(), target, 0f, "Suicide", ConsciousnessModType.Pain);
     }
 }

@@ -11,7 +11,7 @@
   components:
   - type: Sprite
     layers:
-    - map: [ "enum.HumanoidVisualLayers.Groin" ]
+    - map: [ "enum.HumanoidVisualLayers.Groin" ] # backmen
     - map: [ "enum.HumanoidVisualLayers.Chest" ]
     - map: [ "enum.HumanoidVisualLayers.Head" ]
     - map: [ "enum.HumanoidVisualLayers.Snout" ]
@@ -22,12 +22,12 @@
     - map: [ "enum.HumanoidVisualLayers.LLeg" ]
     - map: [ "enum.HumanoidVisualLayers.UndergarmentBottom" ]
     - map: [ "enum.HumanoidVisualLayers.UndergarmentTop" ]
+    - map: [ "socks" ] # Backmen
+    - map: [ "underpants" ] # Backmen
+    - map: [ "undershirt" ] # Backmen
     # - map: ["jumpsuit"]
     - map: ["enum.HumanoidVisualLayers.LFoot"]
     - map: ["enum.HumanoidVisualLayers.RFoot"]
-    - map: ["socks"] #backmen:underclothing
-    - map: ["underpants"] #backmen:underclothing
-    - map: ["undershirt"] #backmen:underclothing
     - map: ["jumpsuit"]
     - map: ["enum.HumanoidVisualLayers.LHand"]
     - map: ["enum.HumanoidVisualLayers.RHand"]
@@ -58,21 +58,21 @@
       sprite: "Effects/creampie.rsi"
       state: "creampie_human"
       visible: false
-  #- type: DamageVisuals
-  #  thresholds: [ 10, 20, 30, 50, 70, 100 ]
-  #  targetLayers:
-  #  - "enum.HumanoidVisualLayers.Chest"
-  #  - "enum.HumanoidVisualLayers.Head"
-  #  - "enum.HumanoidVisualLayers.LArm"
-  #  - "enum.HumanoidVisualLayers.LLeg"
-  #  - "enum.HumanoidVisualLayers.RArm"
-  #  - "enum.HumanoidVisualLayers.RLeg"
-  #  damageOverlayGroups:
-  #    Brute:
-  #      sprite: Mobs/Effects/brute_damage.rsi
-  #      color: "#FF0000"
-  #    Burn:
-  #      sprite: Mobs/Effects/burn_damage.rsi
+  - type: DamageVisuals
+    thresholds: [ 10, 20, 30, 50, 70, 100 ]
+    targetLayers:
+    - "enum.HumanoidVisualLayers.Chest"
+    - "enum.HumanoidVisualLayers.Head"
+    - "enum.HumanoidVisualLayers.LArm"
+    - "enum.HumanoidVisualLayers.LLeg"
+    - "enum.HumanoidVisualLayers.RArm"
+    - "enum.HumanoidVisualLayers.RLeg"
+    damageOverlayGroups:
+      Brute:
+        sprite: Mobs/Effects/brute_damage.rsi
+        color: "#FF0000"
+      Burn:
+        sprite: Mobs/Effects/burn_damage.rsi
   - type: GenericVisualizer
     visuals:
       enum.CreamPiedVisuals.Creamed:
@@ -124,21 +124,16 @@
     - reagents: [Water, SpaceCleaner]
       methods: [Touch]
       effects:
-      - !type:WashCreamPieReaction
+      - !type:WashCreamPie
   - type: StatusEffects
     allowed:
-    - Stun
-    - KnockedDown
-    - SlowedDown
     - Stutter
-    - SeeingRainbows
     - Electrocution
     - Drunk
     - SlurredSpeech
     - RatvarianLanguage
     - PressureImmunity
     - Muted
-    - ForcedSleep
     - TemporaryBlindness
     - Pacified
     - StaminaModifier
@@ -147,7 +142,6 @@
     - SeeAll
     - Flashed
     - RadiationProtection
-    - Drowsiness
     - Adrenaline
   - type: Body
     prototype: Human
@@ -237,7 +231,6 @@
     - TauCetiBasic
     understands:
     - TauCetiBasic
-  - type: Immersive # backmen: immersive
   - type: Targeting # backmen: surgery
   - type: SurgeryTarget # backmen: surgery
 
@@ -253,8 +246,6 @@
   abstract: true
   components:
   - type: Consciousness # backmen
-    cap: 250
-    threshold: 100
   - type: Absorbable # Changeling
   - type: DiseaseCarrier # backmen
   - type: Targeting # backmen: surgery
@@ -279,9 +270,9 @@
         Heat: 1.5 #per second, scales with temperature & other constants
   - type: TemperatureSpeed
     thresholds:
-      293: 0.8
-      280: 0.6
-      260: 0.4
+      293: 0.9
+      280: 0.8
+      260: 0.7
   - type: ThermalRegulator
     metabolismHeat: 800
     radiatedHeat: 100
@@ -312,6 +303,7 @@
     - TauCetiBasic
     understands:
     - TauCetiBasic
+  - type: StunVisuals
 
 - type: entity
   save: false
@@ -331,7 +323,7 @@
     # TODO BODY Turn these into individual body parts?
     layers:
     - map: [ "enum.HumanoidVisualLayers.Chest" ]
-    - map: [ "enum.HumanoidVisualLayers.Groin" ]
+    - map: [ "enum.HumanoidVisualLayers.Groin" ] # backmen
     - map: [ "enum.HumanoidVisualLayers.Head" ]
     - map: [ "enum.HumanoidVisualLayers.Snout" ]
     - map: [ "enum.HumanoidVisualLayers.Eyes" ]

@@ -8,10 +8,10 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Backmen.StationAI;
 
-public sealed class AiEnemySystem : SharedAiEnemySystem
+public sealed partial class AiEnemySystem : SharedAiEnemySystem
 {
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
     private EntityQuery<GhostComponent> _ghostQuery;
 
     public override void Initialize()
@@ -22,8 +22,7 @@ public sealed class AiEnemySystem : SharedAiEnemySystem
         _ghostQuery = GetEntityQuery<GhostComponent>();
     }
 
-    [ValidatePrototypeId<SecurityIconPrototype>]
-    private const string AiEnemyStatus = "AiIconEnemyTarget";
+    private static readonly ProtoId<SecurityIconPrototype> AiEnemyStatus = "AiIconEnemyTarget";
     private void GetIcon(Entity<AIEnemyNTComponent> target, ref GetStatusIconsEvent args)
     {
         var ent = _player.LocalSession?.AttachedEntity ?? EntityUid.Invalid;

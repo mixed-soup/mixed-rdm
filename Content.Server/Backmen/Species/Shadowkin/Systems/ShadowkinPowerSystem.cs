@@ -2,18 +2,19 @@ using Content.Shared.Alert;
 using Content.Shared.Backmen.Species.Shadowkin.Components;
 using Content.Shared.Backmen.Species.Shadowkin.Events;
 using System.Threading.Tasks;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Species.Shadowkin.Systems;
 
-public sealed class ShadowkinPowerSystem : EntitySystem
+public sealed partial class ShadowkinPowerSystem : EntitySystem
 {
-    [Dependency] private readonly AlertsSystem _alerts = default!;
-    [Dependency] private readonly ShadowkinBlackeyeSystem _shadowkinBlackeyeSystem = default!;
+    [Dependency] private AlertsSystem _alerts = default!;
+    [Dependency] private ShadowkinBlackeyeSystem _shadowkinBlackeyeSystem = default!;
 
     private readonly Dictionary<ShadowkinPowerThreshold, string> _powerDictionary = new();
 
-    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private IGameTiming _timing = default!;
 
     public override void Initialize()
     {
@@ -52,8 +53,7 @@ public sealed class ShadowkinPowerSystem : EntitySystem
         return powerType;
     }
 
-    [ValidatePrototypeId<AlertPrototype>]
-    private const string ShadowkinPower = "ShadowkinPower";
+    private static readonly ProtoId<AlertPrototype> ShadowkinPower = "ShadowkinPower";
 
     /// <summary>
     ///    Sets the alert level of a shadowkin.
@@ -241,6 +241,6 @@ public sealed class ShadowkinPowerSystem : EntitySystem
             return;
 
         plr.PowerLevelGainMultiplier = ev.Modifier;
-        Dirty(uid, plr);
+        DirtyField(uid, plr, nameof(ShadowkinComponent.PowerLevelGainMultiplier));
     }
 }

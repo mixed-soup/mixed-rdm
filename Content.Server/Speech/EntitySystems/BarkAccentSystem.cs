@@ -1,11 +1,13 @@
+using Content.Shared.StatusEffectNew;
 using Content.Server.Speech.Components;
+using Content.Shared.Speech;
 using Robust.Shared.Random;
 
 namespace Content.Server.Speech.EntitySystems
 {
-    public sealed class BarkAccentSystem : EntitySystem
+    public sealed partial class BarkAccentSystem : EntitySystem
     {
-        [Dependency] private readonly IRobustRandom _random = default!;
+        [Dependency] private IRobustRandom _random = default!;
 
         private static readonly IReadOnlyList<string> Barks = new List<string>{
             " Гав!", " ГАВ", " вуф-вуф"  // Corvax-Localization
@@ -28,6 +30,7 @@ namespace Content.Server.Speech.EntitySystems
         public override void Initialize()
         {
             SubscribeLocalEvent<BarkAccentComponent, AccentGetEvent>(OnAccent);
+            SubscribeLocalEvent<BarkAccentComponent, StatusEffectRelayedEvent<AccentGetEvent>>(OnAccentRelayed);
         }
 
         public string Accentuate(string message)
@@ -44,9 +47,14 @@ namespace Content.Server.Speech.EntitySystems
                 //Corvax-Localization-End
         }
 
-        private void OnAccent(EntityUid uid, BarkAccentComponent component, AccentGetEvent args)
+        private void OnAccent(Entity<BarkAccentComponent> entity, ref AccentGetEvent args)
         {
             args.Message = Accentuate(args.Message);
+        }
+
+        private void OnAccentRelayed(Entity<BarkAccentComponent> entity, ref StatusEffectRelayedEvent<AccentGetEvent> args)
+        {
+            args.Args.Message = Accentuate(args.Args.Message);
         }
     }
 }

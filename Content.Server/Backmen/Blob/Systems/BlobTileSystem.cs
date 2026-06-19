@@ -6,7 +6,9 @@ using Content.Server.Emp;
 using Content.Shared.Backmen.Blob;
 using Content.Shared.Backmen.Blob.Components;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Destructible;
+using Content.Shared.EntityEffects;
 using Content.Shared.Mobs.Components;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
@@ -16,25 +18,25 @@ using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Content.Server.Backmen.Blob.Systems;
 
-public sealed class BlobTileSystem : SharedBlobTileSystem
+public sealed partial class BlobTileSystem : SharedBlobTileSystem
 {
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly BlobCoreSystem _blobCoreSystem = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly EmpSystem _empSystem = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
-    [Dependency] private readonly TransformSystem _transform = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly NpcFactionSystem _npcFactionSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private BlobCoreSystem _blobCoreSystem = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private EmpSystem _empSystem = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
+    [Dependency] private TransformSystem _transform = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private NpcFactionSystem _npcFactionSystem = default!;
 
     private EntityQuery<BlobCoreComponent> _blobCoreQuery;
 
-    [ValidatePrototypeId<NpcFactionPrototype>]
-    private const string BlobFaction = "Blob";
+    private static readonly ProtoId<NpcFactionPrototype> BlobFaction = "Blob";
 
     public override void Initialize()
     {
@@ -77,7 +79,7 @@ public sealed class BlobTileSystem : SharedBlobTileSystem
 
         if (blobCoreComponent.CurrentChem == BlobChemType.ElectromagneticWeb)
         {
-            _empSystem.EmpPulse(_transform.GetMapCoordinates(uid), 3f, 50f, 3f);
+            _empSystem.EmpPulse(_transform.GetMapCoordinates(uid), 3f, 50f, TimeSpan.FromSeconds(3f), component.Core);
         }
     }
 
@@ -182,7 +184,7 @@ public sealed class BlobTileSystem : SharedBlobTileSystem
             healCore.DamageDict.TryAdd(keyValuePair.Key, keyValuePair.Value * modifier);
         }
 
-        _damageableSystem.TryChangeDamage(ent, healCore);
+        _damageableSystem.ChangeDamage(ent.Owner, healCore);
     }
 
     protected override void TryUpgrade(Entity<BlobTileComponent, BlobUpgradeableTileComponent> target, Entity<BlobCoreComponent> core, EntityUid observer)
@@ -202,8 +204,16 @@ public sealed class BlobTileSystem : SharedBlobTileSystem
         (from.Comp.BlobResource, to.Comp.BlobResource) = (to.Comp.BlobResource, from.Comp.BlobResource);
         (from.Comp.BlobStorage, to.Comp.BlobStorage) = (to.Comp.BlobStorage, from.Comp.BlobStorage);
         (from.Comp.BlobTurret, to.Comp.BlobTurret) = (to.Comp.BlobTurret, from.Comp.BlobTurret);
-        Dirty(from);
-        Dirty(to);
+        DirtyFields(from, from.Comp, null,
+            nameof(BlobNodeComponent.BlobFactory),
+            nameof(BlobNodeComponent.BlobResource),
+            nameof(BlobNodeComponent.BlobStorage),
+            nameof(BlobNodeComponent.BlobTurret));
+        DirtyFields(to, to.Comp, null,
+            nameof(BlobNodeComponent.BlobFactory),
+            nameof(BlobNodeComponent.BlobResource),
+            nameof(BlobNodeComponent.BlobStorage),
+            nameof(BlobNodeComponent.BlobTurret));
     }
 
     public bool IsEmptySpecial(Entity<BlobNodeComponent> node, BlobTileType tile)

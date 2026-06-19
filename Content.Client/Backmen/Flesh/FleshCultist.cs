@@ -8,9 +8,9 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Client.Backmen.Flesh;
 
-public sealed class FleshCultistSystem : EntitySystem
+public sealed partial class FleshCultistSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
     public override void Initialize()
     {
         base.Initialize();
@@ -18,8 +18,7 @@ public sealed class FleshCultistSystem : EntitySystem
         SubscribeLocalEvent<FleshCultistComponent, GetStatusIconsEvent>(OnShowCultIcon);
     }
 
-    [ValidatePrototypeId<FactionIconPrototype>]
-    private const string FleshcultistFaction = "FleshcultistFaction";
+    private static readonly ProtoId<FactionIconPrototype> FleshcultistFaction = "FleshcultistFaction";
 
     private void OnShowCultIcon(Entity<FleshCultistComponent> ent, ref GetStatusIconsEvent args)
     {

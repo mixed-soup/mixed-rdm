@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Content.Server.Cargo.Components;
-using Content.Server.Station.Components;
 using Content.Shared.Cargo;
 using Content.Shared.Cargo.BUI;
 using Content.Shared.Cargo.Components;
@@ -13,8 +12,8 @@ using Content.Shared.IdentityManagement;
 using Content.Shared.Interaction;
 using Content.Shared.Labels.Components;
 using Content.Shared.Paper;
+using Content.Shared.Station.Components;
 using JetBrains.Annotations;
-using Robust.Shared.Audio;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -24,9 +23,9 @@ namespace Content.Server.Cargo.Systems
 {
     public sealed partial class CargoSystem
     {
-        [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
-        [Dependency] private readonly EmagSystem _emag = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private SharedTransformSystem _transformSystem = default!;
+        [Dependency] private EmagSystem _emag = default!;
+        [Dependency] private IGameTiming _timing = default!;
 
         private void InitializeConsole()
         {
@@ -168,7 +167,7 @@ namespace Content.Server.Cargo.Systems
 
             // Find our order again. It might have been dispatched or approved already
             var order = orderDatabase.Orders[component.Account].Find(order => args.OrderId == order.OrderId && !order.Approved);
-            if (order == null || !_protoMan.TryIndex(order.Account, out var account))
+            if (order == null || !_protoMan.Resolve(order.Account, out var account))
             {
                 return;
             }
@@ -323,7 +322,7 @@ namespace Content.Server.Cargo.Systems
 
         private void OnAddOrderMessageSlipPrinter(EntityUid uid, CargoOrderConsoleComponent component, CargoConsoleAddOrderMessage args, CargoProductPrototype product)
         {
-            if (!_protoMan.TryIndex(component.Account, out var account))
+            if (!_protoMan.Resolve(component.Account, out var account))
                 return;
 
             if (Timing.CurTime < component.NextPrintTime)
@@ -441,6 +440,9 @@ namespace Content.Server.Cargo.Systems
             if (!TryComp<StationBankAccountComponent>(station, out var bank))
                 return [];
 
+            if(!station.Comp.Orders.ContainsKey(console.Comp.Account))
+                return [];
+
             var ourOrders = station.Comp.Orders[console.Comp.Account];
 
             if (console.Comp.Account == bank.PrimaryAccount)
@@ -475,6 +477,9 @@ namespace Content.Server.Cargo.Systems
             var amount = 0;
 
             if (!TryComp<StationBankAccountComponent>(station, out var bank))
+                return amount;
+
+            if(!station.Comp.Orders.ContainsKey(account))
                 return amount;
 
             foreach (var order in station.Comp.Orders[account])
@@ -626,7 +631,7 @@ namespace Content.Server.Cargo.Systems
             _transformSystem.Unanchor(item, Transform(item));
 
             // Create a sheet of paper to write the order details on
-            var printed = EntityManager.SpawnEntity(paperProto, spawn);
+            var printed = Spawn(paperProto, spawn);
             if (TryComp<PaperComponent>(printed, out var paper))
             {
                 // fill in the order data

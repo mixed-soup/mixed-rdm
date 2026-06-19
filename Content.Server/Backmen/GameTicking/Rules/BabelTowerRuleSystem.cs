@@ -1,7 +1,5 @@
 using Content.Server.Backmen.GameTicking.Rules.Components;
 using Content.Server.Backmen.Language;
-using Content.Server.Backmen.Language.Events;
-using Content.Server.GameTicking;
 using Content.Server.GameTicking.Rules;
 using Content.Shared.Backmen.Language;
 using Content.Shared.GameTicking;
@@ -9,9 +7,9 @@ using Content.Shared.GameTicking.Components;
 
 namespace Content.Server.Backmen.GameTicking.Rules;
 
-public sealed class BabelTowerRuleSystem : GameRuleSystem<BabelTowerRuleComponent>
+public sealed partial class BabelTowerRuleSystem : GameRuleSystem<BabelTowerRuleComponent>
 {
-    [Dependency] private readonly LanguageSystem _language = default!;
+    [Dependency] private LanguageSystem _language = default!;
 
     public override void Initialize()
     {

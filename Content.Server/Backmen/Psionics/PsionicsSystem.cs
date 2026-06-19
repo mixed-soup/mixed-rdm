@@ -10,18 +10,19 @@ using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
 using Robust.Shared.Configuration;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Content.Server.Backmen.Psionics;
 
-public sealed class PsionicsSystem : SharedPsionicsSystem
+public sealed partial class PsionicsSystem : SharedPsionicsSystem
 {
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly PsionicAbilitiesSystem _psionicAbilitiesSystem = default!;
-    [Dependency] private readonly MindSwapPowerSystem _mindSwapPowerSystem = default!;
-    [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-    [Dependency] private readonly NpcFactionSystem _npcFactonSystem = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private PsionicAbilitiesSystem _psionicAbilitiesSystem = default!;
+    [Dependency] private MindSwapPowerSystem _mindSwapPowerSystem = default!;
+    [Dependency] private GlimmerSystem _glimmerSystem = default!;
+    [Dependency] private NpcFactionSystem _npcFactonSystem = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
 
     /// <summary>
@@ -117,11 +118,8 @@ public sealed class PsionicsSystem : SharedPsionicsSystem
         _chat.TrySendInGameICMessage(uid, message, InGameICChatType.Emote, true, ignoreActionBlocker: true);
     }
 */
-    [ValidatePrototypeId<NpcFactionPrototype>]
-    private const string FactionGlimmerMonster = "GlimmerMonster";
-
-    [ValidatePrototypeId<NpcFactionPrototype>]
-    private const string FactionPsionic = "PsionicInterloper";
+    private static readonly ProtoId<NpcFactionPrototype> FactionGlimmerMonster = "GlimmerMonster";
+    private static readonly ProtoId<NpcFactionPrototype> FactionPsionic = "PsionicInterloper";
 
     private void OnInit(EntityUid uid, PsionicComponent component, ComponentInit args)
     {
@@ -183,6 +181,6 @@ public sealed class PsionicsSystem : SharedPsionicsSystem
 
         RollPsionics(ent!, multiplier: bonusMuliplier);
         ent.Comp.Rerolled = true;
-        Dirty(ent);
+        DirtyField(ent, ent.Comp, nameof(PotentialPsionicComponent.Rerolled));
     }
 }

@@ -1,13 +1,12 @@
 using Content.Shared.Backmen.Surgery.Wounds;
 using Robust.Shared.GameStates;
-using SixLabors.ImageSharp.Formats.Tiff.Constants;
 
 namespace Content.Shared.Backmen.Targeting;
 
 /// <summary>
 /// Controls entity limb targeting for actions.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true, raiseAfterAutoHandleState: true)]
 public sealed partial class TargetingComponent : Component
 {
     [ViewVariables, AutoNetworkedField]

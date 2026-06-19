@@ -4,10 +4,9 @@ using Robust.Shared.Prototypes;
 namespace Content.Shared.Backmen.Surgery.Steps;
 
 [RegisterComponent, NetworkedComponent]
-[Prototype("SurgerySteps")]
+//[Prototype("SurgerySteps")]
 public sealed partial class SurgeryStepComponent : Component
 {
-
     [DataField]
     [AlwaysPushInheritance] // organs
     public ComponentRegistry? Tool;
@@ -23,6 +22,12 @@ public sealed partial class SurgeryStepComponent : Component
 
     [DataField]
     public ComponentRegistry? BodyRemove;
+
+    [DataField]
+    public HashSet<EntProtoId>? BodyStatusEffectAdd;
+
+    [DataField]
+    public HashSet<EntProtoId>? BodyStatusEffectRemove;
 
     [DataField]
     public float Duration = 2f;

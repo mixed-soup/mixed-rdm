@@ -1,21 +1,27 @@
 using Content.Client.Alerts;
+using Content.Shared.Alert;
+using Content.Shared.Alert.Components;
+using Content.Shared._Impstation.Revenant;
+using Content.Shared._Impstation.Revenant.Components;
 using Content.Shared.Revenant;
 using Content.Shared.Revenant.Components;
+using Content.Shared.StatusEffectNew;
 using Robust.Client.GameObjects;
 
 namespace Content.Client.Revenant;
 
-public sealed class RevenantSystem : EntitySystem
+public sealed partial class RevenantSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SpriteSystem _sprite = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SpriteSystem _sprite = default!;
+    [Dependency] private StatusEffectsSystem _status = default!;
 
     public override void Initialize()
     {
         base.Initialize();
 
         SubscribeLocalEvent<RevenantComponent, AppearanceChangeEvent>(OnAppearanceChange);
-        SubscribeLocalEvent<RevenantComponent, UpdateAlertSpriteEvent>(OnUpdateAlert);
+        SubscribeLocalEvent<RevenantComponent, GetGenericAlertCounterAmountEvent>(OnGetCounterAmount);
     }
 
     private void OnAppearanceChange(EntityUid uid, RevenantComponent component, ref AppearanceChangeEvent args)
@@ -40,14 +46,24 @@ public sealed class RevenantSystem : EntitySystem
         }
     }
 
-    private void OnUpdateAlert(Entity<RevenantComponent> ent, ref UpdateAlertSpriteEvent args)
+    private void OnGetCounterAmount(Entity<RevenantComponent> ent, ref GetGenericAlertCounterAmountEvent args)
     {
-        if (args.Alert.ID != ent.Comp.EssenceAlert)
+        if (args.Handled)
             return;
 
-        var essence = Math.Clamp(ent.Comp.Essence.Int(), 0, 999);
-        _sprite.LayerSetRsiState(args.SpriteViewEnt.AsNullable(), RevenantVisualLayers.Digit1, $"{(essence / 100) % 10}");
-        _sprite.LayerSetRsiState(args.SpriteViewEnt.AsNullable(), RevenantVisualLayers.Digit2, $"{(essence / 10) % 10}");
-        _sprite.LayerSetRsiState(args.SpriteViewEnt.AsNullable(), RevenantVisualLayers.Digit3, $"{essence % 10}");
+        if (ent.Comp.EssenceAlert == args.Alert)
+        {
+            args.Amount = ent.Comp.Essence.Int();
+            return;
+        }
+
+        if (args.Alert.ID != "EssenceRegen")
+            return;
+
+        if (!_status.TryGetStatusEffect(ent, RevenantStatusEffects.EssenceRegen, out var regenEnt)
+            || !TryComp<RevenantRegenModifierStatusEffectComponent>(regenEnt, out var regen))
+            return;
+
+        args.Amount = regen.Witnesses.Count;
     }
 }

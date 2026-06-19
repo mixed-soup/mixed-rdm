@@ -39,18 +39,20 @@ using Content.Server.SS220.Chat.Systems;
 using Content.Server.Station.Components;
 using Content.Server.Station.Systems;
 using Content.Server.Storage.Components;
-using Content.Server.Warps;
 using Content.Server.Zombies;
 using Content.Shared.Access.Components;
 using Content.Shared.Atmos;
 using Content.Shared.Backmen.CCVar;
 using Content.Shared.Backmen.Shipwrecked.Components;
+using Content.Shared.Body.Events;
 using Content.Shared.Buckle.Components;
 using Content.Shared.Chat;
 using Content.Shared.Chemistry.Components;
 using Content.Shared.CombatMode.Pacification;
 using Content.Shared.Corvax.TTS;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Dataset;
 using Content.Shared.Doors.Components;
 using Content.Shared.Explosion;
@@ -79,10 +81,13 @@ using Content.Shared.Preferences;
 using Content.Shared.Procedural;
 using Content.Shared.Random;
 using Content.Shared.Random.Helpers;
+using Content.Shared.Roles.Components;
 using Content.Shared.Roles.Jobs;
 using Content.Shared.Salvage;
 using Content.Shared.Shuttles.Components;
+using Content.Shared.Station.Components;
 using Content.Shared.Storage;
+using Content.Shared.Storage.Components;
 using Content.Shared.Tag;
 using Content.Shared.Verbs;
 using Content.Shared.Warps;
@@ -109,55 +114,55 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.Shipwrecked;
 
-public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleComponent>
+public sealed partial class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleComponent>
 {
-    [Dependency] private readonly IChatManager _chatManager = default!;
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IServerPreferencesManager _preferencesManager = default!;
-    [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
-    [Dependency] private readonly GameTicker _gameTicker = default!;
-    [Dependency] private readonly AtmosphereSystem _atmosphereSystem = default!;
-    [Dependency] private readonly AudioSystem _audioSystem = default!;
-    [Dependency] private readonly BiomeSystem _biomeSystem = default!;
-    [Dependency] private readonly BuckleSystem _buckleSystem = default!;
-    [Dependency] private readonly DamageableSystem _damageableSystem = default!;
-    [Dependency] private readonly DestructibleSystem _destructibleSystem = default!;
-    [Dependency] private readonly DungeonSystem _dungeonSystem = default!;
-    [Dependency] private readonly EntityLookupSystem _entityLookupSystem = default!;
-    [Dependency] private readonly ExplosionSystem _explosionSystem = default!;
-    [Dependency] private readonly IdCardSystem _cardSystem = default!;
-    [Dependency] private readonly InventorySystem _inventorySystem = default!;
-    [Dependency] private readonly LockSystem _lockSystem = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly NPCConversationSystem _npcConversationSystem = default!;
-    [Dependency] private readonly PaperSystem _paperSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
-    [Dependency] private readonly ShuttleSystem _shuttleSystem = default!;
-    [Dependency] private readonly SmokeSystem _smokeSystem = default!;
-    [Dependency] private readonly StationSpawningSystem _stationSpawningSystem = default!;
-    [Dependency] private readonly ThrusterSystem _thrusterSystem = default!;
-    [Dependency] private readonly TileSystem _tileSystem = default!;
-    [Dependency] private readonly TransformSystem _transformSystem = default!;
-    [Dependency] private readonly RoleSystem _roleSystem = default!;
-    [Dependency] private readonly AirlockSystem _airlockSystem = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
-    [Dependency] private readonly StationJobsSystem _stationJobsSystem = default!;
-    [Dependency] private readonly MetaDataSystem _metadata = default!;
-    [Dependency] private readonly SharedPinpointerSystem _pinpointerSystem = default!;
-    [Dependency] private readonly TagSystem _tagSystem = default!;
-    [Dependency] private readonly SharedSalvageSystem _salvageSystem = default!;
-    [Dependency] private readonly SharedRoofSystem _roofSystem = default!;
-    [Dependency] private readonly DoorSystem _door = default!;
-    [Dependency] private readonly ISerializationManager _serialization = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
+    [Dependency] private IChatManager _chatManager = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private IMapManager _mapManager = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IServerPreferencesManager _preferencesManager = default!;
+    [Dependency] private ITileDefinitionManager _tileDefinitionManager = default!;
+    [Dependency] private GameTicker _gameTicker = default!;
+    [Dependency] private AtmosphereSystem _atmosphereSystem = default!;
+    [Dependency] private AudioSystem _audioSystem = default!;
+    [Dependency] private BiomeSystem _biomeSystem = default!;
+    [Dependency] private BuckleSystem _buckleSystem = default!;
+    [Dependency] private DamageableSystem _damageableSystem = default!;
+    [Dependency] private DestructibleSystem _destructibleSystem = default!;
+    [Dependency] private DungeonSystem _dungeonSystem = default!;
+    [Dependency] private EntityLookupSystem _entityLookupSystem = default!;
+    [Dependency] private ExplosionSystem _explosionSystem = default!;
+    [Dependency] private IdCardSystem _cardSystem = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
+    [Dependency] private LockSystem _lockSystem = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private NPCConversationSystem _npcConversationSystem = default!;
+    [Dependency] private PaperSystem _paperSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private RoundEndSystem _roundEndSystem = default!;
+    [Dependency] private ShuttleSystem _shuttleSystem = default!;
+    [Dependency] private SmokeSystem _smokeSystem = default!;
+    [Dependency] private StationSpawningSystem _stationSpawningSystem = default!;
+    [Dependency] private ThrusterSystem _thrusterSystem = default!;
+    [Dependency] private TileSystem _tileSystem = default!;
+    [Dependency] private TransformSystem _transformSystem = default!;
+    [Dependency] private RoleSystem _roleSystem = default!;
+    [Dependency] private AirlockSystem _airlockSystem = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private StationJobsSystem _stationJobsSystem = default!;
+    [Dependency] private MetaDataSystem _metadata = default!;
+    [Dependency] private SharedPinpointerSystem _pinpointerSystem = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
+    [Dependency] private SharedSalvageSystem _salvageSystem = default!;
+    [Dependency] private SharedRoofSystem _roofSystem = default!;
+    [Dependency] private DoorSystem _door = default!;
+    [Dependency] private ISerializationManager _serialization = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
 
 
     public override void Initialize()
@@ -245,15 +250,9 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
 
     private void OnPinPointerSpawn(Entity<ShipwreckPinPointerComponent> ent, ref MapInitEvent args)
     {
-        if(!TryComp<PinpointerComponent>(ent, out var pinpointerComponent) || !QueryActiveRules().MoveNext(out var _, out var rule, out _))
+        if(!HasComp<PinpointerComponent>(ent) || !QueryActiveRules().MoveNext(out var _, out var rule, out _))
             return;
         ent.Comp.Rule = rule;
-    }
-
-    private void OnAttackAttempt(Entity<ShipwreckSurvivorComponent> ent, ref AttackAttemptEvent args)
-    {
-        if(HasComp<PacifiedComponent>(ent))
-            args.Cancel();
     }
 /*
     private void OnMapReady(PostGameMapLoad ev)
@@ -376,14 +375,13 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
         }
     }
 */
-    [ValidatePrototypeId<LocalizedDatasetPrototype>]
-    private const string PlanetNames = "NamesBorer";
+    private static readonly ProtoId<LocalizedDatasetPrototype> PlanetNames = "NamesBorer";
 
     private const int MaxPreloadOffset  = 200;
 
     private void SpawnPlanet(EntityUid uid, ShipwreckedRuleComponent component)
     {
-        if (component.PlanetMap.HasValue && !TerminatingOrDeleted(component.PlanetMap.Value) && component.PlanetMapId.HasValue && _mapManager.MapExists(component.PlanetMapId.Value))
+        if (component.PlanetMap.HasValue && !TerminatingOrDeleted(component.PlanetMap.Value) && component.PlanetMapId.HasValue && _mapSystem.MapExists(component.PlanetMapId.Value))
         {
             return;
         }
@@ -505,8 +503,7 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
         EntityManager.System<SharedPhysicsSystem>().WakeBody(boundaryUid, body: boundaryPhysics);
         AddComp<BoundaryComponent>(boundaryUid);
 
-        _mapSystem.InitializeMap(planetMapId);
-        _mapSystem.SetPaused(planetMapId, true);
+        _mapSystem.InitializeMap(planetMapId, false);
 
         component.PlanetMapId = planetMapId;
         component.PlanetMap = planetMapUid;
@@ -642,8 +639,7 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
         }
     }
 
-    [ValidatePrototypeId<GameMapPrototype>]
-    private const string DefaultShuttle = "ShwrAdventurer";
+    private static readonly ProtoId<GameMapPrototype> DefaultShuttle = "ShwrAdventurer";
     private bool AttachMap(EntityUid gridId, ShipwreckedRuleComponent component, bool force = false)
     {
         var mapId = component.SpaceMapId ?? _gameTicker.DefaultMap;
@@ -944,16 +940,11 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
         */
     }
 
-    [ValidatePrototypeId<ExplosionPrototype>]
-    private const string CraterExplosion = "DemolitionCharge";
+    private static readonly ProtoId<ExplosionPrototype> CraterExplosion = "DemolitionCharge";
+    private static readonly ProtoId<ContentTileDefinition> SandTile = "FloorAsteroidSand";
+    private static readonly ProtoId<ContentTileDefinition> CraterTile = "FloorAsteroidSandDug";
 
-    [ValidatePrototypeId<ContentTileDefinition>]
-    private const string SandTile = "FloorAsteroidSand";
-
-    [ValidatePrototypeId<ContentTileDefinition>]
-    private const string CraterTile = "FloorAsteroidSandDug";
-
-    public void MakeCrater(MapGridComponent grid, EntityCoordinates coordinates)
+    public void MakeCrater(Entity<MapGridComponent> grid, EntityCoordinates coordinates)
     {
         // Clear the area with a bomb.
         _explosionSystem.QueueExplosion(
@@ -971,7 +962,8 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
             addLog: false);
 
         // Put down a nice crater.
-        var center = grid.GetTileRef(coordinates);
+
+        var center = _mapSystem.GetTileRef(grid, coordinates);
         var sand = (ContentTileDefinition) _tileDefinitionManager[SandTile];
         var crater = (ContentTileDefinition) _tileDefinitionManager[CraterTile];
 
@@ -981,7 +973,7 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
         {
             for (var x = -1; x <= 1; ++x)
             {
-                _tileSystem.ReplaceTile(grid.GetTileRef(center.GridIndices + new Vector2i(x, y)), sand);
+                _tileSystem.ReplaceTile(_mapSystem.GetTileRef(grid,center.GridIndices + new Vector2i(x, y)), sand);
             }
         }
 
@@ -1059,7 +1051,7 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
 
             // We do this before moving the pieces,
             // so they don't get affected by the explosion.
-            MakeCrater(component.PlanetGrid, spot);
+            MakeCrater((component.PlanetMap.Value,component.PlanetGrid), spot);
 
             component.VitalPieces.Add(uid, (spot, structure));
         }
@@ -1104,7 +1096,7 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
                 TryGetRandomStructureSpot(component, out var spot, out var structure);
                 Log.Info($"Heaven generator! {ToPrettyString(uid)} will go to {spot}");
 
-                MakeCrater(component.PlanetGrid, spot);
+                MakeCrater((component.PlanetMap.Value,component.PlanetGrid), spot);
                 component.VitalPieces.Add(uid, (spot, structure));
             }
         }
@@ -1153,7 +1145,7 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
         foreach (var entry in spawns)
         {
             var spawnTile = room.Tiles.ElementAt(_random.Next(room.Tiles.Count));
-            var spawnPosition = component.PlanetGrid.GridTileToLocal(spawnTile);
+            var spawnPosition = _mapSystem.GridTileToLocal(component.PlanetMap!.Value, component.PlanetGrid, spawnTile);
 
             var uid = EntityManager.CreateEntityUninitialized(entry, spawnPosition);
             RemComp<GhostTakeoverAvailableComponent>(uid);
@@ -1305,7 +1297,7 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
             var limit = _destructibleSystem.DestroyedAt(ent);
             var smash = new DamageSpecifier();
             smash.DamageDict.Add("Structural", limit);
-            _damageableSystem.TryChangeDamage(ent, smash, ignoreResistances: true, damageable: damageableComponent);
+            _damageableSystem.ChangeDamage((ent, damageableComponent), smash, ignoreResistances: true);
         }
 
         var crashSound = new SoundPathSpecifier("/Audio/Nyanotrasen/Effects/crash_impact_metal.ogg");
@@ -1631,7 +1623,7 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
         {
             var station = _stationSystem.GetStationInMap(GameTicker.DefaultMap);
             DebugTools.Assert(station != null);
-            var grid = _stationSystem.GetLargestGrid(Comp<StationDataComponent>(station.Value));
+            var grid = _stationSystem.GetLargestGrid((station.Value,Comp<StationDataComponent>(station.Value)));
             if (!AttachMap(grid ?? EntityUid.Invalid, component, true))
             {
                 _gameTicker.EndGameRule(uid, gameRule);
@@ -1894,11 +1886,8 @@ public sealed class ShipwreckedRuleSystem : GameRuleSystem<ShipwreckedRuleCompon
 
 # region Hecate Dynamic Responses
 
-    [ValidatePrototypeId<TagPrototype>]
-    private const string TagEngineeringAirlock = "EngineeringAirlock";
-
-    [ValidatePrototypeId<TagPrototype>]
-    private const string TagSecureSafe = "SecureSafe";
+    private static readonly ProtoId<TagPrototype> TagEngineeringAirlock = "EngineeringAirlock";
+    private static readonly ProtoId<TagPrototype> TagSecureSafe = "SecureSafe";
 
     private void OnInitHecate(EntityUid uid, ShipwreckedNPCHecateComponent component, MapInitEvent args)
     {

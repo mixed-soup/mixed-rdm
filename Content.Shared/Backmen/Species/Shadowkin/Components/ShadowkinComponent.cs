@@ -1,8 +1,9 @@
+using System.Numerics;
 using Robust.Shared.GameStates;
 
 namespace Content.Shared.Backmen.Species.Shadowkin.Components;
 
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true)]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true, raiseAfterAutoHandleState: true)]
 public sealed partial class ShadowkinComponent : Component
 {
     #region Random occurrences

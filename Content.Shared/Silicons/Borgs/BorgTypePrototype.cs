@@ -16,7 +16,6 @@ namespace Content.Shared.Silicons.Borgs;
 [Prototype]
 public sealed partial class BorgTypePrototype : IPrototype
 {
-    [ValidatePrototypeId<SoundCollectionPrototype>]
     private static readonly ProtoId<SoundCollectionPrototype> DefaultFootsteps = new("FootstepBorg");
 
     [IdDataField]
@@ -95,16 +94,10 @@ public sealed partial class BorgTypePrototype : IPrototype
     //
 
     /// <summary>
-    /// The path to the borg type's sprites.
-    /// </summary>
-    [DataField]
-    public string SpritePath { get; set; } = "Mobs/Silicon/Chassis/generic.rsi";
-
-    /// <summary>
     /// The sprite state for the main borg body.
     /// </summary>
     [DataField]
-    public string SpriteBodyState { get; set; } = "borg";
+    public string SpriteBodyState { get; set; } = "robot";
 
     /// <summary>
     /// An optional movement sprite state for the main borg body.
@@ -117,20 +110,20 @@ public sealed partial class BorgTypePrototype : IPrototype
     /// </summary>
     /// <seealso cref="BorgChassisComponent.HasMindState"/>
     [DataField]
-    public string SpriteHasMindState { get; set; } = "borg_e";
+    public string SpriteHasMindState { get; set; } = "robot_e";
 
     /// <summary>
     /// Sprite state used to indicate that the borg has no mind in it.
     /// </summary>
     /// <seealso cref="BorgChassisComponent.NoMindState"/>
     [DataField]
-    public string SpriteNoMindState { get; set; } = "borg_e_r";
+    public string SpriteNoMindState { get; set; } = "robot_e_r";
 
     /// <summary>
     /// Sprite state used when the borg's flashlight is on.
     /// </summary>
     [DataField]
-    public string SpriteToggleLightState { get; set; } = "borg_l";
+    public string SpriteToggleLightState { get; set; } = "robot_l";
 
     //
     // Minor information

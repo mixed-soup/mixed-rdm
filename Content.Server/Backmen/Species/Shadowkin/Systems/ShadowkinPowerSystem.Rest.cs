@@ -9,11 +9,11 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Species.Shadowkin.Systems;
 
-public sealed class ShadowkinRestSystem : EntitySystem
+public sealed partial class ShadowkinRestSystem : EntitySystem
 {
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly ShadowkinPowerSystem _power = default!;
-    [Dependency] private readonly SleepingSystem _sleeping = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private ShadowkinPowerSystem _power = default!;
+    [Dependency] private SleepingSystem _sleeping = default!;
 
     public override void Initialize()
     {
@@ -38,7 +38,7 @@ public sealed class ShadowkinRestSystem : EntitySystem
         args.ModifySpeed(1.5f);
     }
 
-    [ValidatePrototypeId<EntityPrototype>] private const string ShadowkinRest = "ShadowkinRest";
+    private readonly EntProtoId ShadowkinRest = "ShadowkinRest";
     private void OnInit(Entity<ShadowkinRestPowerComponent> ent, ref ComponentInit args)
     {
         _actions.AddAction(ent, ref ent.Comp.ShadowkinRestAction, ShadowkinRest);
@@ -76,7 +76,7 @@ public sealed class ShadowkinRestSystem : EntitySystem
 
             // Sleepy time
             _sleeping.TrySleeping(args.Performer);
-            EnsureComp<ForcedSleepingComponent>(args.Performer);
+            EnsureComp<ForcedSleepingStatusEffectComponent>(args.Performer);
 
             // No waking up normally (it would do nothing)
             //_actions.RemoveAction(args.Performer, new InstantAction(_prototype.Index<InstantActionPrototype>("Wake")));
@@ -96,7 +96,7 @@ public sealed class ShadowkinRestSystem : EntitySystem
             // Wake up
             // Action cooldown
             RemCompDeferred<ShadowkinRestPowerUsedComponent>(args.Performer);
-            RemComp<ForcedSleepingComponent>(args.Performer);
+            RemComp<ForcedSleepingStatusEffectComponent>(args.Performer);
             args.Handled = _sleeping.TryWaking((args.Performer,sleepingComponent), true);
             _actions.SetCooldown(component.ShadowkinRestAction.Value, TimeSpan.FromMinutes(1));
         }

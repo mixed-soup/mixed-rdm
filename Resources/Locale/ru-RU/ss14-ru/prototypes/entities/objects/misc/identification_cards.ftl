@@ -108,7 +108,6 @@ ent-ZookeeperIDCard = ID карта зоотехника
     .desc = { ent-IDCardStandard.desc }
 ent-DetectiveIDCard = ID карта детектива
     .desc = { ent-IDCardStandard.desc }
-
 ent-CBURNIDcard = ID карта РХБЗЗ
     .desc = { ent-CentcomIDCard.desc }
     .suffix = РХБЗЗ
@@ -123,6 +122,8 @@ ent-SeniorPhysicianIDCard = ID карта ведущего врача
     .desc = { ent-MedicalIDCard.desc }
 ent-SeniorOfficerIDCard = ID карта инструктора СБ
     .desc = { ent-SecurityIDCard.desc }
+ent-XenoborgIDCard = ID карта ксеноборга
+    .desc = { ent-IDCardStandard.desc }
 ent-WizardIDCard = ID-карта волшебника
     .desc = { ent-IDCardStandard.desc }
 ent-UniversalIDCard = универсальная ID-карта

@@ -1,12 +1,10 @@
 using Content.Server.Chat.Systems;
 using Content.Server.NPC.Components;
-using Content.Shared.Backmen.Chat;
+
 using Content.Shared.NPC.Components;
+using Content.Shared.Chat;
 using Content.Shared.Chemistry.EntitySystems;
-using Content.Shared.Damage;
-using Content.Shared.Emag.Components;
 using Content.Shared.Interaction;
-using Content.Shared.Mobs.Components;
 using Content.Shared.Popups;
 using Content.Shared.Silicons.Bots;
 using Robust.Shared.Audio.Systems;
@@ -15,7 +13,7 @@ namespace Content.Server.NPC.HTN.PrimitiveTasks.Operators.Specific;
 
 public sealed partial class MedibotInjectOperator : HTNOperator
 {
-    [Dependency] private readonly IEntityManager _entMan = default!;
+    [Dependency] private IEntityManager _entMan = default!;
     private ChatSystem _chat = default!;
     private MedibotSystem _medibot = default!;
     private SharedAudioSystem _audio = default!;

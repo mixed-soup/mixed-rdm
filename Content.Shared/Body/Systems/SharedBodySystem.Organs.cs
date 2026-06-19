@@ -5,6 +5,7 @@ using Content.Shared.Body.Events;
 using Content.Shared.Body.Organ;
 using Content.Shared.Body.Part;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
 using Robust.Shared.Containers;
 
 // Shitmed Change
@@ -169,6 +170,9 @@ public partial class SharedBodySystem
             return false;
 
         if (!Containers.TryGetContainingContainer((organId, null, null), out var container))
+            return false;
+
+        if (TerminatingOrDeleted(organ.Body))
             return false;
 
         var parent = container.Owner;

@@ -4,9 +4,9 @@ using Content.Shared.Backmen.Targeting;
 using Content.Shared.Mobs;
 
 namespace Content.Server.Backmen.Targeting;
-public sealed class TargetingSystem : SharedTargetingSystem
+public sealed partial class TargetingSystem : SharedTargetingSystem
 {
-    [Dependency] private readonly WoundSystem _woundSystem = default!;
+    [Dependency] private WoundSystem _woundSystem = default!;
 
     public override void Initialize()
     {
@@ -21,7 +21,7 @@ public sealed class TargetingSystem : SharedTargetingSystem
             return;
 
         target.Target = message.BodyPart;
-        Dirty(GetEntity(message.Uid), target);
+        DirtyField(GetEntity(message.Uid), target, nameof(TargetingComponent.Target));
     }
 
     private void OnMobStateChange(EntityUid uid, TargetingComponent component, MobStateChangedEvent args)
@@ -46,7 +46,7 @@ public sealed class TargetingSystem : SharedTargetingSystem
         if (!changed)
             return;
 
-        Dirty(uid, component);
+        DirtyField(uid, component, nameof(TargetingComponent.BodyStatus));
         RaiseNetworkEvent(new TargetIntegrityChangeEvent(GetNetEntity(uid)), uid);
     }
 }

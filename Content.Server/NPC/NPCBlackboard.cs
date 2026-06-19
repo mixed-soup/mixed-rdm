@@ -1,11 +1,10 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
-using Content.Server.Interaction;
+using Content.Server.Hands.Systems;
 using Content.Shared.Access.Systems;
 using Content.Shared.ActionBlocker;
 using Content.Shared.Hands.Components;
 using Content.Shared.Interaction;
-using Content.Shared.Inventory;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
@@ -23,6 +22,8 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
         {"FollowCloseRange", 3f},
         {"FollowRange", 7f},
         {"IdleRange", 7f},
+        {"WebExpandRadius", 2f},
+        {"MinWebTiles", 9f},
         {"InteractRange", SharedInteractionSystem.InteractionRange},
         {"MaximumIdleTime", 7f},
         {MedibotInjectRange, 4f},
@@ -152,6 +153,8 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
         value = default;
         EntityUid owner;
 
+        var handSys = entManager.System<HandsSystem>();
+
         switch (key)
         {
             case Access:
@@ -168,25 +171,24 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
             case ActiveHand:
             {
                 if (!TryGetValue(Owner, out owner, entManager) ||
-                    !entManager.TryGetComponent<HandsComponent>(owner, out var hands) ||
-                    hands.ActiveHand == null)
+                    handSys.GetActiveHand(owner) is not { } activeHand)
                 {
                     return false;
                 }
 
-                value = hands.ActiveHand;
+                value = activeHand;
                 return true;
             }
             case ActiveHandFree:
             {
                 if (!TryGetValue(Owner, out owner, entManager) ||
                     !entManager.TryGetComponent<HandsComponent>(owner, out var hands) ||
-                    hands.ActiveHand == null)
+                    handSys.GetActiveHand(owner) is not { } activeHand)
                 {
                     return false;
                 }
 
-                value = hands.ActiveHand.IsEmpty;
+                value = handSys.HandIsEmpty((owner, hands), activeHand);
                 return true;
             }
             case CanMove:
@@ -204,16 +206,16 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
             {
                 if (!TryGetValue(Owner, out owner, entManager) ||
                     !entManager.TryGetComponent<HandsComponent>(owner, out var hands) ||
-                    hands.ActiveHand == null)
+                    handSys.GetActiveHand(owner) is null)
                 {
                     return false;
                 }
 
                 var handos = new List<string>();
 
-                foreach (var (id, hand) in hands.Hands)
+                foreach (var id in hands.Hands.Keys)
                 {
-                    if (!hand.IsEmpty)
+                    if (!handSys.HandIsEmpty((owner, hands), id))
                         continue;
 
                     handos.Add(id);
@@ -226,16 +228,16 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
             {
                 if (!TryGetValue(Owner, out owner, entManager) ||
                     !entManager.TryGetComponent<HandsComponent>(owner, out var hands) ||
-                    hands.ActiveHand == null)
+                    handSys.GetActiveHand(owner) is null)
                 {
                     return false;
                 }
 
                 var handos = new List<string>();
 
-                foreach (var (id, hand) in hands.Hands)
+                foreach (var id in hands.Hands.Keys)
                 {
-                    if (!hand.IsEmpty)
+                    if (!handSys.HandIsEmpty((owner, hands), id))
                         continue;
 
                     handos.Add(id);
@@ -320,6 +322,14 @@ public sealed partial class NPCBlackboard : IEnumerable<KeyValuePair<string, obj
     public const string NavClimb = "NavClimb";
 
     public const string NavBlob = "NavBlob";
+
+    public const string NavWeb = "NavWeb";
+
+    public const string NavWebOnly = "NavWebOnly";
+
+    public const string WebExpandRadius = "WebExpandRadius";
+
+    public const string MinWebTiles = "MinWebTiles";
 
     /// <summary>
     /// Default key storage for a movement pathfind.

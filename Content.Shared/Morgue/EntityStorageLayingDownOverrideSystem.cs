@@ -7,10 +7,10 @@ using Content.Shared.Storage.Components;
 
 namespace Content.Shared.Morgue;
 
-public sealed class EntityStorageLayingDownOverrideSystem : EntitySystem
+public sealed partial class EntityStorageLayingDownOverrideSystem : EntitySystem
 {
-    [Dependency] private readonly StandingStateSystem _standing = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
+    [Dependency] private StandingStateSystem _standing = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
 
     public override void Initialize()
     {
@@ -23,7 +23,9 @@ public sealed class EntityStorageLayingDownOverrideSystem : EntitySystem
     {
         foreach (var ent in args.Contents)
         {
-            if (HasComp<BodyComponent>(ent) && (!_standing.IsDown(ent) || !_mobState.IsDead(ent)))
+            // Explicitly check for standing state component, as entities without it will return false for IsDown()
+            // which prevents inserting any kind of non-mobs into this container (which is unintended)
+            if (TryComp<StandingStateComponent>(ent, out var standingState) && !_standing.IsDown((ent, standingState)))
                 args.Contents.Remove(ent);
         }
     }

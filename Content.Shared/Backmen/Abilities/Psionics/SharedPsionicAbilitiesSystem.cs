@@ -1,61 +1,103 @@
+using System.Linq;
 using Content.Shared.Actions;
 using Content.Shared.Actions.Events;
 using Content.Shared.Administration.Logs;
+using Content.Shared.Backmen.Abilities.Psionics.Events;
 using Content.Shared.Backmen.Psionics;
 using Content.Shared.Backmen.Psionics.Glimmer;
+using Content.Shared.Examine;
 using Content.Shared.Interaction;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
+using Content.Shared.Mobs.Systems;
 using Content.Shared.Physics;
 using Content.Shared.Popups;
 using Content.Shared.StatusEffect;
+using Content.Shared.StatusEffectNew;
 using Content.Shared.Tag;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Serialization;
 
 namespace Content.Shared.Backmen.Abilities.Psionics;
 
-public abstract class SharedPsionicAbilitiesSystem : EntitySystem
+public abstract partial class SharedPsionicAbilitiesSystem : EntitySystem
 {
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedPopupSystem _popups = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly SharedInteractionSystem _interaction = default!;
-    [Dependency] private readonly TagSystem _tagSystem = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedPopupSystem _popups = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private GlimmerSystem _glimmerSystem = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private SharedInteractionSystem _interaction = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
+    [Dependency] private Shared.StatusEffectNew.StatusEffectsSystem _statusEffects = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
 
-    private EntityQuery<PsionicallyInvisibleComponent> _psionicallyInvisibleQuery;
-    private EntityQuery<PsionicInsulationComponent> _psionicInsulationQuery;
+    [Dependency] private EntityQuery<PsionicallyInvisibleComponent> _psionicallyInvisibleQuery = default!;
 
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<PsionicsDisabledComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<PsionicsDisabledComponent, ComponentShutdown>(OnShutdown);
+
+        SubscribeLocalEvent<PsionicInsulationComponent, StatusEffectAppliedEvent>(OnApplied);
+        SubscribeLocalEvent<PsionicInsulationComponent, StatusEffectRemovedEvent>(OnRemoved);
+
         SubscribeLocalEvent<PsionicComponent, PsionicPowerUsedEvent>(OnPowerUsed);
         SubscribeLocalEvent<PsionicComponent, MobStateChangedEvent>(OnMobStateChanged);
 
         SubscribeLocalEvent<PsiActionComponent, ActionValidateEvent>(OnActionValidate);
         SubscribeLocalEvent<PsiActionComponent, ActionAttemptEvent>(OnTryUsePower);
+        SubscribeLocalEvent<PsiActionComponent, PsiActionToggleEvent>(OnToggleEvent);
+        SubscribeLocalEvent<PsiActionComponent, ExaminedEvent>(OnExamined);
+    }
 
-        _psionicallyInvisibleQuery = GetEntityQuery<PsionicallyInvisibleComponent>();
-        _psionicInsulationQuery = GetEntityQuery<PsionicInsulationComponent>();
+    private void OnExamined(Entity<PsiActionComponent> ent, ref ExaminedEvent args)
+    {
+        var action = _actions.GetAction(ent.Owner,false);
+        if (action == null)
+        {
+            return;
+        }
+
+        if (!action.Value.Comp.Enabled)
+        {
+            args.PushMarkup(Loc.GetString("psionic-actions-off"));
+        }
+    }
+
+    private void OnToggleEvent(Entity<PsiActionComponent> ent, ref PsiActionToggleEvent args)
+    {
+        var act = _actions.GetAction(ent.Owner, false);
+        if(act is not {} actEnt)
+            return;
+        var actEnt2 = actEnt.AsNullable();
+
+        _actions.SetEnabled(actEnt2, args.Toggle);
+    }
+
+    private void OnRemoved(Entity<PsionicInsulationComponent> ent, ref StatusEffectRemovedEvent args)
+    {
+        SetPsionicsThroughEligibility(args.Target);
+    }
+
+    private void OnApplied(Entity<PsionicInsulationComponent> ent, ref StatusEffectAppliedEvent args)
+    {
+        SetPsionicsThroughEligibility(args.Target);
     }
 
     private void OnTryUsePower(Entity<PsiActionComponent> ent, ref ActionAttemptEvent args)
     {
-        if (_psionicallyInvisibleQuery.HasComp(args.User))
+        if (_psionicallyInvisibleQuery.HasComp(args.User) || _statusEffects.HasEffectComp<PsionicallyInvisibleComponent>(args.User))
         {
             _popups.PopupCursor(Loc.GetString("cant-use-in-invisible"), PopupType.SmallCaution);
             args.Cancelled = true;
             return;
         }
 
-        if (_psionicInsulationQuery.HasComp(args.User))
+        if (_statusEffects.HasEffectComp<PsionicInsulationComponent>(args.User))
         {
             _popups.PopupCursor(Loc.GetString("cant-use-in-insulation"), PopupType.SmallCaution);
             args.Cancelled = true;
@@ -93,14 +135,17 @@ public abstract class SharedPsionicAbilitiesSystem : EntitySystem
 
     public bool CanUsePsionicAbilities(EntityUid performer, EntityUid target, bool popup = true)
     {
-        if (_psionicallyInvisibleQuery.HasComp(performer))
+        if (_psionicallyInvisibleQuery.HasComp(performer) || _statusEffects.HasEffectComp<PsionicallyInvisibleComponent>(performer))
         {
             if(popup)
                 _popups.PopupCursor(Loc.GetString("cant-use-in-invisible"), performer, PopupType.SmallCaution);
             return false;
         }
 
-        if (_psionicInsulationQuery.HasComp(target) || _psionicInsulationQuery.HasComp(performer))
+        if (
+            _statusEffects.HasEffectComp<PsionicInsulationComponent>(target) ||
+            _statusEffects.HasEffectComp<PsionicInsulationComponent>(performer)
+            )
         {
             if(popup)
                 _popups.PopupCursor(Loc.GetString("cant-use-in-insulation"), performer, PopupType.SmallCaution);
@@ -114,6 +159,9 @@ public abstract class SharedPsionicAbilitiesSystem : EntitySystem
 
         return true;
     }
+
+    private static readonly ProtoId<TagPrototype> Structure = "Structure";
+
     public bool CanUsePsionicAbilities(EntityUid performer, EntityCoordinates target, bool popup = true)
     {
         if (_psionicallyInvisibleQuery.HasComp(performer))
@@ -123,12 +171,12 @@ public abstract class SharedPsionicAbilitiesSystem : EntitySystem
             return false;
         }
 
-        if (_psionicInsulationQuery.HasComp(performer))
+        if (_statusEffects.HasEffectComp<PsionicInsulationComponent>(performer))
             return false;
 
         if(!_interaction.InRangeUnobstructed(performer, target, 0,
                CollisionGroup.Opaque,
-               predicate: (ent) => _tagSystem.HasTag(ent, "Structure"),
+               predicate: (ent) => _tagSystem.HasTag(ent, Structure),
                popup:true))
             return false;
 
@@ -140,23 +188,17 @@ public abstract class SharedPsionicAbilitiesSystem : EntitySystem
 
         foreach (var entity in _lookup.GetEntitiesInRange<MetapsionicPowerComponent>(Transform(uid).Coordinates, 10f))
         {
-            if (entity.Owner == uid || _psionicInsulationQuery.TryComp(entity, out var insul) && !insul.Passthrough)
+            if (entity.Owner == uid)
+                continue;
+
+            if (_statusEffects.TryEffectsWithComp<PsionicInsulationComponent>(entity, out var effects) &&
+                effects.Any(x=>!x.Comp1.Passthrough))
                 continue;
 
             _popups.PopupEntity(Loc.GetString("metapsionic-pulse-power", ("power", args.Power)), entity, entity, PopupType.LargeCaution);
             args.Handled = true;
             return;
         }
-    }
-
-    private void OnInit(EntityUid uid, PsionicsDisabledComponent component, ComponentInit args)
-    {
-        SetPsionicsThroughEligibility(uid);
-    }
-
-    private void OnShutdown(EntityUid uid, PsionicsDisabledComponent component, ComponentShutdown args)
-    {
-        SetPsionicsThroughEligibility(uid);
     }
 
     private void OnMobStateChanged(EntityUid uid, PsionicComponent component, MobStateChangedEvent args)
@@ -169,20 +211,20 @@ public abstract class SharedPsionicAbilitiesSystem : EntitySystem
     /// </summary>
     public void SetPsionicsThroughEligibility(EntityUid uid)
     {
-        PsionicComponent? component = null;
-        if (!Resolve(uid, ref component, false))
-            return;
-
-        if (component.PsionicAbility == null)
-            return;
-
-        _actions.SetEnabled(component.PsionicAbility, IsEligibleForPsionics(uid));
+        var toggle = IsEligibleForPsionics(uid);
+        var ev = new PsiActionToggleEvent(uid, toggle);
+        foreach (var action in _actions.GetActions(uid))
+        {
+            RaiseLocalEvent(action, ev);
+        }
     }
 
     private bool IsEligibleForPsionics(EntityUid uid)
     {
-        return !_psionicInsulationQuery.HasComp(uid)
-               && (!TryComp<MobStateComponent>(uid, out var mobstate) || mobstate.CurrentState == MobState.Alive);
+        if (_statusEffects.HasEffectComp<PsionicInsulationComponent>(uid))
+            return false;
+
+        return !_mobStateSystem.IsCritical(uid) && !_mobStateSystem.IsDead(uid);
     }
 
     public void LogPowerUsed(EntityUid uid, string power, int minGlimmer = 8, int maxGlimmer = 12)
@@ -193,8 +235,6 @@ public abstract class SharedPsionicAbilitiesSystem : EntitySystem
 
         _glimmerSystem.Glimmer += _robustRandom.Next(minGlimmer, maxGlimmer);
     }
-
-
 }
 
 public sealed class PsionicPowerUsedEvent : HandledEntityEventArgs

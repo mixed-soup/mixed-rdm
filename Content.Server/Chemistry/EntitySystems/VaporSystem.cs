@@ -20,15 +20,15 @@ using System.Numerics;
 namespace Content.Server.Chemistry.EntitySystems
 {
     [UsedImplicitly]
-    internal sealed class VaporSystem : EntitySystem
+    internal sealed partial class VaporSystem : EntitySystem
     {
-        [Dependency] private readonly IPrototypeManager _protoManager = default!;
-        [Dependency] private readonly SharedMapSystem _map = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
-        [Dependency] private readonly ThrowingSystem _throwing = default!;
-        [Dependency] private readonly ReactiveSystem _reactive = default!;
-        [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
+        [Dependency] private IPrototypeManager _protoManager = default!;
+        [Dependency] private SharedMapSystem _map = default!;
+        [Dependency] private SharedPhysicsSystem _physics = default!;
+        [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
+        [Dependency] private ThrowingSystem _throwing = default!;
+        [Dependency] private ReactiveSystem _reactive = default!;
+        [Dependency] private SharedTransformSystem _transformSystem = default!;
 
         public override void Initialize()
         {
@@ -39,7 +39,7 @@ namespace Content.Server.Chemistry.EntitySystems
 
         private void HandleCollide(Entity<VaporComponent> entity, ref StartCollideEvent args)
         {
-            if (!EntityManager.TryGetComponent(entity.Owner, out SolutionContainerManagerComponent? contents)) return;
+            if (!TryComp(entity.Owner, out SolutionContainerManagerComponent? contents)) return;
 
             foreach (var (_, soln) in _solutionContainerSystem.EnumerateSolutions((entity.Owner, contents)))
             {
@@ -50,7 +50,7 @@ namespace Content.Server.Chemistry.EntitySystems
             // Check for collision with a impassable object (e.g. wall) and stop
             if ((args.OtherFixture.CollisionLayer & (int)CollisionGroup.Impassable) != 0 && args.OtherFixture.Hard)
             {
-                EntityManager.QueueDeleteEntity(entity);
+                QueueDel(entity);
             }
         }
 
@@ -67,7 +67,7 @@ namespace Content.Server.Chemistry.EntitySystems
             despawn.Lifetime = aliveTime;
 
             // Set Move
-            if (EntityManager.TryGetComponent(vapor, out PhysicsComponent? physics))
+            if (TryComp(vapor, out PhysicsComponent? physics))
             {
                 _physics.SetLinearDamping(vapor, physics, 0f);
                 _physics.SetAngularDamping(vapor, physics, 0f);
@@ -156,7 +156,7 @@ namespace Content.Server.Chemistry.EntitySystems
 
                         // Delete the vapor entity if it has no contents
                         if (contents.Volume == 0)
-                            EntityManager.QueueDeleteEntity(uid);
+                            QueueDel(uid);
 
                     }
 

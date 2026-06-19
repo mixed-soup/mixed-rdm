@@ -82,13 +82,6 @@ public sealed partial class CCVars
     public static readonly CVarDef<int> GhostRespawnMaxPlayers =
         CVarDef.Create("ghost.respawn_max_players", 40, CVar.SERVERONLY);
 
-    /*
-     * Immersion
-     */
-
-    public static readonly CVarDef<bool> ImmersiveEnabled =
-        CVarDef.Create("immersive.enabled", true, CVar.SERVERONLY);
-
     /// <summary>
     /// Default volume setting of the boombox audio
     /// </summary>
@@ -101,13 +94,6 @@ public sealed partial class CCVars
 
     public static readonly CVarDef<bool> AutoGetUp =
         CVarDef.Create("laying.auto_get_up", true, CVar.CLIENT | CVar.ARCHIVE | CVar.REPLICATED);
-
-    /// <summary>
-    ///     When true, entities that fall to the ground will be able to crawl under tables and
-    ///     plastic flaps, allowing them to take cover from gunshots.
-    /// </summary>
-    public static readonly CVarDef<bool> CrawlUnderTables =
-        CVarDef.Create("laying.crawlundertables", true, CVar.REPLICATED);
 
     public static readonly CVarDef<bool> OfferModeIndicatorsPointShow =
         CVarDef.Create("hud.offer_mode_indicators_point_show", true, CVar.ARCHIVE | CVar.CLIENTONLY);

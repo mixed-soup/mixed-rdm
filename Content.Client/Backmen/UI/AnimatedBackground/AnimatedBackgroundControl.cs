@@ -5,17 +5,20 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Content.Client.Backmen.UI.AnimatedBackground;
 
-public sealed class AnimatedBackgroundControl : TextureRect
+public sealed partial class AnimatedBackgroundControl : TextureRect
 {
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
+    [Dependency] private IClyde _clyde = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
-    private string _rsiPath = "/Textures/Backmen/LobbyScreens/native.rsi";
+    private ResPath _rsiPath = new("/Textures/Backmen/LobbyScreens/native.rsi");
     public RSI? _RSI;
     private const int States = 1;
 
@@ -48,6 +51,12 @@ public sealed class AnimatedBackgroundControl : TextureRect
         }
     }
 
+    public void SetRSI(ResPath path)
+    {
+        _rsiPath = path;
+        _RSI = null;
+        InitializeStates();
+    }
     public void SetRSI(RSI? rsi)
     {
         _RSI = rsi;
@@ -91,21 +100,22 @@ public sealed class AnimatedBackgroundControl : TextureRect
     {
         base.Resized();
         _buffer?.Dispose();
+        _buffer = null;
         _buffer = _clyde.CreateRenderTarget(PixelSize, RenderTargetColorFormat.Rgba8Srgb);
     }
 
-    protected override void Dispose(bool disposing)
+    protected override void ExitedTree()
     {
-        base.Dispose(disposing);
         _buffer?.Dispose();
+        _buffer = null;
+        _RSI = null;
     }
 
     public void RandomizeBackground()
     {
-        var backgroundsProto = _prototypeManager.EnumeratePrototypes<AnimatedLobbyScreenPrototype>().ToList();
-        var random = new Random();
-        var index = random.Next(backgroundsProto.Count);
-        _rsiPath = $"/Textures/{backgroundsProto[index].Path}";
+        _prototypeManager.TryGetRandom<AnimatedLobbyScreenPrototype>(_random, out var backgroundsProto);
+        _rsiPath = ((AnimatedLobbyScreenPrototype?)backgroundsProto)?.Path ?? new("/Textures/Backmen/LobbyScreens/native.rsi");
+        _RSI = null;
         InitializeStates();
     }
 }

@@ -1,11 +1,13 @@
 using Content.Server.Speech.Components;
+using Content.Shared.Speech;
+using Content.Shared.StatusEffectNew;
 using Robust.Shared.Random;
 
 namespace Content.Server.Speech.EntitySystems
 {
-    public sealed class OwOAccentSystem : EntitySystem
+    public sealed partial class OwOAccentSystem : EntitySystem
     {
-        [Dependency] private readonly IRobustRandom _random = default!;
+        [Dependency] private IRobustRandom _random = default!;
 
         private static readonly IReadOnlyList<string> Faces = new List<string>{
             " (•`ω´•)", " ;;w;;", " owo", " UwU", " >w<", " ^w^"
@@ -20,6 +22,7 @@ namespace Content.Server.Speech.EntitySystems
         public override void Initialize()
         {
             SubscribeLocalEvent<OwOAccentComponent, AccentGetEvent>(OnAccent);
+            SubscribeLocalEvent<OwOAccentComponent, StatusEffectRelayedEvent<AccentGetEvent>>(OnAccentRelayed);
         }
 
         public string Accentuate(string message)
@@ -38,9 +41,15 @@ namespace Content.Server.Speech.EntitySystems
                 .Replace("l", "w").Replace("L", "W");
         }
 
-        private void OnAccent(EntityUid uid, OwOAccentComponent component, AccentGetEvent args)
+        private void OnAccent(Entity<OwOAccentComponent> entity, ref AccentGetEvent args)
         {
             args.Message = Accentuate(args.Message);
         }
+
+        private void OnAccentRelayed(Entity<OwOAccentComponent> entity, ref StatusEffectRelayedEvent<AccentGetEvent> args)
+        {
+            args.Args.Message = Accentuate(args.Args.Message);
+        }
+
     }
 }

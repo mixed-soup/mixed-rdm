@@ -11,12 +11,12 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.Players;
 
-public sealed class DiscordJobWhitelist : EntitySystem
+public sealed partial class DiscordJobWhitelist : EntitySystem
 {
-    [Dependency] private readonly IConfigurationManager _config = default!;
-    [Dependency] private readonly IServerDiscordAuthManager _manager = default!;
-    [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IPrototypeManager _prototypes = default!;
+    [Dependency] private IConfigurationManager _config = default!;
+    [Dependency] private IServerDiscordAuthManager _manager = default!;
+    [Dependency] private IPlayerManager _player = default!;
+    [Dependency] private IPrototypeManager _prototypes = default!;
 
     private ImmutableArray<ProtoId<JobPrototype>> _whitelistedJobs = [];
 
@@ -24,7 +24,7 @@ public sealed class DiscordJobWhitelist : EntitySystem
     {
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         SubscribeLocalEvent<StationJobsGetCandidatesEvent>(OnStationJobsGetCandidates);
-        SubscribeLocalEvent<IsJobAllowedEvent>(OnIsJobAllowed);
+        SubscribeLocalEvent<IsRoleAllowedEvent>(OnIsJobAllowed);
         SubscribeLocalEvent<GetDisallowedJobsEvent>(OnGetDisallowedJobs);
 
         CacheJobs();
@@ -53,13 +53,21 @@ public sealed class DiscordJobWhitelist : EntitySystem
         }
     }
 
-    private void OnIsJobAllowed(ref IsJobAllowedEvent ev)
+    private void OnIsJobAllowed(ref IsRoleAllowedEvent ev)
     {
         if (!_config.GetCVar(CCVars.DiscordAuthEnabled))
             return;
 
-        if (_whitelistedJobs.Contains(ev.JobId) && !_manager.IsCached(ev.Player))
-            ev.Cancelled = true;
+        if (ev.Jobs is null)
+            return;
+
+        foreach (var proto in ev.Jobs)
+        {
+            if (_whitelistedJobs.Contains(proto) && !_manager.IsCached(ev.Player))
+                ev.Cancelled = true;
+        }
+
+
     }
 
     private void OnGetDisallowedJobs(ref GetDisallowedJobsEvent ev)

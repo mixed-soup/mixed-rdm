@@ -21,8 +21,7 @@
     sprite: Mobs/Species/Reptilian/parts.rsi
     state: full
   - type: Consciousness # Idk they are kinda more resistant to pain
-    threshold: 100
-    cap: 290
+    capBonus: 90
   - type: Body
     prototype: Reptilian
     requiredLegs: 2
@@ -70,9 +69,9 @@
         Heat : 1.5 #per second, scales with temperature & other constants
   - type: TemperatureSpeed
     thresholds:
-      301: 0.8
-      295: 0.6
-      285: 0.4
+      301: 0.9
+      295: 0.8
+      285: 0.7
   - type: Wagging
   - type: Inventory
     speciesId: reptilian

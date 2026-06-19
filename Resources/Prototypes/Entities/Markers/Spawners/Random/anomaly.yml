@@ -1,4 +1,4 @@
-﻿- type: entity
+- type: entity
   id: RandomAnomalySpawner
   name: random anomaly spawner
   parent: MarkerBase
@@ -22,7 +22,7 @@
     - AnomalyFlora
     - AnomalyShadow
     - AnomalyTech
-    #- AnomalySanta
+    - AnomalySanta
     rareChance: 0.3
     rarePrototypes:
     - RandomAnomalyInjectorSpawner
@@ -72,5 +72,10 @@
     - AnomalyTrapGravity
     - AnomalyTrapTech
     - AnomalyTrapRock
-    #- AnomalyTrapSanta
+    - AnomalyTrapSanta
+    - AnomalyTrapToxic # backmen
+    - AnomalyTrapHealing # backmen
+    - AnomalyTrapStasis # backmen
+    - AnomalyTrapPoison # backmen
+    - AnomalyTrapVoid # backmen
     chance: 1

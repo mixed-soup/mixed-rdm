@@ -70,9 +70,7 @@
     maxCharge: 1400
     startingCharge: 1400
   - type: BatterySelfRecharger
-    autoRecharge: true
     autoRechargeRate: 15
-    autoRechargePause: true
     autoRechargePauseTime: 2
 
 - type: entity
@@ -102,7 +100,7 @@
     maxCharge: 2200
     startingCharge: 2200
   - type: BatterySelfRecharger
-    autoRecharge: true
+    #autoRecharge: true
     autoRechargeRate: 15
 
 - type: entity
@@ -132,5 +130,5 @@
     maxCharge: 1200
     startingCharge: 1200
   - type: BatterySelfRecharger
-    autoRecharge: true
+    #autoRecharge: true
     autoRechargeRate: 25 # IDK what to do with this mf

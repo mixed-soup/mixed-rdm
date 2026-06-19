@@ -6,23 +6,24 @@ using Content.Shared.Backmen.Psionics.Components;
 using Content.Shared.Damage.Events;
 using Content.Shared.Database;
 using Content.Shared.Electrocution;
-using Content.Shared.StatusEffect;
+using Content.Shared.StatusEffectNew;
 using Content.Shared.Verbs;
 using Content.Shared.Weapons.Melee.Events;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Utility;
 
 namespace Content.Shared.Backmen.Psionics;
 
-public abstract class SharedPsionicsSystem : EntitySystem
+public abstract partial class SharedPsionicsSystem : EntitySystem
 {
-    [Dependency] private readonly ISharedAdminManager _adminManager = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly StatusEffectsSystem _statusEffects = default!;
-    [Dependency] private readonly SharedElectrocutionSystem _electrocutionSystem = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
+    [Dependency] private ISharedAdminManager _adminManager = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private StatusEffectsSystem _statusEffects = default!;
+    [Dependency] private SharedElectrocutionSystem _electrocutionSystem = default!;
+    [Dependency] private IRobustRandom _random = default!;
 
     public override void Initialize()
     {
@@ -39,10 +40,6 @@ public abstract class SharedPsionicsSystem : EntitySystem
 
     protected EntityQuery<PotentialPsionicComponent> PotentialPsionicQuery { get; set; }
     protected EntityQuery<PsionicComponent> PsionicQuery { get; set; }
-
-    [ValidatePrototypeId<StatusEffectPrototype>]
-    private const string PsionicsDisabled = "PsionicsDisabled";
-
 
     private static readonly SoundPathSpecifier Lightburn = new("/Audio/Effects/lightburn.ogg");
 
@@ -105,6 +102,8 @@ public abstract class SharedPsionicsSystem : EntitySystem
         }
     }
 
+    private static readonly EntProtoId<PsionicInsulationComponent> StatusEffectPsionicallyInsulated = "StatusEffectPsionicallyInsulated";
+
     private void OnMeleeHit(EntityUid uid, AntiPsionicWeaponComponent component, MeleeHitEvent args)
     {
         foreach (var entity in args.HitEntities)
@@ -114,7 +113,7 @@ public abstract class SharedPsionicsSystem : EntitySystem
                 _audio.PlayPvs(Lightburn,entity);
                 args.ModifiersList.Add(component.Modifiers);
                 if (_random.Prob(component.DisableChance))
-                    _statusEffects.TryAddStatusEffect<PsionicsDisabledComponent>(entity, PsionicsDisabled, TimeSpan.FromSeconds(10), true);
+                    _statusEffects.TryAddStatusEffectDuration(entity, StatusEffectPsionicallyInsulated, TimeSpan.FromSeconds(10));
             }
 
             if (UndoMindSwap(entity))

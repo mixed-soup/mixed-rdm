@@ -11,6 +11,8 @@ using Content.Shared.Nutrition.Components;
 using Content.Server.Administration.Logs;
 using Content.Server.Charges;
 using Robust.Shared.Random;
+using Content.Server.Backmen.Arachne;
+using Content.Server.Backmen.Vampiric;
 using Content.Shared.Database;
 using Content.Shared.IdentityManagement;
 using Robust.Shared.Audio.Systems;
@@ -18,18 +20,23 @@ using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Spider;
 
-public sealed class SpiderVampireSystem : EntitySystem
+public sealed partial class SpiderVampireSystem : EntitySystem
 {
-    [Dependency] private readonly ActionsSystem _action = default!;
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfterSystem = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly HungerSystem _hunger = default!;
-    [Dependency] private readonly IAdminLogManager _adminLog = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly ChargesSystem _charges = default!;
+    [Dependency] private ActionsSystem _action = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private SharedDoAfterSystem _doAfterSystem = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private HungerSystem _hunger = default!;
+    [Dependency] private IAdminLogManager _adminLog = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private ChargesSystem _charges = default!;
+    [Dependency] private BloodSuckerSystem _bloodSucker = default!;
+    [Dependency] private ArachneSystem _arachne = default!;
+
+    private const int DefaultWebExpandRadius = 2;
+    private const int DefaultMinWebTiles = 9;
 
     public override void Initialize()
     {
@@ -43,7 +50,7 @@ public sealed class SpiderVampireSystem : EntitySystem
 
     #region Добавить скилл
 
-    [ValidatePrototypeId<EntityPrototype>] private const string SpiderVampireEggAction = "ActionSpiderVampireEgg";
+    private readonly EntProtoId SpiderVampireEggAction = "ActionSpiderVampireEgg";
 
     private void OnMapInit(EntityUid uid, SpiderVampireComponent component, MapInitEvent args)
     {
@@ -72,7 +79,7 @@ public sealed class SpiderVampireSystem : EntitySystem
             return;
         }
 
-        if (_mobState.IsIncapacitated(uid))
+        if (_mobState.IsCritical(uid) || _mobState.IsDead(uid))
         {
             _popupSystem.PopupEntity("хуйня какая-то", uid, uid);
             return;
@@ -127,10 +134,53 @@ public sealed class SpiderVampireSystem : EntitySystem
         var xform = Transform(uid);
         var offspring = Spawn(component.SpawnEgg, xform.Coordinates.Offset(_random.NextVector2(0.3f)));
         _hunger.ModifyHunger(uid, -component.HungerPerBirth);
+        if (component.Charges > 0)
+            component.Charges--;
         _adminLog.Add(LogType.Action, $"{ToPrettyString(uid)} gave birth to {ToPrettyString(offspring)}.");
         _popupSystem.PopupEntity(
             Loc.GetString("reproductive-birth-popup", ("parent", Identity.Entity(uid, EntityManager))), uid);
+        args.Handled = true;
     }
 
     #endregion
+
+    public bool CanLayEgg(EntityUid uid, SpiderVampireComponent? component = null)
+    {
+        if (!Resolve(uid, ref component) || component.Charges <= 0)
+            return false;
+
+        if (_mobState.IsCritical(uid) || _mobState.IsDead(uid))
+            return false;
+
+        if (TryComp<HungerComponent>(uid, out var hunger) && _hunger.GetHungerThreshold(hunger) < HungerThreshold.Okay)
+            return false;
+
+        if (TryComp<ThirstComponent>(uid, out var thirst) && thirst.CurrentThirstThreshold < ThirstThreshold.Okay)
+            return false;
+
+        if (!_arachne.IsWebNestReady(Transform(uid).Coordinates, DefaultWebExpandRadius, DefaultMinWebTiles))
+            return false;
+
+        return !_bloodSucker.NeedsBlood(uid);
+    }
+
+    public bool NPCTryLayEgg(EntityUid uid, SpiderVampireComponent? component = null)
+    {
+        if (!CanLayEgg(uid, component))
+            return false;
+
+        if (!_doAfterSystem.TryStartDoAfter(new DoAfterArgs(EntityManager, uid, component!.UsingEggTime,
+                new SpiderVampireEggDoAfterEvent(), uid, used: uid)
+            {
+                BreakOnMove = true,
+                BreakOnDamage = true,
+            }))
+        {
+            return false;
+        }
+
+        _audio.PlayPvs(HairballPlay, uid, AudioParams.Default.WithVariation(0.025f));
+        return true;
+    }
+
 }

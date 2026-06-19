@@ -21,11 +21,11 @@ namespace Content.Server.Tools.Innate;
 ///     Spawns a list unremovable tools in hands if possible. Used for drones,
 ///     borgs, or maybe even stuff like changeling armblades!
 /// </summary>
-public sealed class InnateToolSystem : EntitySystem
+public sealed partial class InnateToolSystem : EntitySystem
 {
-    [Dependency] private readonly IRobustRandom _robustRandom = default!;
-    [Dependency] private readonly SharedHandsSystem _sharedHandsSystem = default!;
-    [Dependency] private readonly TagSystem _tagSystem = default!;
+    [Dependency] private IRobustRandom _robustRandom = default!;
+    [Dependency] private SharedHandsSystem _sharedHandsSystem = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
 
     private static readonly ProtoId<TagPrototype> InnateDontDeleteTag = "InnateDontDelete";
 
@@ -40,14 +40,13 @@ public sealed class InnateToolSystem : EntitySystem
 
     //start-backmen: fix
 
-    [ValidatePrototypeId<EntityPrototype>]
-    public const string DefaultHandPrototype = "LeftHandHuman";
+    public readonly EntProtoId DefaultHandPrototype = "LeftHandHuman";
 
 
-    private void AddHand(EntityUid entity, int handCounter, HandsComponent handsComponent)
+    private void AddHand(Entity<HandsComponent?> ent, int handCounter)
     {
-        var handId = $"it-{entity}-item{handCounter}";
-        _sharedHandsSystem.AddHand(entity, handId, HandLocation.Middle, handsComponent);
+        var handId = $"it-{ent.Owner}-item{handCounter}";
+        _sharedHandsSystem.AddHand(ent, handId, HandLocation.Middle);
     }
 
     //end-backmen: fix
@@ -64,7 +63,7 @@ public sealed class InnateToolSystem : EntitySystem
         var hands = EnsureComp<HandsComponent>(uid);
         for (var i = 0; i < component.Tools.Count; i++)
         {
-            AddHand(uid,i,hands);
+            AddHand((uid, hands), i);
         }
         //end-backmen: fix
     }
@@ -118,9 +117,9 @@ public sealed class InnateToolSystem : EntitySystem
 
             if (TryComp<HandsComponent>(uid, out var hands))
             {
-                foreach (var hand in hands.Hands)
+                foreach (var hand in hands.Hands.Keys)
                 {
-                    _sharedHandsSystem.TryDrop(uid, hand.Value, checkActionBlocker: false, handsComp: hands);
+                    _sharedHandsSystem.TryDrop((uid, hands), hand, checkActionBlocker: false);
                 }
             }
         }

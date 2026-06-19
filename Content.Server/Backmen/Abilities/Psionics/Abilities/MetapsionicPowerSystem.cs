@@ -1,81 +1,70 @@
-using Content.Server.Backmen.Psionics;
 using Content.Shared.Actions;
 using Content.Shared.Backmen.Abilities.Psionics;
-using Content.Shared.Backmen.Psionics;
-using Content.Shared.Backmen.Psionics.Components;
 using Content.Shared.Backmen.Psionics.Events;
 using Content.Shared.Backmen.Species.Shadowkin.Components;
 using Content.Shared.Eye;
-using Content.Shared.StatusEffect;
+using Content.Shared.StatusEffectNew;
 using Content.Shared.Popups;
-using Robust.Server.GameObjects;
+using Content.Shared.StatusEffectNew.Components;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Abilities.Psionics;
 
-public sealed class MetapsionicPowerSystem : EntitySystem
+public sealed partial class MetapsionicPowerSystem : StatusEffectGrantedPowerSystem<MetapsionicPowerComponent, MetapsionicPowerActionEvent>
 {
-    [Dependency] private readonly StatusEffectsSystem _statusEffects = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedPopupSystem _popups = default!;
-    [Dependency] private readonly SharedPsionicAbilitiesSystem _psionics = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly SharedEyeSystem _eye = default!;
-    [Dependency] private readonly PsionicInvisibilitySystem _invisibilitySystem = default!;
-    [Dependency] private readonly VisibilitySystem _visibility = default!;
-
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedPopupSystem _popups = default!;
+    [Dependency] private SharedPsionicAbilitiesSystem _psionics = default!;
+    [Dependency] private SharedEyeSystem _eye = default!;
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<MetapsionicPowerComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<MetapsionicPowerComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<MetapsionicPowerComponent, MetapsionicPowerActionEvent>(OnPowerUsed);
         SubscribeLocalEvent<MetapsionicVisibleComponent, ComponentStartup>(OnAddCanSeeAll);
         SubscribeLocalEvent<MetapsionicVisibleComponent, ComponentShutdown>(OnRemoveCanSeeAll);
+
+        SubscribeLocalEvent<MetapsionicVisibleComponent, GetVisMaskEvent>(OnGetVisMask);
+        SubscribeLocalEvent<MetapsionicVisibleComponent, StatusEffectAppliedEvent>(OnApplied);
+        SubscribeLocalEvent<MetapsionicVisibleComponent, StatusEffectRemovedEvent>(OnRemoved);
+    }
+
+    private void OnRemoved(Entity<MetapsionicVisibleComponent> ent, ref StatusEffectRemovedEvent args)
+    {
+        RemComp<MetapsionicVisibleComponent>(args.Target);
+        _eye.RefreshVisibilityMask(args.Target);
+    }
+
+    private void OnApplied(Entity<MetapsionicVisibleComponent> ent, ref StatusEffectAppliedEvent args)
+    {
+        EnsureComp<MetapsionicVisibleComponent>(args.Target);
+        _eye.RefreshVisibilityMask(args.Target);
+    }
+
+    private void OnGetVisMask(Entity<MetapsionicVisibleComponent> ent, ref GetVisMaskEvent args)
+    {
+        if (ent.Comp.LifeStage > ComponentLifeStage.Running)
+            return;
+
+        args.VisibilityMask |= (int)VisibilityFlags.DarkSwapInvisibility;
+        args.VisibilityMask |= (int)VisibilityFlags.PsionicInvisibility;
     }
 
     private void OnRemoveCanSeeAll(Entity<MetapsionicVisibleComponent> ent, ref ComponentShutdown args)
     {
-        if (!TryComp<EyeComponent>(ent, out var eye))
-            return;
-
-        if(HasComp<PotentialPsionicComponent>(ent) && !HasComp<PsionicallyInvisibleComponent>(ent))
-            _invisibilitySystem.SetCanSeePsionicInvisiblity(ent, false, eye);
-
-        var vm = (VisibilityFlags)eye.VisibilityMask;
-        if (vm.HasFlag(VisibilityFlags.DarkSwapInvisibility) && !HasComp<ShadowkinDarkSwappedComponent>(ent))
-        {
-            _eye.SetVisibilityMask(ent, eye.VisibilityMask & ~(int) VisibilityFlags.DarkSwapInvisibility, eye);
-
-            var eyeEnt = (ent.Owner, EnsureComp<VisibilityComponent>(ent));
-            _visibility.RemoveLayer(eyeEnt, (int) VisibilityFlags.DarkSwapInvisibility, false);
-            _visibility.RefreshVisibility(eyeEnt);
-        }
+        // Visibility mask will be recalculated automatically by GetVisMaskEvent handler
+        _eye.RefreshVisibilityMask(ent.Owner);
     }
 
     private void OnAddCanSeeAll(Entity<MetapsionicVisibleComponent> ent, ref ComponentStartup args)
     {
-        if (!TryComp<EyeComponent>(ent, out var eye))
-            return;
-        _invisibilitySystem.SetCanSeePsionicInvisiblity(ent, true);
-
-        var vm = (VisibilityFlags)eye.VisibilityMask;
-        if (!vm.HasFlag(VisibilityFlags.DarkSwapInvisibility))
-        {
-            _eye.SetVisibilityMask(ent, eye.VisibilityMask | (int) VisibilityFlags.DarkSwapInvisibility, eye);
-
-            var eyeEnt = (ent.Owner, EnsureComp<VisibilityComponent>(ent));
-            _visibility.AddLayer(eyeEnt, (int) VisibilityFlags.DarkSwapInvisibility, false);
-            _visibility.RefreshVisibility(eyeEnt);
-        }
+        // Visibility mask will be recalculated automatically by GetVisMaskEvent handler
+        _eye.RefreshVisibilityMask(ent.Owner);
     }
 
-    [ValidatePrototypeId<EntityPrototype>] private const string ActionMetapsionicPulse = "ActionMetapsionicPulse";
+    private static readonly EntProtoId ActionMetapsionicPulse = "ActionMetapsionicPulse";
 
-    private void OnInit(EntityUid uid, MetapsionicPowerComponent component, ComponentInit args)
+    protected override void EnsurePowerActions(EntityUid uid, MetapsionicPowerComponent component)
     {
         _actions.AddAction(uid, ref component.MetapsionicPowerAction, ActionMetapsionicPulse);
 
@@ -87,42 +76,46 @@ public sealed class MetapsionicPowerSystem : EntitySystem
             psionic.PsionicAbility = component.MetapsionicPowerAction;
     }
 
-    private void OnShutdown(EntityUid uid, MetapsionicPowerComponent component, ComponentShutdown args)
+    protected override void RemovePowerActions(EntityUid uid, MetapsionicPowerComponent component)
     {
         _actions.RemoveAction(uid, component.MetapsionicPowerAction);
     }
 
-    private void OnPowerUsed(EntityUid uid, MetapsionicPowerComponent component, MetapsionicPowerActionEvent args)
+    private static readonly EntProtoId MetapsionicVisibleStatus = "StatusEffectPsionicAllSee";
+
+    protected override void HandlePowerUse(EntityUid uid, MetapsionicPowerComponent component, MetapsionicPowerActionEvent args)
     {
-        if(args.Handled)
+        if (args.Handled)
             return;
 
-        _statusEffects.TryAddStatusEffect<MetapsionicVisibleComponent>(uid, "SeeAll", TimeSpan.FromSeconds(2), true);
-        var coord = Transform(uid).Coordinates;
+        StatusEffects.TryAddStatusEffectDuration(args.Performer, MetapsionicVisibleStatus, TimeSpan.FromSeconds(10));
+        var coord = Transform(args.Performer).Coordinates;
+
         foreach (var entity in _lookup.GetEntitiesInRange<PsionicComponent>(coord, component.Range))
         {
-            if (entity.Owner != uid && !HasComp<PsionicInsulationComponent>(entity)
+            if (entity.Owner != args.Performer && !StatusEffects.HasEffectComp<PsionicInsulationComponent>(entity)
                                     //&& !(HasComp<ClothingGrantPsionicPowerComponent>(entity) && Transform(entity).ParentUid == uid)
                                     )
             {
-                _popups.PopupEntity(Loc.GetString("metapsionic-pulse-success"), uid, uid, PopupType.LargeCaution);
+                _popups.PopupEntity(Loc.GetString("metapsionic-pulse-success"), args.Performer, args.Performer, PopupType.LargeCaution);
                 args.Handled = true;
                 return;
             }
         }
+
         foreach (var entity in _lookup.GetEntitiesInRange<ShadowkinDarkSwappedComponent>(coord, component.Range))
         {
-            if (entity.Owner != uid && !HasComp<PsionicInsulationComponent>(entity)
+            if (entity.Owner != args.Performer && !StatusEffects.HasEffectComp<PsionicInsulationComponent>(entity)
                 //&& !(HasComp<ClothingGrantPsionicPowerComponent>(entity) && Transform(entity).ParentUid == uid)
                )
             {
-                _popups.PopupEntity(Loc.GetString("metapsionic-pulse-shadowkin-success"), uid, uid, PopupType.LargeCaution);
+                _popups.PopupEntity(Loc.GetString("metapsionic-pulse-shadowkin-success"), args.Performer, args.Performer, PopupType.LargeCaution);
                 args.Handled = true;
                 return;
             }
         }
-        _popups.PopupEntity(Loc.GetString("metapsionic-pulse-failure"), uid, uid, PopupType.Large);
-        _psionics.LogPowerUsed(uid, "metapsionic pulse", 2, 4);
+        _popups.PopupEntity(Loc.GetString("metapsionic-pulse-failure"), args.Performer, args.Performer, PopupType.Large);
+        _psionics.LogPowerUsed(args.Performer, "metapsionic pulse", 2, 4);
 
         args.Handled = true;
     }

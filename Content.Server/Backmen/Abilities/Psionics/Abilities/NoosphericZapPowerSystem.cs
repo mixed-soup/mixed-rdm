@@ -8,32 +8,26 @@ using Content.Shared.Backmen.Abilities.Psionics;
 using Content.Shared.Backmen.Psionics;
 using Content.Shared.Backmen.Psionics.Components;
 using Content.Shared.Backmen.Psionics.Events;
+using Content.Shared.StatusEffectNew;
+using Content.Shared.StatusEffectNew.Components;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Content.Server.Backmen.Abilities.Psionics;
 
-public sealed class NoosphericZapPowerSystem : SharedNoosphericZapPowerSystem
+public sealed partial class NoosphericZapPowerSystem : SharedNoosphericZapPowerSystem
 {
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly SharedActionsSystem _actions = default!;
-    [Dependency] private readonly SharedPsionicAbilitiesSystem _psionics = default!;
-    [Dependency] private readonly StunSystem _stunSystem = default!;
-    [Dependency] private readonly StatusEffectsSystem _statusEffectsSystem = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly BeamSystem _beam = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private SharedActionsSystem _actions = default!;
+    [Dependency] private SharedPsionicAbilitiesSystem _psionics = default!;
+    [Dependency] private StunSystem _stunSystem = default!;
+    [Dependency] private Content.Shared.StatusEffect.StatusEffectsSystem _statusEffectsSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private BeamSystem _beam = default!;
 
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<NoosphericZapPowerComponent, ComponentInit>(OnInit);
-        SubscribeLocalEvent<NoosphericZapPowerComponent, ComponentShutdown>(OnShutdown);
-        SubscribeLocalEvent<NoosphericZapPowerActionEvent>(OnPowerUsed);
-    }
+    private readonly EntProtoId ActionNoosphericZap = "ActionNoosphericZap";
 
-    [ValidatePrototypeId<EntityPrototype>] private const string ActionNoosphericZap = "ActionNoosphericZap";
-
-    private void OnInit(EntityUid uid, NoosphericZapPowerComponent component, ComponentInit args)
+    protected override void EnsurePowerActions(EntityUid uid, NoosphericZapPowerComponent component)
     {
         _actions.AddAction(uid, ref component.NoosphericZapPowerAction, ActionNoosphericZap);
 
@@ -45,28 +39,28 @@ public sealed class NoosphericZapPowerSystem : SharedNoosphericZapPowerSystem
             psionic.PsionicAbility = component.NoosphericZapPowerAction;
     }
 
-    private void OnShutdown(EntityUid uid, NoosphericZapPowerComponent component, ComponentShutdown args)
+    protected override void RemovePowerActions(EntityUid uid, NoosphericZapPowerComponent component)
     {
         _actions.RemoveAction(uid, component.NoosphericZapPowerAction);
     }
 
-    private void OnPowerUsed(NoosphericZapPowerActionEvent args)
+    protected override void HandlePowerUse(EntityUid uid, NoosphericZapPowerComponent component, NoosphericZapPowerActionEvent args)
     {
-        if(args.Handled)
+        if (args.Handled)
             return;
 
         _beam.TryCreateBeam(args.Performer, args.Target, "LightningNoospheric");
 
-        _stunSystem.TryParalyze(args.Target, TimeSpan.FromSeconds(5), false);
+        _stunSystem.TryUpdateParalyzeDuration(args.Target, TimeSpan.FromSeconds(5));
         _statusEffectsSystem.TryAddStatusEffect(args.Target, "Stutter", TimeSpan.FromSeconds(10), false, "StutteringAccent");
 
         _psionics.LogPowerUsed(args.Performer, "noospheric zap");
         args.Handled = true;
 
-        if (TryComp<PyrokinesisPowerComponent>(args.Performer, out var powerComponent)
-            && _actions.GetAction(powerComponent.PyrokinesisPowerAction) is {} action)
+        if (TryComp<NoosphericZapPowerComponent>(args.Performer, out var powerComponent)
+            && _actions.GetAction(powerComponent.NoosphericZapPowerAction) is {} action)
         {
-            _actions.SetCooldown(powerComponent.PyrokinesisPowerAction, action.Comp.UseDelay ?? TimeSpan.FromMinutes(1));
+            _actions.SetCooldown(powerComponent.NoosphericZapPowerAction, action.Comp.UseDelay ?? TimeSpan.FromMinutes(1));
         }
     }
 }

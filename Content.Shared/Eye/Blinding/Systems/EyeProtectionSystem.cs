@@ -3,13 +3,14 @@ using Content.Shared.Inventory;
 using Content.Shared.Eye.Blinding.Components;
 using Content.Shared.Tools.Components;
 using Content.Shared.Item.ItemToggle.Components;
+using Content.Shared.Clothing.Components;
 
 namespace Content.Shared.Eye.Blinding.Systems
 {
-    public sealed class EyeProtectionSystem : EntitySystem
+    public sealed partial class EyeProtectionSystem : EntitySystem
     {
-        [Dependency] private readonly StatusEffectsSystem _statusEffectsSystem = default!;
-        [Dependency] private readonly BlindableSystem _blindingSystem = default!;
+        [Dependency] private StatusEffectsSystem _statusEffectsSystem = default!;
+        [Dependency] private BlindableSystem _blindingSystem = default!;
 
         public override void Initialize()
         {
@@ -29,6 +30,9 @@ namespace Content.Shared.Eye.Blinding.Systems
 
         private void OnGetProtection(EntityUid uid, EyeProtectionComponent component, GetEyeProtectionEvent args)
         {
+            if (TryComp<MaskComponent>(uid, out var mask) && mask.IsToggled)
+                return;
+
             args.Protection += component.ProtectionTime;
         }
 

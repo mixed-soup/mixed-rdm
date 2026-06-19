@@ -19,17 +19,18 @@ using Robust.Shared.Prototypes;
 using Content.Shared.Backmen.Harpy.Components;
 using Content.Shared.Backmen.Surgery.Wounds;
 using Content.Shared.Bed.Sleep;
+using Content.Shared.Damage.Systems;
 
 namespace Content.Server.Backmen.Harpy
 {
-    public sealed class HarpySingerSystem : EntitySystem
+    public sealed partial class HarpySingerSystem : EntitySystem
     {
-        [Dependency] private readonly InstrumentSystem _instrument = default!;
-        [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
-        [Dependency] private readonly InventorySystem _inventorySystem = default!;
-        [Dependency] private readonly ActionBlockerSystem _blocker = default!;
-        [Dependency] private readonly IPrototypeManager _prototype = default!;
-        [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
+        [Dependency] private InstrumentSystem _instrument = default!;
+        [Dependency] private SharedPopupSystem _popupSystem = default!;
+        [Dependency] private InventorySystem _inventorySystem = default!;
+        [Dependency] private ActionBlockerSystem _blocker = default!;
+        [Dependency] private IPrototypeManager _prototype = default!;
+        [Dependency] private SharedAppearanceSystem _appearance = default!;
 
         public override void Initialize()
         {
@@ -43,7 +44,6 @@ namespace Content.Server.Backmen.Harpy
             SubscribeLocalEvent<InstrumentComponent, SleepStateChangedEvent>(OnSleep);
             SubscribeLocalEvent<InstrumentComponent, StatusEffectAddedEvent>(OnStatusEffect);
             SubscribeLocalEvent<InstrumentComponent, DamageChangedEvent>(OnDamageChanged);
-            SubscribeLocalEvent<InstrumentComponent, WoundsDeltaChanged>(OnWoundsChanged);
             SubscribeLocalEvent<HarpySingerComponent, BoundUIClosedEvent>(OnBoundUIClosed);
             SubscribeLocalEvent<HarpySingerComponent, BoundUIOpenedEvent>(OnBoundUIOpened);
 
@@ -117,26 +117,6 @@ namespace Content.Server.Backmen.Harpy
             foreach (var (group, value) in args.DamageDelta.GetDamagePerGroup(_prototype))
             {
                 if (!component.ValidDamageGroups.Contains(group))
-                    continue;
-
-                totalApplicableDamage += value;
-            }
-
-            if (totalApplicableDamage >= component.DamageThreshold)
-                CloseMidiUi(uid);
-        }
-
-        private void OnWoundsChanged(EntityUid uid, InstrumentComponent instrumentComponent, WoundsDeltaChanged args)
-        {
-            if (!TryComp<DamageForceSayComponent>(uid, out var component) ||
-                args.TotalDelta < component.DamageThreshold ||
-                component.ValidDamageGroups == null)
-                return;
-
-            var totalApplicableDamage = FixedPoint2.Zero;
-            foreach (var (group, value) in args.WoundsDelta)
-            {
-                if (!component.ValidDamageGroups.Contains(group.Comp.DamageType))
                     continue;
 
                 totalApplicableDamage += value;

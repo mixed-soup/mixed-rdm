@@ -4,13 +4,14 @@ using Content.Shared.Chemistry.Components;
 using Content.Server.Explosion.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared.Chemistry.EntitySystems;
+using Content.Shared.Trigger;
 
 namespace Content.Server.Backmen.Explosion.EntitySystems;
 
-public sealed class BTriggerSystem : EntitySystem
+public sealed partial class BTriggerSystem : EntitySystem
 {
-    [Dependency] private readonly PuddleSystem _puddleSystem = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
+    [Dependency] private PuddleSystem _puddleSystem = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionSystem = default!;
     public override void Initialize()
     {
         base.Initialize();

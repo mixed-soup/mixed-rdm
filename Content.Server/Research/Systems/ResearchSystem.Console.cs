@@ -3,7 +3,7 @@ using Content.Server.Power.EntitySystems;
 using Content.Server.Research.Components;
 using Content.Shared.UserInterface;
 using Content.Shared.Access.Components;
-using Content.Shared.Backmen.Chat;
+using Content.Shared.Chat;
 using Content.Shared.Emag.Components;
 using Content.Shared.Emag.Systems;
 using Content.Shared.IdentityManagement;
@@ -14,8 +14,8 @@ namespace Content.Server.Research.Systems;
 
 public sealed partial class ResearchSystem
 {
-    [Dependency] private readonly EmagSystem _emag = default!;
-    [Dependency] private readonly ChatSystem _chat = default!; // Backmen
+    [Dependency] private EmagSystem _emag = default!;
+    [Dependency] private ChatSystem _chat = default!; // Backmen
 
     private void InitializeConsole()
     {

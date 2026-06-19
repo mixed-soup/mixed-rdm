@@ -1,13 +1,13 @@
 ﻿using Content.Server.Backmen.Language;
-using Content.Server.Backmen.Language.Events;
 using Content.Server.Backmen.Xeno.Components;
 using Content.Shared.Backmen.Language;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Xeno;
 
-public sealed class XenoAgentSystem : EntitySystem
+public sealed partial class XenoAgentSystem : EntitySystem
 {
-    [Dependency] private readonly LanguageSystem _language = default!;
+    [Dependency] private LanguageSystem _language = default!;
     public override void Initialize()
     {
         base.Initialize();
@@ -16,8 +16,7 @@ public sealed class XenoAgentSystem : EntitySystem
         SubscribeLocalEvent<XenoAgentComponent, DetermineEntityLanguagesEvent>(OnApplyLanguages);
     }
 
-    [ValidatePrototypeId<LanguagePrototype>]
-    private const string XenoLanguage = "Xeno";
+    private static readonly ProtoId<LanguagePrototype> XenoLanguage = "Xeno";
 
     private void OnApplyLanguages(Entity<XenoAgentComponent> ent, ref DetermineEntityLanguagesEvent args)
     {

@@ -1,23 +1,27 @@
+using System.Linq;
 using Content.Server.Backmen.Abilities.Psionics;
-using Content.Server.Backmen.Eye;
 using Content.Shared.Backmen.Abilities.Psionics;
 using Content.Shared.Backmen.Psionics;
 using Content.Shared.Backmen.Psionics.Components;
 using Content.Shared.Eye;
+using Content.Shared.Ghost;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
 using Robust.Shared.Containers;
 using Robust.Server.GameObjects;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Psionics;
 
-public sealed class PsionicInvisibilitySystem : EntitySystem
+public sealed partial class PsionicInvisibilitySystem : EntitySystem
 {
-    [Dependency] private readonly VisibilitySystem _visibilitySystem = default!;
-    [Dependency] private readonly PsionicInvisibilityPowerSystem _invisSystem = default!;
-    [Dependency] private readonly NpcFactionSystem _npcFactonSystem = default!;
-    [Dependency] private readonly SharedEyeSystem _sharedEyeSystem = default!;
+    [Dependency] private VisibilitySystem _visibilitySystem = default!;
+    [Dependency] private PsionicInvisibilityPowerSystem _invisSystem = default!;
+    [Dependency] private NpcFactionSystem _npcFactonSystem = default!;
+    [Dependency] private SharedEyeSystem _sharedEyeSystem = default!;
+    [Dependency] private Shared.StatusEffectNew.StatusEffectsSystem _statusEffects = default!;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -25,7 +29,10 @@ public sealed class PsionicInvisibilitySystem : EntitySystem
         SubscribeLocalEvent<PotentialPsionicComponent, ComponentInit>(OnInit);
         SubscribeLocalEvent<PsionicInsulationComponent, ComponentInit>(OnInsulInit);
         SubscribeLocalEvent<PsionicInsulationComponent, ComponentShutdown>(OnInsulShutdown);
-        SubscribeLocalEvent<EyeMapInit>(OnEyeInit);
+
+        // Visibility mask event
+        SubscribeLocalEvent<GetVisMaskEvent>(OnGetVisMask);
+        SubscribeLocalEvent<PsionicallyInvisibleComponent, GetVisMaskEvent>(OnGetVisMask2);
 
         // Layer
         SubscribeLocalEvent<PsionicallyInvisibleComponent, ComponentInit>(OnInvisInit);
@@ -36,16 +43,48 @@ public sealed class PsionicInvisibilitySystem : EntitySystem
         SubscribeLocalEvent<PsionicallyInvisibleComponent, EntRemovedFromContainerMessage>(OnEntRemoved);
     }
 
-    private void OnInit(EntityUid uid, PotentialPsionicComponent component, ComponentInit args)
+    private void OnGetVisMask2(Entity<PsionicallyInvisibleComponent> ent, ref GetVisMaskEvent args)
     {
-        SetCanSeePsionicInvisiblity(uid, false);
+        if (ent.Comp.LifeStage > ComponentLifeStage.Running)
+            return;
+
+        args.VisibilityMask |= (int)VisibilityFlags.PsionicInvisibility;
     }
 
-    [ValidatePrototypeId<NpcFactionPrototype>]
-    private const string PsionicInterloper = "PsionicInterloper";
+    private void OnGetVisMask(ref GetVisMaskEvent args)
+    {
+        if (HasComp<GhostComponent>(args.Entity))
+        {
+            args.VisibilityMask |= (int)VisibilityFlags.PsionicInvisibility;
+            return;
+        }
 
-    [ValidatePrototypeId<NpcFactionPrototype>]
-    private const string GlimmerMonster = "GlimmerMonster";
+        // Entities without PotentialPsionicComponent can see psionic invisibility
+        if (!HasComp<PotentialPsionicComponent>(args.Entity))
+        {
+            args.VisibilityMask |= (int)VisibilityFlags.PsionicInvisibility;
+            return;
+        }
+
+        // Entities with PsionicInsulationComponent can see psionic invisibility
+        if (_statusEffects.TryEffectsWithComp<PsionicInsulationComponent>(args.Entity, out var insul))
+        {
+            if (insul.Any(effect => effect.Comp1.LifeStage >= ComponentLifeStage.Stopping))
+            {
+                return;
+            }
+
+            args.VisibilityMask |= (int)VisibilityFlags.PsionicInvisibility;
+        }
+    }
+
+    private void OnInit(EntityUid uid, PotentialPsionicComponent component, ComponentInit args)
+    {
+        _sharedEyeSystem.RefreshVisibilityMask(uid);
+    }
+
+    private static readonly ProtoId<NpcFactionPrototype> PsionicInterloper = "PsionicInterloper";
+    private static readonly ProtoId<NpcFactionPrototype> GlimmerMonster = "GlimmerMonster";
 
     private void OnInsulInit(EntityUid uid, PsionicInsulationComponent component, ComponentInit args)
     {
@@ -70,8 +109,8 @@ public sealed class PsionicInvisibilitySystem : EntitySystem
                 _npcFactonSystem.RemoveFaction(ent, GlimmerMonster);
             }
         }
-        
-        SetCanSeePsionicInvisiblity(uid, true);
+
+        _sharedEyeSystem.RefreshVisibilityMask(uid);
     }
 
     private void OnInsulShutdown(EntityUid uid, PsionicInsulationComponent component, ComponentShutdown args)
@@ -79,7 +118,7 @@ public sealed class PsionicInvisibilitySystem : EntitySystem
         if (!HasComp<PotentialPsionicComponent>(uid))
             return;
 
-        SetCanSeePsionicInvisiblity(uid, false);
+        _sharedEyeSystem.RefreshVisibilityMask(uid);
 
         if (!HasComp<PsionicComponent>(uid))
         {
@@ -101,7 +140,7 @@ public sealed class PsionicInvisibilitySystem : EntitySystem
         _visibilitySystem.RemoveLayer(vis, (int) VisibilityFlags.Normal, false);
         _visibilitySystem.RefreshVisibility(uid, visibilityComponent: vis);
 
-        SetCanSeePsionicInvisiblity(uid, true);
+        _sharedEyeSystem.RefreshVisibilityMask(uid);
     }
 
 
@@ -114,16 +153,7 @@ public sealed class PsionicInvisibilitySystem : EntitySystem
             _visibilitySystem.AddLayer(vis, (int) VisibilityFlags.Normal, false);
             _visibilitySystem.RefreshVisibility(uid, visibilityComponent: visibility);
         }
-        if (HasComp<PotentialPsionicComponent>(uid) && !HasComp<PsionicInsulationComponent>(uid))
-            SetCanSeePsionicInvisiblity(uid, false);
-    }
-
-    private void OnEyeInit(EyeMapInit args)
-    {
-        if (HasComp<PotentialPsionicComponent>(args.Target)) //|| HasComp<VehicleComponent>(args.Target)
-            return;
-
-        SetCanSeePsionicInvisiblity(args.Target, true, args.Target.Comp);
+        _sharedEyeSystem.RefreshVisibilityMask(uid);
     }
     private void OnEntInserted(EntityUid uid, PsionicallyInvisibleComponent component, EntInsertedIntoContainerMessage args)
     {
@@ -133,20 +163,5 @@ public sealed class PsionicInvisibilitySystem : EntitySystem
     private void OnEntRemoved(EntityUid uid, PsionicallyInvisibleComponent component, EntRemovedFromContainerMessage args)
     {
         DirtyEntity(args.Entity);
-    }
-
-    public void SetCanSeePsionicInvisiblity(EntityUid uid, bool set, EyeComponent? eye = null)
-    {
-        if (!Resolve(uid, ref eye, false))
-            return;
-
-        if (set)
-        {
-            _sharedEyeSystem.SetVisibilityMask(uid,  eye.VisibilityMask | (int) VisibilityFlags.PsionicInvisibility, eye);
-        }
-        else
-        {
-            _sharedEyeSystem.SetVisibilityMask(uid,  eye.VisibilityMask &~ (int) VisibilityFlags.PsionicInvisibility, eye);
-        }
     }
 }

@@ -3,12 +3,13 @@ using Content.Shared.Backmen.StationAI.Components;
 using Content.Shared.NPC.Components;
 using Content.Shared.NPC.Prototypes;
 using Content.Shared.NPC.Systems;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.StationAI;
 
-public sealed class AiEnemySystem : SharedAiEnemySystem
+public sealed partial class AiEnemySystem : SharedAiEnemySystem
  {
-     [Dependency] private readonly NpcFactionSystem _faction = default!;
+     [Dependency] private NpcFactionSystem _faction = default!;
 
 
      public override void Initialize()
@@ -32,8 +33,7 @@ public sealed class AiEnemySystem : SharedAiEnemySystem
              EnsureComp<AIEnemyNTComponent>(target).Source = u;
      }
 
-     [ValidatePrototypeId<NpcFactionPrototype>]
-     private const string AiEnemyFaction = "AiEnemy";
+     private static readonly ProtoId<NpcFactionPrototype> AiEnemyFaction = "AiEnemy";
 
      private void OnRemove(Entity<AIEnemyNTComponent> ent, ref ComponentShutdown args)
      {

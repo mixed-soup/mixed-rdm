@@ -15,6 +15,8 @@ using Content.Shared.Alert;
 using Content.Shared.Backmen.Blob;
 using Content.Shared.Backmen.Blob.Components;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Destructible;
 using Content.Shared.Explosion.Components;
 using Content.Shared.FixedPoint;
@@ -30,35 +32,33 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.Blob.Systems;
 
-public sealed class BlobCoreSystem : EntitySystem
+public sealed partial class BlobCoreSystem : EntitySystem
 {
-    [Dependency] private readonly AlertsSystem _alerts = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly GameTicker _gameTicker = default!;
-    [Dependency] private readonly ExplosionSystem _explosionSystem = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
-    [Dependency] private readonly AlertLevelSystem _alertLevelSystem = default!;
-    [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
-    [Dependency] private readonly ActionsSystem _action = default!;
-    [Dependency] private readonly MapSystem _mapSystem = default!;
-    [Dependency] private readonly StoreSystem _storeSystem = default!;
-    [Dependency] private readonly BlobTileSystem _blobTile = default!;
+    [Dependency] private AlertsSystem _alerts = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private SharedTransformSystem _transform = default!;
+    [Dependency] private GameTicker _gameTicker = default!;
+    [Dependency] private ExplosionSystem _explosionSystem = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private AlertLevelSystem _alertLevelSystem = default!;
+    [Dependency] private RoundEndSystem _roundEndSystem = default!;
+    [Dependency] private ActionsSystem _action = default!;
+    [Dependency] private MapSystem _mapSystem = default!;
+    [Dependency] private StoreSystem _storeSystem = default!;
+    [Dependency] private BlobTileSystem _blobTile = default!;
 
     private EntityQuery<BlobTileComponent> _tile;
     private EntityQuery<BlobFactoryComponent> _factory;
     private EntityQuery<BlobNodeComponent> _node;
 
-    [ValidatePrototypeId<AlertPrototype>]
-    private const string BlobHealth = "BlobHealth";
-    [ValidatePrototypeId<AlertPrototype>]
-    private const string BlobResource = "BlobResource";
-    [ValidatePrototypeId<CurrencyPrototype>]
-    private const string BlobMoney = "BlobPoint";
+    private static readonly ProtoId<AlertPrototype> BlobHealth = "BlobHealth";
+    private static readonly ProtoId<AlertPrototype> BlobResource = "BlobResource";
+    private static readonly ProtoId<CurrencyPrototype> BlobMoney = "BlobPoint";
 
     private readonly ReaderWriterLockSlim _pointsChange = new();
 
@@ -233,7 +233,7 @@ public sealed class BlobCoreSystem : EntitySystem
                 continue;
 
             blobTileComponent.Color = component.ChemСolors[newChem];
-            Dirty(blobTile, blobTileComponent);
+            DirtyField(blobTile, blobTileComponent, nameof(BlobTileComponent.Color));
 
             ChangeBlobEntChem(blobTile, newChem);
 
@@ -244,7 +244,7 @@ public sealed class BlobCoreSystem : EntitySystem
                 continue;
 
             blobbernautComponent.Color = component.ChemСolors[newChem];
-            Dirty(blobFactoryComponent.Blobbernaut.Value, blobbernautComponent);
+            DirtyField(blobFactoryComponent.Blobbernaut.Value, blobbernautComponent, nameof(BlobbernautComponent.Color));
 
             if (TryComp<MeleeWeaponComponent>(blobFactoryComponent.Blobbernaut, out var meleeWeaponComponent))
             {
@@ -312,7 +312,6 @@ public sealed class BlobCoreSystem : EntitySystem
 
         ConnectBlobTile((blobTileUid, blobTileComp), blobCore, nearNode);
         ChangeBlobEntChem(blobTileUid, blobCoreComp.CurrentChem);
-        Dirty(blobTileUid, blobTileComp);
 
         var ev = new BlobTransformTileEvent();
         RaiseLocalEvent(blobTileUid, ev);
@@ -347,19 +346,19 @@ public sealed class BlobCoreSystem : EntitySystem
         {
             case BlobTileType.Factory:
                 node.Value.Comp.BlobFactory = tile;
-                Dirty(node.Value);
+                DirtyField(node.Value, node.Value.Comp, nameof(BlobNodeComponent.BlobFactory));
                 break;
             case BlobTileType.Resource:
                 node.Value.Comp.BlobResource = tile;
-                Dirty(node.Value);
+                DirtyField(node.Value, node.Value.Comp, nameof(BlobNodeComponent.BlobResource));
                 break;
             case BlobTileType.Storage:
                 node.Value.Comp.BlobStorage = tile;
-                Dirty(node.Value);
+                DirtyField(node.Value, node.Value.Comp, nameof(BlobNodeComponent.BlobStorage));
                 break;
             case BlobTileType.Turret:
                 node.Value.Comp.BlobTurret = tile;
-                Dirty(node.Value);
+                DirtyField(node.Value, node.Value.Comp, nameof(BlobNodeComponent.BlobTurret));
                 break;
         }
     }
@@ -500,7 +499,7 @@ public sealed class BlobCoreSystem : EntitySystem
 
             blobTileComponent.Core = null;
             blobTileComponent.Color = Color.White;
-            Dirty(blobTile, blobTileComponent);
+            DirtyField(blobTile, blobTileComponent, nameof(BlobTileComponent.Color));
         }
 
         var blobCoreQuery = EntityQueryEnumerator<BlobCoreComponent, MetaDataComponent>();

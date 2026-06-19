@@ -10,7 +10,7 @@ using Content.Server.Botany;
 using Content.Server.Chemistry.Containers.EntitySystems;
 using Content.Server.Fluids.EntitySystems;
 using Content.Shared.Backmen.Abilities.Psionics;
-using Content.Shared.Backmen.Chat;
+
 using Content.Shared.Backmen.Psionics.Components;
 using Content.Shared.Backmen.Psionics.Glimmer;
 using Content.Shared.Body.Systems;
@@ -24,32 +24,33 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Player;
 using Content.Server.Backmen.GibOnCollide;
+using Content.Shared.Chat;
 
 namespace Content.Server.Backmen.Research.Oracle;
 
-public sealed class OracleSystem : EntitySystem
+public sealed partial class OracleSystem : EntitySystem
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly ChatSystem _chat = default!;
-    [Dependency] private readonly IChatManager _chatManager = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionSystem = default!;
-    [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-    [Dependency] private readonly PuddleSystem _puddleSystem = default!;
-    [Dependency] private readonly SharedBodySystem _body = default!;
-    [Dependency] private readonly AppearanceSystem _appearance = default!;
-    [Dependency] private readonly EntityTableSystem _entityTable = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private ChatSystem _chat = default!;
+    [Dependency] private IChatManager _chatManager = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionSystem = default!;
+    [Dependency] private GlimmerSystem _glimmerSystem = default!;
+    [Dependency] private PuddleSystem _puddleSystem = default!;
+    [Dependency] private SharedBodySystem _body = default!;
+    [Dependency] private AppearanceSystem _appearance = default!;
+    [Dependency] private EntityTableSystem _entityTable = default!;
+    [Dependency] private Shared.StatusEffectNew.StatusEffectsSystem _statusEffects = default!;
 
 
-    [ValidatePrototypeId<ReagentPrototype>]
-    public readonly IReadOnlyList<ProtoId<ReagentPrototype>> RewardReagents = new ProtoId<ReagentPrototype>[]
-    {
-        "LotophagoiOil", "LotophagoiOil", "LotophagoiOil", "LotophagoiOil", "LotophagoiOil", "Wine", "Blood", "Ichor"
-    };
+    public readonly IReadOnlyList<ProtoId<ReagentPrototype>> RewardReagents =
+    [
+        "LotophagoiOil", "LotophagoiOil", "LotophagoiOil", "LotophagoiOil", "LotophagoiOil", "Wine", "Blood", "Ichor",
+    ];
 
     [ViewVariables(VVAccess.ReadWrite)]
-    public readonly IReadOnlyList<LocId> DemandMessages = new LocId[]
-    {
+    public readonly IReadOnlyList<LocId> DemandMessages =
+    [
         "oracle-demand-1",
         "oracle-demand-2",
         "oracle-demand-3",
@@ -61,8 +62,8 @@ public sealed class OracleSystem : EntitySystem
         "oracle-demand-9",
         "oracle-demand-10",
         "oracle-demand-11",
-        "oracle-demand-12"
-    };
+        "oracle-demand-12",
+    ];
 
     public readonly IReadOnlyList<string> RejectMessages = new[]
     {
@@ -73,7 +74,6 @@ public sealed class OracleSystem : EntitySystem
         "σάκλας"
     };
 
-    [ValidatePrototypeId<EntityPrototype>]
     public readonly IReadOnlyList<EntProtoId> BlacklistedProtos = new EntProtoId[]
     {
         "MobTomatoKiller",
@@ -124,11 +124,8 @@ public sealed class OracleSystem : EntitySystem
         "MechEquipmentGrabber",
     };
 
-    [ValidatePrototypeId<EntityTablePrototype>]
-    private const string ResearchDisk5000 = "OraculStandartTable";
-
-    [ValidatePrototypeId<EntityPrototype>]
-    private const string CrystalNormality = "CrystalNormality";
+    private static readonly ProtoId<EntityTablePrototype> ResearchDisk5000 = "OraculStandartTable";
+    private readonly EntProtoId CrystalNormality = "CrystalNormality";
 
     public override void Update(float frameTime)
     {
@@ -171,8 +168,7 @@ public sealed class OracleSystem : EntitySystem
 
     private void OnGibOnCollide(EntityUid uid, OracleComponent component, GibOnCollideAttemptEvent args)
     {
-        var oracleEntity = new Entity<OracleComponent>(uid, component);
-        HandleGibEvent(oracleEntity);
+        HandleGibEvent((uid, component));
     }
 
     private void HandleGibEvent(Entity<OracleComponent> ent)
@@ -209,7 +205,8 @@ public sealed class OracleSystem : EntitySystem
 
     private void OnInteractHand(EntityUid uid, OracleComponent component, InteractHandEvent args)
     {
-        if (!HasComp<PotentialPsionicComponent>(args.User) || HasComp<PsionicInsulationComponent>(args.User))
+        if (!HasComp<PotentialPsionicComponent>(args.User) ||
+            _statusEffects.HasEffectComp<PsionicInsulationComponent>(args.User))
             return;
 
         if (!TryComp<ActorComponent>(args.User, out var actor))
@@ -251,18 +248,16 @@ public sealed class OracleSystem : EntitySystem
         if (HasComp<MobStateComponent>(args.Used))
             return;
 
-        if (!TryComp<MetaDataComponent>(args.Used, out var meta))
+        var proto = Prototype(args.Used);
+        if (proto == null)
             return;
 
-        if (meta.EntityPrototype == null)
-            return;
-
-        var validItem = CheckValidity(meta.EntityPrototype, component.DesiredPrototype);
+        var validItem = CheckValidity(proto, component.DesiredPrototype);
 
         var nextItem = true;
 
         if (component.LastDesiredPrototype != null &&
-            CheckValidity(meta.EntityPrototype, component.LastDesiredPrototype))
+            CheckValidity(proto, component.LastDesiredPrototype))
         {
             nextItem = false;
             validItem = true;
@@ -332,10 +327,8 @@ public sealed class OracleSystem : EntitySystem
 
         sol.AddReagent(reagent, amount);
 
-        _solutionSystem.TryMixAndOverflow(fountainEnt.Value, sol, fountainSol.MaxVolume, out var overflowing);
-
-        if (overflowing != null && overflowing.Volume > 0)
-            _puddleSystem.TrySpillAt(uid, overflowing, out var _);
+        if (_solutionSystem.TryMixAndOverflow(fountainEnt.Value, sol, fountainSol.MaxVolume, out var overflowing) && overflowing.Volume > 0)
+            _puddleSystem.TrySpillAt(uid, overflowing, out _);
     }
 
     private void NextItem(OracleComponent component)
@@ -354,10 +347,10 @@ public sealed class OracleSystem : EntitySystem
         return _random.Pick(GetAllProtos());
     }
 
-    public List<string> GetAllProtos()
+    public List<EntProtoId> GetAllProtos()
     {
         var allTechs = _prototypeManager.EnumeratePrototypes<TechnologyPrototype>();
-        var allRecipes = new List<string>();
+        var allRecipes = new List<EntProtoId>();
 
         foreach (var tech in allTechs)
         {
@@ -365,13 +358,13 @@ public sealed class OracleSystem : EntitySystem
             {
                 var recipeProto = _prototypeManager.Index(recipe);
                 if (recipeProto.Result != null)
-                    allRecipes.Add(recipeProto.Result);
+                    allRecipes.Add(recipeProto.Result.Value);
             }
         }
 
         var allPlants = _prototypeManager.EnumeratePrototypes<SeedPrototype>()
             .Select(x => x.ProductPrototypes[0])
-            .Where( x=>!x.StartsWith("FloorTile"))
+            .Where( x=> !x.Id.StartsWith("FloorTile"))
             .ToList();
         var allProtos = allRecipes.Concat(allPlants).ToList();
         foreach (var proto in BlacklistedProtos)

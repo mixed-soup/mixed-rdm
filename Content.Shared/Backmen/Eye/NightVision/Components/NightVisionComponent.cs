@@ -6,8 +6,8 @@ using Robust.Shared.GameStates;
 namespace Content.Shared.Backmen.Eye.NightVision.Components;
 
 [RegisterComponent]
-[NetworkedComponent, AutoGenerateComponentState]
-[Access(typeof(NightVisionSystem))]
+[NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true)]
+[Access(typeof(NightVisionSystem), typeof(PNVSystem))]
 public sealed partial class NightVisionComponent : Component
 {
     [ViewVariables(VVAccess.ReadWrite), DataField("isOn"), AutoNetworkedField]
@@ -30,6 +30,8 @@ public sealed partial class NightVisionComponent : Component
     [DataField("playSoundOn")]
     public bool PlaySoundOn = true;
     public SoundSpecifier OnOffSound = new SoundPathSpecifier("/Audio/Backmen/Misc/night-vision-sound-effect_E_minor.ogg");
+
+    public bool IsGranted = false;
 }
 
 public sealed partial class NVInstantActionEvent : InstantActionEvent { }

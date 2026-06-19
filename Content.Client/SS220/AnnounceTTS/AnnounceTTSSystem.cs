@@ -16,11 +16,11 @@ using Robust.Shared.Utility;
 namespace Content.Client.SS220.AnnounceTTS;
 
 // ReSharper disable once InconsistentNaming
-public sealed class AnnounceTTSSystem : EntitySystem
+public sealed partial class AnnounceTTSSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audio = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IResourceCache _resourceCache = default!;
+    [Dependency] private SharedAudioSystem _audio = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IResourceCache _resourceCache = default!;
 
     private ISawmill _sawmill = default!;
     private readonly MemoryContentRoot _contentRoot = new();
@@ -97,9 +97,9 @@ public sealed class AnnounceTTSSystem : EntitySystem
             return;
         }
 
-        if (TryCreateAudioSource(file, ev.AnnouncementParams.Volume, out var sourceAnnounce))
+        if (TryCreateAudioSource(file, ev.AnnouncementParams, out var sourceAnnounce))
             AddEntityStreamToQueue(sourceAnnounce);
-        if (ev.Data.Length > 0 && TryCreateAudioSource(ev.Data, volume, out var source))
+        if (ev.Data.Length > 0 && TryCreateAudioSource(ev.Data, ev.AnnouncementParams, out var source))
         {
             source.DelayMs = (int) audio.AudioStream.Length.TotalMilliseconds;
             AddEntityStreamToQueue(source);
@@ -118,12 +118,10 @@ public sealed class AnnounceTTSSystem : EntitySystem
             PlayEntity(_currentlyPlaying);
     }
 
-    private bool TryCreateAudioSource(byte[] data, float volume, [NotNullWhen(true)] out TTSAudioStream? source)
+    private bool TryCreateAudioSource(byte[] data, AudioParams audioParams, [NotNullWhen(true)] out TTSAudioStream? source)
     {
         var filePath = new ResPath($"{_fileIdx++}.ogg");
         _contentRoot.AddOrUpdateFile(filePath, data);
-
-        var audioParams = AudioParams.Default.WithVolume(volume).WithRolloffFactor(1f).WithMaxDistance(float.MaxValue).WithReferenceDistance(1f);
         var soundPath = new SoundPathSpecifier(_prefix / filePath, audioParams);
 
         source = new TTSAudioStream(soundPath, filePath);
@@ -131,14 +129,10 @@ public sealed class AnnounceTTSSystem : EntitySystem
         return true;
     }
 
-    private bool TryCreateAudioSource(ResPath audio, float volume,
+    private bool TryCreateAudioSource(ResPath audio, AudioParams audioParams,
         [NotNullWhen(true)] out TTSAudioStream? source)
     {
-        var audioParams = AudioParams.Default.WithVolume(volume).WithRolloffFactor(1f).WithMaxDistance(float.MaxValue).WithReferenceDistance(1f);
-
         var soundPath = new SoundPathSpecifier(audio, audioParams);
-
-
         source = new TTSAudioStream(soundPath, null);
 
         return true;

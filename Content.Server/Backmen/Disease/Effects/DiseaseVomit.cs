@@ -1,5 +1,6 @@
 ﻿using Content.Server.Medical;
 using Content.Shared.Backmen.Disease;
+using Content.Shared.Medical;
 using JetBrains.Annotations;
 using Robust.Shared.Prototypes;
 
@@ -25,7 +26,7 @@ public sealed partial class DiseaseVomit : DiseaseEffect
 }
 public sealed partial class DiseaseEffectSystem
 {
-    [Dependency] private readonly VomitSystem _vomit = default!;
+    [Dependency] private VomitSystem _vomit = default!;
     private void DiseaseVomit(Entity<DiseaseCarrierComponent> ent, ref DiseaseEffectArgs<DiseaseVomit> args)
     {
         if(args.Handled)

@@ -14,12 +14,12 @@ using Robust.Shared.Timing;
 namespace Content.Server.Backmen.Administration.Commands
 {
     [AdminCommand(AdminFlags.Admin)]
-    sealed class FixPlayerCommand : IConsoleCommand
+    sealed partial class FixPlayerCommand : IConsoleCommand
     {
 
-        [Dependency] private readonly IAdminLogManager _adminLogger = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
+        [Dependency] private IAdminLogManager _adminLogger = default!;
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private ISharedPlayerManager _playerManager = default!;
 
         public string Command => "fixplayerchat";
 
@@ -65,7 +65,7 @@ namespace Content.Server.Backmen.Administration.Commands
 
             _entityManager.RemoveComponent<ActorComponent>(eUid);
             _entityManager.RemoveComponent<MindContainerComponent>(eUid);
-            _entityManager.RemoveComponent<ForcedSleepingComponent>(eUid);
+            _entityManager.RemoveComponent<ForcedSleepingStatusEffectComponent>(eUid);
             _entityManager.RemoveComponent<SleepingComponent>(eUid);
 
             // hm, does player have a mind? if not we may need to give them one

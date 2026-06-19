@@ -7,7 +7,6 @@ using Content.Server.GameTicking.Rules;
 using Content.Server.Mind;
 using Content.Server.NPC.Systems;
 using Content.Server.Objectives;
-using Content.Server.Radio.Components;
 using Content.Server.Roles;
 using Content.Server.RoundEnd;
 using Content.Server.Shuttles.Components;
@@ -26,8 +25,11 @@ using Content.Shared.Objectives.Components;
 using Content.Shared.Players;
 using Content.Shared.Preferences;
 using Content.Shared.Radio;
+using Content.Shared.Radio.Components;
 using Content.Shared.Roles;
+using Content.Shared.Roles.Components;
 using Content.Shared.Roles.Jobs;
+using Content.Shared.Station.Components;
 using Content.Shared.Store.Components;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
@@ -39,22 +41,22 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.GameTicking.Rules;
 
-public sealed class FleshCultRuleSystem : GameRuleSystem<FleshCultRuleComponent>
+public sealed partial class FleshCultRuleSystem : GameRuleSystem<FleshCultRuleComponent>
 {
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
-    [Dependency] private readonly IChatManager _chatManager = default!;
-    [Dependency] private readonly NpcFactionSystem _faction = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly RoundEndSystem _roundEndSystem = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly ISharedPlayerManager _actorSystem = default!;
-    [Dependency] private readonly RoleSystem _roleSystem = default!;
-    [Dependency] private readonly SharedJobSystem _jobs = default!;
-    [Dependency] private readonly ObjectivesSystem _objectivesSystem = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
+    [Dependency] private IChatManager _chatManager = default!;
+    [Dependency] private NpcFactionSystem _faction = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private RoundEndSystem _roundEndSystem = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private ISharedPlayerManager _actorSystem = default!;
+    [Dependency] private RoleSystem _roleSystem = default!;
+    [Dependency] private SharedJobSystem _jobs = default!;
+    [Dependency] private ObjectivesSystem _objectivesSystem = default!;
+    [Dependency] private IComponentFactory _componentFactory = default!;
 
     private ISawmill _sawmill = default!;
 
@@ -338,14 +340,9 @@ public sealed class FleshCultRuleSystem : GameRuleSystem<FleshCultRuleComponent>
         return results;
     }
 
-    [ValidatePrototypeId<RadioChannelPrototype>]
-    public const string FleshChannel = "Flesh";
-
-    [ValidatePrototypeId<EntityPrototype>]
-    public const string CreateFleshHeartObjective = "CreateFleshHeartObjective";
-
-    [ValidatePrototypeId<EntityPrototype>]
-    public const string FleshCultistSurvivalObjective = "FleshCultistSurvivalObjective";
+    public readonly ProtoId<RadioChannelPrototype> FleshChannel = "Flesh";
+    public readonly EntProtoId CreateFleshHeartObjective = "CreateFleshHeartObjective";
+    public readonly EntProtoId FleshCultistSurvivalObjective = "FleshCultistSurvivalObjective";
 
     private bool BaseMakeCultist(ICommonSession traitor, FleshCultRuleComponent fleshCultRule, EntityUid mindId, MindComponent mind, EntProtoId role)
     {

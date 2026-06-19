@@ -4,19 +4,19 @@ using Content.Server.Backmen.NPC.Events;
 using Content.Server.Backmen.NPC.Prototypes;
 using Content.Server.Backmen.NPC.Systems;
 using Content.Server.Backmen.StationEvents.Events;
-using Content.Server.Radio.Components;
 using Content.Server.Radio.EntitySystems;
 using Content.Shared.Backmen.Psionics.Glimmer;
 using Content.Shared.Radio;
+using Content.Shared.Radio.Components;
 
 namespace Content.Server.Backmen.Research.SophicScribe;
 
 public sealed partial class SophicScribeSystem : EntitySystem
 {
-    [Dependency] private readonly GlimmerSystem _glimmerSystem = default!;
-    [Dependency] private readonly RadioSystem _radioSystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-    [Dependency] private readonly NPCConversationSystem _conversationSystem = default!;
+    [Dependency] private GlimmerSystem _glimmerSystem = default!;
+    [Dependency] private RadioSystem _radioSystem = default!;
+    [Dependency] private IPrototypeManager _prototypeManager = default!;
+    [Dependency] private NPCConversationSystem _conversationSystem = default!;
 
     private readonly ISawmill _sawmill = default!;
 

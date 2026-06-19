@@ -25,6 +25,7 @@ using Content.Shared.Inventory;
 using Content.Shared.Objectives.Components;
 using Content.Shared.PDA;
 using Content.Shared.Roles;
+using Content.Shared.Roles.Components;
 using Content.Shared.Roles.Jobs;
 using Content.Shared.Verbs;
 using JetBrains.Annotations;
@@ -34,22 +35,21 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.Economy;
 
-public sealed class EconomySystem : EntitySystem
+public sealed partial class EconomySystem : EntitySystem
 {
-    [Dependency] private readonly BankManagerSystem _bankManagerSystem = default!;
-    [Dependency] private readonly WageManagerSystem _wageManagerSystem = default!;
-    [Dependency] private readonly BankCartridgeSystem _bankCartridgeSystem = default!;
-    [Dependency] private readonly InventorySystem _inventorySystem = default!;
-    [Dependency] private readonly IdCardSystem _cardSystem = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
-    [Dependency] private readonly BankManagerSystem _bankManager = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly RoleSystem _roleSystem = default!;
-    [Dependency] private readonly MetaDataSystem _metaDataSystem = default!;
-    [Dependency] private readonly IAdminManager _adminManager = default!;
-    [Dependency] private readonly IChatManager _chatManager = default!;
+    [Dependency] private WageManagerSystem _wageManagerSystem = default!;
+    [Dependency] private BankCartridgeSystem _bankCartridgeSystem = default!;
+    [Dependency] private InventorySystem _inventorySystem = default!;
+    [Dependency] private IdCardSystem _cardSystem = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private BankManagerSystem _bankManager = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private RoleSystem _roleSystem = default!;
+    [Dependency] private MetaDataSystem _metaDataSystem = default!;
+    [Dependency] private IAdminManager _adminManager = default!;
+    [Dependency] private IChatManager _chatManager = default!;
 
-    [ValidatePrototypeId<EntityPrototype>] private readonly string MindRoleBankMemory = "MindRoleBankMemory";
+    private readonly EntProtoId MindRoleBankMemory = "MindRoleBankMemory";
 
     public override void Initialize()
     {
@@ -96,7 +96,7 @@ public sealed class EconomySystem : EntitySystem
     private static readonly ResPath BankIcon = new("Backmen/Objects/Tools/rimbank.rsi");
     private void GetIdCardVerb(GetVerbsEvent<Verb> args, Entity<IdCardComponent> card, ActorComponent actor)
     {
-        if (!_bankManagerSystem.TryGetBankAccount(card.Owner, out var account))
+        if (!_bankManager.TryGetBankAccount(card.Owner, out var account))
         {
             Verb verb = new();
             verb.Text = Loc.GetString("prayer-verbs-bank-new");
@@ -105,12 +105,14 @@ public sealed class EconomySystem : EntitySystem
             verb.Icon = new SpriteSpecifier.Rsi(BankIcon,"icon");
             verb.Act = () =>
             {
-                var bankAccount = _bankManagerSystem.CreateNewBankAccount(card);
+                var bankAccount = _bankManager.CreateNewBankAccount(card);
                 DebugTools.Assert(bankAccount != null);
                 bankAccount.Value.Comp.AccountName = card.Comp.FullName;
                 card.Comp.StoredBankAccountNumber = bankAccount.Value.Comp.AccountNumber;
                 Dirty(card);
-                Dirty(bankAccount.Value);
+                DirtyFields(bankAccount.Value, bankAccount.Value.Comp, null,
+                    nameof(BankAccountComponent.AccountName),
+                    nameof(BankAccountComponent.AccountNumber));
                 var msg = $"Новый счет в банке №{bankAccount.Value.Comp.AccountNumber}, пин-код {bankAccount.Value.Comp.AccountPin}";
                 _chatManager.ChatMessageToOne(ChatChannel.Admin, msg, msg, EntityUid.FirstUid, false, actor.PlayerSession.Channel);
             };
@@ -182,11 +184,11 @@ public sealed class EconomySystem : EntitySystem
             return;
         }
 
-        if (!_bankManagerSystem.TryGetBankAccount(component.PresetAccountNumber, out var account))
+        if (!_bankManager.TryGetBankAccount(component.PresetAccountNumber, out var account))
         {
             var dummy = Spawn("CaptainIDCard");
             _metaDataSystem.SetEntityName(dummy, $"Bank: {component.PresetAccountNumber}");
-            account = _bankManagerSystem.CreateNewBankAccount(dummy, component.PresetAccountNumber);
+            account = _bankManager.CreateNewBankAccount(dummy, component.PresetAccountNumber);
             DebugTools.Assert(account != null);
             account.Value.Comp.AccountName = component.PresetAccountName ?? component.PresetAccountNumber;
         }
@@ -206,9 +208,9 @@ public sealed class EconomySystem : EntitySystem
     {
         foreach (var department in _prototype.EnumeratePrototypes<DepartmentPrototype>())
         {
-            var dummy = Spawn("CaptainIDCard");
+            var dummy = Spawn(null);
             _metaDataSystem.SetEntityName(dummy, "Bank: " + department.AccountNumber);
-            var bankAccount = _bankManagerSystem.CreateNewBankAccount(dummy, department.AccountNumber, true);
+            var bankAccount = _bankManager.CreateNewBankAccount(dummy, department.AccountNumber, true);
             if (bankAccount == null)
                 continue;
             bankAccount.Value.Comp.AccountName = department.ID;
@@ -237,7 +239,7 @@ public sealed class EconomySystem : EntitySystem
             account.Comp.AccountName = MetaData(player).EntityName;
         }
 
-        Dirty(bankAccount.Value);
+        DirtyField(bankAccount.Value, bankAccount.Value.Comp, nameof(BankAccountComponent.AccountName));
         return true;
     }
 
@@ -295,7 +297,7 @@ public sealed class EconomySystem : EntitySystem
             if (_roleSystem.MindHasRole<JobRoleComponent>(mindId, out var jobComponent) && jobComponent.Value.Comp1.JobPrototype != null &&
                 _prototype.TryIndex(jobComponent.Value.Comp1.JobPrototype, out var jobPrototype))
             {
-                _bankManagerSystem.TryGenerateStartingBalance(bankAccount, jobPrototype);
+                _bankManager.TryGenerateStartingBalance(bankAccount, jobPrototype);
 
                 if (AttachWage)
                 {
@@ -331,5 +333,5 @@ public sealed class EconomySystem : EntitySystem
 
     #endregion
 
-    [ValidatePrototypeId<EntityPrototype>] private const string BankNoteCondition = "BankNote";
+    private readonly EntProtoId BankNoteCondition = "BankNote";
 }

@@ -8,6 +8,8 @@ using Content.Shared.Backmen.Surgery.Wounds.Systems;
 using Content.Shared.Body.Components;
 using Content.Shared.Body.Systems;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
+using Content.Shared.Damage.Systems;
 using Content.Shared.FixedPoint;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Mobs.Events;
@@ -17,16 +19,16 @@ using Robust.Shared.Serialization;
 
 namespace Content.Shared.Mobs.Systems;
 
-public sealed class MobThresholdSystem : EntitySystem
+public sealed partial class MobThresholdSystem : EntitySystem
 {
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
-    [Dependency] private readonly AlertsSystem _alerts = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
+    [Dependency] private AlertsSystem _alerts = default!;
 
     // backmen edit start
-    [Dependency] private readonly SharedBodySystem _body = default!;
+    [Dependency] private SharedBodySystem _body = default!;
 
-    [Dependency] private readonly INetManager _net = default!;
-    [Dependency] private readonly WoundSystem _wound = default!;
+    [Dependency] private INetManager _net = default!;
+    [Dependency] private WoundSystem _wound = default!;
     // backmen edit end
 
     public override void Initialize()
@@ -173,6 +175,34 @@ public sealed class MobThresholdSystem : EntitySystem
         percentage = damage / threshold;
         return true;
     }
+
+    // start-backmen: consciousness alert thresholds
+    private bool TryGetConsciousnessPercentageForState(
+        EntityUid target,
+        ConsciousnessComponent consciousness,
+        MobState currentMobState,
+        FixedPoint2 damage,
+        MobThresholdsComponent thresholds,
+        [NotNullWhen(true)] out FixedPoint2? percentage)
+    {
+        percentage = null;
+        if (!TryGetNextState(target, currentMobState, out var nextState, thresholds))
+            return false;
+
+        FixedPoint2? threshold = nextState switch
+        {
+            MobState.Critical or MobState.SoftCritical => consciousness.Threshold,
+            MobState.Dead => consciousness.Cap,
+            _ => null
+        };
+
+        if (threshold is not { } value || value <= 0)
+            return false;
+
+        percentage = damage / value;
+        return true;
+    }
+    // end-backmen
 
     /// <summary>
     /// Try to get the Damage Threshold for crit or death. Outputs the first found threshold.
@@ -462,8 +492,25 @@ public sealed class MobThresholdSystem : EntitySystem
                 return;
             }
 
-            if (TryGetNextState(target, currentMobState, out var nextState, threshold) &&
-                TryGetPercentageForState(target, nextState.Value, totalDamage, out var percentage))
+            // start-backmen: consciousness alert thresholds
+            FixedPoint2? percentage = null;
+            if (TryComp<ConsciousnessComponent>(target, out var consciousnessAlert))
+            {
+                TryGetConsciousnessPercentageForState(
+                    target,
+                    consciousnessAlert,
+                    currentMobState,
+                    totalDamage,
+                    threshold,
+                    out percentage);
+            }
+            else if (TryGetNextState(target, currentMobState, out var nextState, threshold)
+                     && TryGetPercentageForState(target, nextState.Value, totalDamage, out percentage))
+            {
+            }
+            // end-backmen
+
+            if (percentage != null)
             {
                 percentage = FixedPoint2.Clamp(percentage.Value, 0, 1);
 
@@ -483,6 +530,9 @@ public sealed class MobThresholdSystem : EntitySystem
 
     private void OnDamaged(EntityUid target, MobThresholdsComponent thresholds, DamageChangedEvent args)
     {
+        if(HasComp<ConsciousnessComponent>(target)) // backmen
+            return;
+
         if (!TryComp<MobStateComponent>(target, out var mobState))
             return;
         CheckThresholds(target, mobState, thresholds, args.Damageable, args.Origin);
@@ -513,7 +563,12 @@ public sealed class MobThresholdSystem : EntitySystem
     {
         if (!TryComp<MobStateComponent>(target, out var mobState) || !TryComp<DamageableComponent>(target, out var damageable))
             return;
-        CheckThresholds(target, mobState, thresholds, damageable);
+
+        // start-backmen: consciousness handles mob state thresholds
+        if (!HasComp<ConsciousnessComponent>(target))
+            CheckThresholds(target, mobState, thresholds, damageable);
+        // end-backmen
+
         UpdateAllEffects((target, thresholds, mobState, damageable), mobState.CurrentState);
     }
 

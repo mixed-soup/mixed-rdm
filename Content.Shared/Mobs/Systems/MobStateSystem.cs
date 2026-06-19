@@ -2,6 +2,7 @@ using Content.Shared.ActionBlocker;
 using Content.Shared.Administration.Logs;
 using Content.Shared.Backmen.Surgery.Consciousness.Systems;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
 using Content.Shared.Mobs.Components;
 using Content.Shared.Standing;
 using Robust.Shared.Timing;
@@ -11,13 +12,13 @@ namespace Content.Shared.Mobs.Systems;
 [Virtual]
 public partial class MobStateSystem : EntitySystem
 {
-    [Dependency] private readonly ActionBlockerSystem _blocker = default!;
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly StandingStateSystem _standing = default!;
-    [Dependency] private readonly ISharedAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly ConsciousnessSystem _consciousness = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
+    [Dependency] private ActionBlockerSystem _blocker = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private StandingStateSystem _standing = default!;
+    [Dependency] private ISharedAdminLogManager _adminLogger = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private ConsciousnessSystem _consciousness = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
 
     private EntityQuery<MobStateComponent> _mobStateQuery;
 
@@ -29,6 +30,15 @@ public partial class MobStateSystem : EntitySystem
     }
 
     #region Public API
+
+    // start-backmen: soft crit
+    public bool IsAliveOrSoftCrit(EntityUid target, MobStateComponent? component = null)
+    {
+        if (!_mobStateQuery.Resolve(target, ref component, false))
+            return false;
+        return component.CurrentState is MobState.Alive or MobState.SoftCritical;
+    }
+    // end-backmen: soft crit
 
     /// <summary>
     ///  Check if a Mob is Alive
@@ -85,11 +95,12 @@ public partial class MobStateSystem : EntitySystem
     }
 
     /// <summary>
-    ///  Check if a Mob is Critical or Dead
+    ///  Check if a Mob is unconscious (hard critical) or dead.
+    ///  Soft critical (pain crit) is excluded; use <see cref="IsCritical"/> to include it.
     /// </summary>
     /// <param name="target">Target Entity</param>
     /// <param name="component">The MobState component owned by the target</param>
-    /// <returns>If the entity is Critical or Dead</returns>
+    /// <returns>If the entity is hard critical or dead</returns>
     public bool IsIncapacitated(EntityUid target, MobStateComponent? component = null)
     {
         if (!_mobStateQuery.Resolve(target, ref component, false))

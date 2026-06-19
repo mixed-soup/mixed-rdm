@@ -6,6 +6,7 @@ using Content.Shared.Body.Components;
 using Content.Shared.Buckle;
 using Content.Shared.Buckle.Components;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Systems;
 using Content.Shared.DoAfter;
 using Content.Shared.Gravity;
 using Content.Shared.Input;
@@ -15,6 +16,7 @@ using Content.Shared.Mobs.Systems;
 using Content.Shared.Movement.Components;
 using Content.Shared.Movement.Pulling.Systems;
 using Content.Shared.Movement.Systems;
+using Content.Shared.NPC;
 using Content.Shared.Physics;
 using Content.Shared.Popups;
 using Content.Shared.Silicons.Borgs.Components;
@@ -40,27 +42,25 @@ using Robust.Shared.Utility;
 
 namespace Content.Shared.Backmen.Standing;
 
-public abstract class SharedLayingDownSystem : EntitySystem
+public abstract partial class SharedLayingDownSystem : EntitySystem
 {
-    [Dependency] private readonly MobStateSystem _mobState = default!;
-    [Dependency] private readonly StandingStateSystem _standing = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
-    [Dependency] private readonly SharedGravitySystem _gravity = default!;
-    [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedBuckleSystem _buckle = default!;
-    [Dependency] private readonly PullingSystem _pulling = default!;
-    [Dependency] private readonly SharedStunSystem _stun = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly DamageableSystem _damageable = default!;
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private MobStateSystem _mobState = default!;
+    [Dependency] private StandingStateSystem _standing = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedGravitySystem _gravity = default!;
+    [Dependency] private ISharedPlayerManager _playerManager = default!;
+    [Dependency] private SharedContainerSystem _container = default!;
+    [Dependency] private SharedBuckleSystem _buckle = default!;
+    [Dependency] private PullingSystem _pulling = default!;
+    [Dependency] private SharedStunSystem _stun = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private DamageableSystem _damageable = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private IGameTiming _timing = default!;
+    [Dependency] private EntityLookupSystem _lookup = default!;
+    [Dependency] private SharedPhysicsSystem _physics = default!;
 
-    [Dependency] private readonly IConfigurationManager _config = default!;
-
-    protected bool CrawlUnderTables;
+    [Dependency] private IConfigurationManager _config = default!;
 
     public override void Initialize()
     {
@@ -75,12 +75,9 @@ public abstract class SharedLayingDownSystem : EntitySystem
         SubscribeLocalEvent<LayingDownComponent, EntParentChangedMessage>(OnParentChanged);
         SubscribeLocalEvent<LayingDownComponent, MobStateChangedEvent>(OnChangeMobState);
 
-        SubscribeLocalEvent<LayingDownComponent, BuckledEvent>(OnBuckled);
         SubscribeLocalEvent<LayingDownComponent, UnbuckledEvent>(OnUnBuckled);
         SubscribeLocalEvent<LayingDownComponent, StandAttemptEvent>(OnCheckLegs);
         SubscribeLocalEvent<BoundUserInterfaceMessageAttempt>(OnBoundUserInterface, after: [typeof(SharedInteractionSystem)]);
-
-        Subs.CVar(_config, CCVars.CrawlUnderTables, b => CrawlUnderTables = b, true);
     }
 
     public bool HasLegs(Entity<LayingDownComponent> ent)
@@ -112,20 +109,18 @@ public abstract class SharedLayingDownSystem : EntitySystem
     private void OnChangeMobState(Entity<LayingDownComponent> ent, ref MobStateChangedEvent args)
     {
         if (!TryComp<StandingStateComponent>(ent, out var standingStateComponent) ||
-            standingStateComponent.CurrentState != StandingState.Lying)
+            standingStateComponent.Standing)
             return;
 
         if (args.NewMobState == MobState.Alive)
         {
+            if (HasComp<ActiveNPCComponent>(ent))
+            {
+                TryStandUp(ent, ent, standingStateComponent);
+                return;
+            }
             AutoGetUp(ent);
-            TryStandUp(ent, ent, standingStateComponent);
-            return;
-        }
-
-        if (CrawlUnderTables)
-        {
-            ent.Comp.DrawDowned = false;
-            Dirty(ent,ent.Comp);
+            //TryStandUp(ent, ent, standingStateComponent);
         }
     }
 
@@ -142,46 +137,33 @@ public abstract class SharedLayingDownSystem : EntitySystem
             return;
         }
 
-        TryProcessAutoGetUp(ent);
-
-        if (!CrawlUnderTables || standingStateComponent.CurrentState != StandingState.Lying)
-            return;
-
-        ent.Comp.DrawDowned = true;
-        Dirty(ent,ent.Comp);
-    }
-
-    private void OnBuckled(Entity<LayingDownComponent> ent, ref BuckledEvent args)
-    {
-        if (!TryComp<StandingStateComponent>(ent, out var standingStateComponent) ||
-            standingStateComponent.CurrentState != StandingState.Lying)
-            return;
-
-        if (!CrawlUnderTables)
-            return;
-
-        ent.Comp.DrawDowned = false;
-        Dirty(ent, ent.Comp);
+        TryProcessAutoGetUp(ent.AsNullable());
     }
 
     protected abstract bool GetAutoGetUp(Entity<LayingDownComponent> ent, ICommonSession session);
 
-    public void TryProcessAutoGetUp(Entity<LayingDownComponent> ent)
+    public bool TryProcessAutoGetUp(Entity<LayingDownComponent?> ent)
     {
+        if (!Resolve(ent, ref ent.Comp, false))
+        {
+            return false;
+        }
         if (_buckle.IsBuckled(ent))
-            return;
+            return false;
 
         if (_pulling.IsPulled(ent))
-            return;
+            return false;
 
         if (!IsSafeToStandUp(ent, out _))
-            return;
+            return false;
 
         var autoUp = !_playerManager.TryGetSessionByEntity(ent, out var player) ||
-                     GetAutoGetUp(ent, session: player);
+                     GetAutoGetUp((ent,ent.Comp), session: player);
 
         if (autoUp && !_container.IsEntityInContainer(ent))
-            TryStandUp(ent, ent);
+            return TryStandUp(ent, ent);
+
+        return false;
     }
 
     public override void Shutdown()
@@ -234,7 +216,7 @@ public abstract class SharedLayingDownSystem : EntitySystem
             !inputMover.CanMove)
             return;
 
-        if (_standing.IsDown(uid, standing))
+        if (_standing.IsDown((uid, standing)))
             TryStandUp(uid, layingDown, standing);
         else
             TryLieDown(uid, layingDown, standing);
@@ -279,6 +261,11 @@ public abstract class SharedLayingDownSystem : EntitySystem
     private const int NotSafeToStandUp = (int)CollisionGroup.MidImpassable | (int)CollisionGroup.BlobImpassable;
     public bool IsSafeToStandUp(EntityUid entity, [NotNullWhen(false)] out EntityUid? obj)
     {
+        if(HasComp<ActiveNPCComponent>(entity))
+        {
+            obj = null;
+            return true;
+        }
         var xform = Transform(entity);
         if (
             !TryComp<Robust.Shared.Physics.Components.PhysicsComponent>(entity, out var physEnt) ||
@@ -355,8 +342,8 @@ public abstract class SharedLayingDownSystem : EntitySystem
                 obj.Value,
                 uid,
                 PopupType.MediumCaution);
-            _damageable.TryChangeDamage(uid, new DamageSpecifier{DamageDict = {{"Blunt", 5}}}, canBeCancelled: false, ignoreResistances: true, targetPart: TargetBodyPart.Head);
-            _stun.TryStun(uid, TimeSpan.FromSeconds(2), true);
+            _damageable.ChangeDamage(uid, new DamageSpecifier{DamageDict = {{"Blunt", 5}}}, ignoreResistances: true, targetPart: TargetBodyPart.Head);
+            _stun.TryAddStunDuration(uid, TimeSpan.FromSeconds(2));
             _audioSystem.PlayPredicted(_bonkSound, uid, obj.Value);
             return false;
         }

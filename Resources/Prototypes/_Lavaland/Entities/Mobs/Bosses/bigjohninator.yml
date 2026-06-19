@@ -1,43 +1,4 @@
-#Big John Spawner
-
-- type: entity
-  id: DropPodMarkerBigJohn
-  parent: DropPodMarker
-  suffix: Босс, Big Johninator
-  components:
-  - type: TimedSpawner
-    prototypes:
-      -  DropPodLaunchAnimationBigJohn
-
-- type: entity
-  id: DropPodLaunchAnimationBigJohn
-  parent: DropPodLaunchAnimation
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Backmen/Effects/droppod_falling.rsi
-    layers:
-    - state: supplypod_falling_animation
-      offset: "0,3.3"
-  - type: TimedSpawner
-    prototypes:
-      - SupplyDropPodBigJohn
-
-- type: entity
-  id: SupplyDropPodBigJohn
-  parent: MissileBase
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Sprite
-    sprite: Backmen/Structures/Storage/supplypod.rsi
-    layers:
-    - state: supplypod
-  - type: ConditionalSpawner
-    prototypes:
-    - MobBigJohninator
-
-#John
-
+#Big John
 - type: entity
   name: Big Johninator
   description: Большой Джонни уже тут! Ха-ха!
@@ -73,10 +34,11 @@
             max: 1
   - type: ReplacementAccent
     accent: BigJohn
-  - type: Advertise
-    minimumWait: 3
-    maximumWait: 5
-    pack: DiscountDansAds
+  - type: DatasetVocalizer
+    dataset: DiscountDansAds
+  - type: Vocalizer
+    minVocalizeInterval: 3
+    maxVocalizeInterval: 5
   - type: Speech
     speechSounds: BigJohn
     audioParams:
@@ -122,54 +84,23 @@
     availableModes:
       - Burst
     soundGunshot: /Audio/Weapons/Guns64/Rifles/ak47.ogg
-  - type: Timer
-  - type: TimedSpawner
+  - type: TimedPolymorph
     prototypes:
-      - ProjectilePolyboltFly
+      - SwoopFly
     chance: 0.7
     intervalSeconds: 10
-    minimumEntitiesSpawned: 1
-    maximumEntitiesSpawned: 1
   - type: Polymorphable
     innatePolymorphs:
     - SwoopFly
-  - type: Loadout
-    prototypes: [BigJohn]
+  - type: Aggressive
+  - type: BossMusic
+    soundId: BigJohn
   - type: Tag
     tags:
       - BigJohninator
 
 - type: Tag
   id: BigJohninator
-
-- type: entity
-  id: ProjectilePolyboltFly
-  categories: [ HideSpawnMenu ]
-  components:
-  - type: Physics
-    bodyType: KinematicController
-    canCollide: true
-  - type: InteractionOutline
-  - type: TimedDespawn
-    lifetime: 0.5
-  - type: TriggerOnCollide
-    fixtureID: projectile
-  - type: PolymorphOnTrigger
-    polymorph: SwoopFly
-  - type: TriggerWhitelist
-    whitelist:
-      tags:
-      - BigJohninator
-  - type: Fixtures
-    fixtures:
-      projectile:
-        shape:
-          !type:PhysShapeAabb
-          bounds: "-5.5,-5.5,5.5,5.5"
-        mask:
-        - Impassable
-        - BulletImpassable
-        hard: false
 
 - type: accent
   id: BigJohn
@@ -263,6 +194,8 @@
     revertOnDeath: true
     revertOnCrit: true
     duration: 4
+    polymorphPopup: null
+    exitPolymorphPopup: null
 
 - type: entity
   id: MobJohninatorSwoop
@@ -295,7 +228,6 @@
     delay: 3.9
   - type: SpawnOnTrigger
     proto: ShockWaveBigJohn
-  - type: Timer
   - type: TimedSpawner
     prototypes:
       - ActivatedGrenadeBigJohn

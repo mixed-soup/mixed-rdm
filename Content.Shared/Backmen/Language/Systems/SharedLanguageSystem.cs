@@ -4,36 +4,34 @@ using Robust.Shared.Prototypes;
 
 namespace Content.Shared.Backmen.Language.Systems;
 
-public abstract class SharedLanguageSystem : EntitySystem
+public abstract partial class SharedLanguageSystem : EntitySystem
 {
     /// <summary>
     ///     The language used as a fallback in cases where an entity suddenly becomes a language speaker (e.g. the usage of make-sentient)
     /// </summary>
-    [ValidatePrototypeId<LanguagePrototype>]
-    public static readonly string FallbackLanguagePrototype = "TauCetiBasic";
+    public static readonly ProtoId<LanguagePrototype> FallbackLanguagePrototype = "TauCetiBasic";
 
     /// <summary>
     ///     The language whose speakers are assumed to understand and speak every language. Should never be added directly.
     /// </summary>
-    [ValidatePrototypeId<LanguagePrototype>]
-    public static readonly string UniversalPrototype = "Universal";
+    public static readonly ProtoId<LanguagePrototype> UniversalPrototype = "Universal";
 
     /// <summary>
     ///     A cached instance of <see cref="UniversalPrototype"/>
     /// </summary>
     public static LanguagePrototype Universal { get; private set; } = default!;
 
-    [Dependency] protected readonly IPrototypeManager _prototype = default!;
-    [Dependency] protected readonly SharedGameTicker _ticker = default!;
+    [Dependency] protected IPrototypeManager PrototypeManager = default!;
+    [Dependency] protected SharedGameTicker Ticker = default!;
 
     public override void Initialize()
     {
-        Universal = _prototype.Index<LanguagePrototype>("Universal");
+        Universal = PrototypeManager.Index(UniversalPrototype);
     }
 
     public LanguagePrototype? GetLanguagePrototype(string id)
     {
-        _prototype.TryIndex<LanguagePrototype>(id, out var proto);
+        PrototypeManager.TryIndex<LanguagePrototype>(id, out var proto);
         return proto;
     }
 
@@ -60,7 +58,7 @@ public abstract class SharedLanguageSystem : EntitySystem
         // Each call would require us to allocate a new instance of random, which would lead to lots of unnecessary calculations.
         // Instead, we use a simple but effective algorithm derived from the C language.
         // It does not produce a truly random number, but for the purpose of obfuscating messages in an RP-based game it's more than alright.
-        seed = seed ^ (_ticker.RoundId * 127);
+        seed = seed ^ (Ticker.RoundId * 127);
         var random = seed * 1103515245 + 12345;
 
         return min + Math.Abs(random) % (max - min + 1);

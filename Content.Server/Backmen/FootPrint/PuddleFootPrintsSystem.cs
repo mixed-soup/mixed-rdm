@@ -4,25 +4,26 @@ using Content.Shared.Backmen.FootPrint;
 using Content.Shared.Chemistry.Components.SolutionManager;
 using Content.Shared.Chemistry.EntitySystems;
 using Content.Shared.Chemistry.Reagent;
+using Content.Shared.FixedPoint;
 using Content.Shared.Fluids;
 using Content.Shared.Fluids.Components;
 using Robust.Shared.Configuration;
 using Robust.Shared.Physics.Events;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.FootPrint;
 
-public sealed class PuddleFootPrintsSystem : EntitySystem
+public sealed partial class PuddleFootPrintsSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly SharedSolutionContainerSystem _solutionContainerSystem = default!;
-    [Dependency] private readonly IConfigurationManager _configuration = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private SharedSolutionContainerSystem _solutionContainerSystem = default!;
+    [Dependency] private IConfigurationManager _configuration = default!;
     private EntityQuery<AppearanceComponent> _appearanceQuery;
     private EntityQuery<PuddleComponent> _puddleQuery;
     private EntityQuery<FootPrintsComponent> _footPrintsQuery;
     private EntityQuery<SolutionContainerManagerComponent> _solutionContainerManageQuery;
 
-    [ValidatePrototypeId<ReagentPrototype>]
-    private const string WaterId = "Water";
+    private static readonly ProtoId<ReagentPrototype> WaterId = "Water";
 
     private bool _footprintEnabled = false;
 
@@ -55,23 +56,29 @@ public sealed class PuddleFootPrintsSystem : EntitySystem
         if (!_solutionContainerSystem.ResolveSolution((uid, solutionManager), puddle.SolutionName, ref puddle.Solution, out var solutions))
             return;
 
-        // alles gut!
-        var totalSolutionQuantity = solutions.Contents.Sum(sol => (float)sol.Quantity);
-        var waterQuantity = (from sol in solutions.Contents where sol.Reagent.Prototype == WaterId select (float) sol.Quantity).FirstOrDefault();
-
-        if (waterQuantity / (totalSolutionQuantity / 100f) > comp.OffPercent)
+        if (solutions.Contents.Count <= 0)
             return;
 
-        if (solutions.Contents.Count <= 0)
+        var volume = solutions.Volume;
+        if (volume <= FixedPoint2.Zero)
+            return;
+
+        if (volume < comp.MinVolume)
+            return;
+
+        var totalSolutionQuantity = volume.Float();
+        var waterQuantity = (from sol in solutions.Contents where sol.Reagent.Prototype == WaterId select (float) sol.Quantity).FirstOrDefault();
+
+        if (totalSolutionQuantity <= 0f || waterQuantity / (totalSolutionQuantity / 100f) > comp.OffPercent)
             return;
 
         tripper.ReagentToTransfer =
             solutions.Contents.Aggregate((l, r) => l.Quantity > r.Quantity ? l : r).Reagent.Prototype;
 
         if (_appearance.TryGetData(uid, PuddleVisuals.SolutionColor, out var color, appearance) &&
-            _appearance.TryGetData(uid, PuddleVisuals.CurrentVolume, out var volume, appearance))
+            _appearance.TryGetData(uid, PuddleVisuals.CurrentVolume, out var volumeRatio, appearance))
         {
-            AddColor((Color)color, (float)volume * comp.SizeRatio, tripper);
+            AddColor((Color)color, (float)volumeRatio * comp.SizeRatio, tripper);
         }
 
         _solutionContainerSystem.RemoveEachReagent(puddle.Solution.Value, 1);

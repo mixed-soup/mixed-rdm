@@ -5,12 +5,13 @@ using Content.Shared.Bed.Components;
 using Content.Shared.Bed.Sleep;
 using Content.Shared.Buckle.Components;
 using Content.Shared.Mobs.Components;
+using Content.Shared.Temperature.Components;
 
 namespace Content.Server.Backmen.Disease.Cures;
 
 public sealed partial class DiseaseCureSystem : EntitySystem
 {
-    [Dependency] private readonly DiseaseSystem _disease = default!;
+    [Dependency] private DiseaseSystem _disease = default!;
     private EntityQuery<BuckleComponent> _buckleQuery;
     private EntityQuery<HealOnBuckleComponent> _healOnBuckleQuery;
     private EntityQuery<SleepingComponent> _sleepingComponentQuery;

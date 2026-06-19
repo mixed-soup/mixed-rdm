@@ -5,6 +5,7 @@ using Content.Server.Access.Systems;
 using Content.Server.Administration.Logs;
 using Content.Server.Backmen.Cloning;
 using Content.Server.Backmen.Economy;
+using Content.Shared.Backmen.Economy;
 using Content.Server.Backmen.Fugitive;
 using Content.Server.CartridgeLoader.Cartridges;
 using Content.Server.Forensics;
@@ -27,7 +28,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Content.Server.Ghost.Roles.Events;
-using Content.Server.IdentityManagement;
 using Content.Server.Medical.SuitSensors;
 using Content.Server.Mind;
 using Content.Server.Objectives;
@@ -43,6 +43,7 @@ using Content.Shared.Clothing;
 using Content.Shared.DetailExaminable;
 using Content.Shared.Forensics.Components;
 using Content.Shared.GameTicking;
+using Content.Shared.IdentityManagement;
 using Content.Shared.Inventory;
 using Content.Shared.Medical.SuitSensor;
 using Content.Shared.Mind;
@@ -52,7 +53,9 @@ using Content.Shared.Objectives.Components;
 using Content.Shared.PDA;
 using Content.Shared.Players;
 using Content.Shared.Preferences.Loadouts;
+using Content.Shared.Roles.Components;
 using Content.Shared.Roles.Jobs;
+using Content.Shared.Station.Components;
 using Content.Shared.StatusIcon;
 using Robust.Server.Player;
 using Robust.Shared.Configuration;
@@ -62,7 +65,7 @@ using Robust.Shared.Utility;
 
 namespace Content.Server.Backmen.EvilTwin;
 
-public sealed class EvilTwinSystem : EntitySystem
+public sealed partial class EvilTwinSystem : EntitySystem
 {
     public override void Initialize()
     {
@@ -142,7 +145,7 @@ public sealed class EvilTwinSystem : EntitySystem
                                 if (bank != null)
                                 {
                                     bank.Value.Comp.Balance = 1_000;
-                                    Dirty(bank.Value);
+                                    DirtyField(bank.Value, bank.Value.Comp, nameof(BankAccountComponent.Balance));
                                 }
                             });
 
@@ -566,7 +569,7 @@ public sealed class EvilTwinSystem : EntitySystem
             EnsureComp<DetailExaminableComponent>(twinUid).Content = detail.Content;
         }
 
-        _humanoidSystem.LoadProfile(twinUid, pref);
+        _humanoid.LoadProfile(twinUid, pref);
 
         if (pref.FlavorText != "" && _configurationManager.GetCVar(CCVars.FlavorText))
         {
@@ -644,37 +647,33 @@ public sealed class EvilTwinSystem : EntitySystem
         return (twinUid, pref);
     }
 
-    [Dependency] private readonly InventorySystem _inventory = default!;
-    [Dependency] private readonly IRobustRandom _random = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
-    [Dependency] private readonly IServerPreferencesManager _prefs = default!;
-    [Dependency] private readonly HumanoidAppearanceSystem _humanoid = default!;
-    [Dependency] private readonly StationSpawningSystem _stationSpawning = default!;
-    [Dependency] private readonly StationSystem _stationSystem = default!;
-    [Dependency] private readonly PrayerSystem _prayerSystem = default!;
-    [Dependency] private readonly IAdminLogManager _adminLogger = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly TagSystem _tagSystem = default!;
-    [Dependency] private readonly MindSystem _mindSystem = default!;
-    [Dependency] private readonly MetaDataSystem _metaSystem = default!;
-    [Dependency] private readonly RoleSystem _roles = default!;
-    [Dependency] private readonly IConfigurationManager _configurationManager = default!;
-    [Dependency] private readonly HumanoidAppearanceSystem _humanoidSystem = default!;
-    [Dependency] private readonly ObjectivesSystem _objectivesSystem = default!;
-    [Dependency] private readonly TargetObjectiveSystem _target = default!;
-    [Dependency] private readonly IPlayerManager _playerManager = default!;
-    [Dependency] private readonly IdentitySystem _identity = default!;
-    [Dependency] private readonly EconomySystem _economySystem = default!;
-    [Dependency] private readonly ForensicsSystem _forensicsSystem = default!;
-    [Dependency] private readonly SuitSensorSystem _sensor = default!;
+    [Dependency] private InventorySystem _inventory = default!;
+    [Dependency] private IRobustRandom _random = default!;
+    [Dependency] private IPrototypeManager _prototype = default!;
+    [Dependency] private IServerPreferencesManager _prefs = default!;
+    [Dependency] private HumanoidAppearanceSystem _humanoid = default!;
+    [Dependency] private StationSpawningSystem _stationSpawning = default!;
+    [Dependency] private StationSystem _stationSystem = default!;
+    [Dependency] private PrayerSystem _prayerSystem = default!;
+    [Dependency] private IAdminLogManager _adminLogger = default!;
+    [Dependency] private IEntityManager _entityManager = default!;
+    [Dependency] private TagSystem _tagSystem = default!;
+    [Dependency] private MindSystem _mindSystem = default!;
+    [Dependency] private MetaDataSystem _metaSystem = default!;
+    [Dependency] private RoleSystem _roles = default!;
+    [Dependency] private IConfigurationManager _configurationManager = default!;
+    [Dependency] private ObjectivesSystem _objectivesSystem = default!;
+    [Dependency] private TargetObjectiveSystem _target = default!;
+    [Dependency] private IPlayerManager _playerManager = default!;
+    [Dependency] private IdentitySystem _identity = default!;
+    [Dependency] private EconomySystem _economySystem = default!;
+    [Dependency] private ForensicsSystem _forensicsSystem = default!;
+    [Dependency] private SuitSensorSystem _sensor = default!;
 
-    [ValidatePrototypeId<EntityPrototype>] private const string MindRoleEvilTwin = "MindRoleEvilTwin";
-
-    [ValidatePrototypeId<EntityPrototype>] private const string KillObjective = "KillObjectiveEvilTwin";
-
-    [ValidatePrototypeId<EntityPrototype>] private const string EscapeObjective = "EscapeShuttleObjectiveEvilTwin";
-
-    [ValidatePrototypeId<EntityPrototype>] private const string SpawnPointPrototype = "SpawnPointEvilTwin";
+    private readonly EntProtoId MindRoleEvilTwin = "MindRoleEvilTwin";
+    private readonly EntProtoId KillObjective = "KillObjectiveEvilTwin";
+    private readonly EntProtoId EscapeObjective = "EscapeShuttleObjectiveEvilTwin";
+    private readonly EntProtoId SpawnPointPrototype = "SpawnPointEvilTwin";
 }
 
 public sealed class SpawnEvilTwinEvent : EntityEventArgs

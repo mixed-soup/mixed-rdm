@@ -5,29 +5,30 @@ using Content.Server.Popups;
 using Robust.Shared.Physics.Events;
 using Content.Shared.Body.Components;
 using Content.Shared.Damage;
+using Content.Shared.Damage.Components;
 using Content.Shared.Damage.Prototypes;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Systems;
 using Content.Shared.Popups;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Prototypes;
 
 namespace Content.Server.Backmen.GibOnCollide;
 
-public sealed class GibOnCollideSystem : EntitySystem
+public sealed partial class GibOnCollideSystem : EntitySystem
 {
-    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly PopupSystem _popupSystem = default!;
-    [Dependency] private readonly BodySystem _body = default!;
-    [Dependency] private readonly MobStateSystem _mobStateSystem = default!;
+    [Dependency] private SharedAudioSystem _audioSystem = default!;
+    [Dependency] private IGameTiming _gameTiming = default!;
+    [Dependency] private PopupSystem _popupSystem = default!;
+    [Dependency] private BodySystem _body = default!;
+    [Dependency] private MobStateSystem _mobStateSystem = default!;
 
     public override void Initialize()
     {
         SubscribeLocalEvent<GibOnCollideComponent, StartCollideEvent>(OnStartCollide);
     }
 
-    [ValidatePrototypeId<DamageContainerPrototype>]
-    private const string BiologicalDamageContainerPrototype = "Biological";
+    private static readonly ProtoId<DamageContainerPrototype> BiologicalDamageContainerPrototype = "Biological";
 
     private void OnStartCollide(EntityUid uid, GibOnCollideComponent component, ref StartCollideEvent args)
     {
@@ -44,7 +45,7 @@ public sealed class GibOnCollideSystem : EntitySystem
                 return;
 
             if (!TryComp<DamageableComponent>(otherUid, out var damageable)
-                || damageable.DamageContainerID?.Id != BiologicalDamageContainerPrototype)
+                || damageable.DamageContainerID?.Id != BiologicalDamageContainerPrototype.Id)
                 return;
         }
 

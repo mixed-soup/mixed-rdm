@@ -1,11 +1,11 @@
 meta:
   format: 7
   category: Map
-  engineVersion: 262.0.0
+  engineVersion: 270.1.0
   forkId: ""
   forkVersion: ""
-  time: 07/04/2025 07:44:03
-  entityCount: 11462
+  time: 01/05/2026 13:48:45
+  entityCount: 11447
 maps:
 - 658
 grids:
@@ -1395,187 +1395,36 @@ entities:
         - volume: 2500
           temperature: 293.15
           moles:
-          - 21.824879
-          - 82.10312
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
+            Oxygen: 21.824879
+            Nitrogen: 82.10312
         - volume: 2500
           temperature: 235
           moles:
-          - 21.824879
-          - 82.10312
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
+            Oxygen: 21.824879
+            Nitrogen: 82.10312
         - volume: 2500
           immutable: True
-          moles:
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
+          moles: {}
         - volume: 2500
           temperature: 293.15
           moles:
-          - 23.57087
-          - 88.67137
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
+            Oxygen: 23.57087
+            Nitrogen: 88.67137
         - volume: 2500
           temperature: 293.15
           moles:
-          - 0
-          - 6666.982
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
+            Nitrogen: 6666.982
+        - volume: 2500
+          temperature: 293.15
+          moles: {}
         - volume: 2500
           temperature: 293.15
           moles:
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
+            Oxygen: 6666.982
         - volume: 2500
           temperature: 293.15
           moles:
-          - 6666.982
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-        - volume: 2500
-          temperature: 293.15
-          moles:
-          - 0
-          - 0
-          - 0
-          - 6666.982
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
-          - 0
+            Plasma: 6666.982
         chunkSize: 4
     - type: Gravity
       gravityShakeSound: !type:SoundPathSpecifier
@@ -3449,6 +3298,7 @@ entities:
     - type: RadiationGridResistance
     - type: NavMap
     - type: ImplicitRoof
+    - type: ExplosionAirtightGrid
   - uid: 658
     components:
     - type: MetaData
@@ -3498,6 +3348,8 @@ entities:
       - 10909
       - 10960
       - 8384
+    - type: Fixtures
+      fixtures: {}
   - uid: 6582
     components:
     - type: Transform
@@ -3507,6 +3359,8 @@ entities:
     - type: DeviceList
       devices:
       - 6492
+    - type: Fixtures
+      fixtures: {}
   - uid: 7104
     components:
     - type: Transform
@@ -3521,6 +3375,8 @@ entities:
       - 4267
       - 9965
       - 9966
+    - type: Fixtures
+      fixtures: {}
   - uid: 7345
     components:
     - type: Transform
@@ -3537,6 +3393,8 @@ entities:
       - 1481
       - 7335
       - 8438
+    - type: Fixtures
+      fixtures: {}
   - uid: 7904
     components:
     - type: Transform
@@ -3551,6 +3409,8 @@ entities:
       - 10375
       - 4921
       - 3724
+    - type: Fixtures
+      fixtures: {}
   - uid: 8476
     components:
     - type: Transform
@@ -3567,6 +3427,8 @@ entities:
       - 337
       - 6080
       - 6071
+    - type: Fixtures
+      fixtures: {}
   - uid: 9042
     components:
     - type: Transform
@@ -3589,6 +3451,8 @@ entities:
       - 6120
       - 6117
       - 6118
+    - type: Fixtures
+      fixtures: {}
   - uid: 9164
     components:
     - type: Transform
@@ -3601,6 +3465,8 @@ entities:
       - 6552
       - 11092
       - 9961
+    - type: Fixtures
+      fixtures: {}
   - uid: 9975
     components:
     - type: Transform
@@ -3617,6 +3483,8 @@ entities:
       - 9958
       - 9959
       - 9960
+    - type: Fixtures
+      fixtures: {}
   - uid: 9976
     components:
     - type: Transform
@@ -3632,6 +3500,8 @@ entities:
       - 4480
       - 4603
       - 4481
+    - type: Fixtures
+      fixtures: {}
   - uid: 9977
     components:
     - type: Transform
@@ -3651,6 +3521,8 @@ entities:
       - 9959
       - 9960
       - 9961
+    - type: Fixtures
+      fixtures: {}
   - uid: 9978
     components:
     - type: Transform
@@ -3670,6 +3542,8 @@ entities:
       - 5474
       - 8876
       - 8875
+    - type: Fixtures
+      fixtures: {}
   - uid: 9979
     components:
     - type: Transform
@@ -3704,6 +3578,8 @@ entities:
       - 5543
       - 5544
       - 7460
+    - type: Fixtures
+      fixtures: {}
   - uid: 9983
     components:
     - type: Transform
@@ -3715,6 +3591,8 @@ entities:
       - 5704
       - 4783
       - 5698
+    - type: Fixtures
+      fixtures: {}
   - uid: 9991
     components:
     - type: Transform
@@ -3730,6 +3608,8 @@ entities:
       - 100
       - 5365
       - 5332
+    - type: Fixtures
+      fixtures: {}
   - uid: 9996
     components:
     - type: Transform
@@ -3747,6 +3627,8 @@ entities:
       - 7745
       - 7746
       - 6169
+    - type: Fixtures
+      fixtures: {}
   - uid: 9998
     components:
     - type: Transform
@@ -3764,6 +3646,8 @@ entities:
       - 4185
       - 10000
       - 9999
+    - type: Fixtures
+      fixtures: {}
   - uid: 10001
     components:
     - type: Transform
@@ -3785,6 +3669,8 @@ entities:
       - 5869
       - 5864
       - 716
+    - type: Fixtures
+      fixtures: {}
   - uid: 10003
     components:
     - type: Transform
@@ -3802,6 +3688,8 @@ entities:
       - 5883
       - 1230
       - 8417
+    - type: Fixtures
+      fixtures: {}
   - uid: 10005
     components:
     - type: Transform
@@ -3817,6 +3705,8 @@ entities:
       - 3116
       - 3118
       - 1505
+    - type: Fixtures
+      fixtures: {}
   - uid: 10015
     components:
     - type: Transform
@@ -3834,6 +3724,8 @@ entities:
       - 24
       - 1185
       - 10099
+    - type: Fixtures
+      fixtures: {}
   - uid: 10016
     components:
     - type: Transform
@@ -3848,6 +3740,8 @@ entities:
       - 5597
       - 5104
       - 10017
+    - type: Fixtures
+      fixtures: {}
   - uid: 10018
     components:
     - type: Transform
@@ -3869,6 +3763,8 @@ entities:
       - 5495
       - 5606
       - 5607
+    - type: Fixtures
+      fixtures: {}
   - uid: 10021
     components:
     - type: Transform
@@ -3887,12 +3783,16 @@ entities:
       - 4525
       - 7041
       - 7040
+    - type: Fixtures
+      fixtures: {}
   - uid: 10031
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: -21.5,-21.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10238
     components:
     - type: Transform
@@ -3910,6 +3810,8 @@ entities:
       - 10240
       - 10241
       - 10242
+    - type: Fixtures
+      fixtures: {}
   - uid: 10371
     components:
     - type: Transform
@@ -3926,6 +3828,8 @@ entities:
       - 3857
       - 3724
       - 3428
+    - type: Fixtures
+      fixtures: {}
   - uid: 10373
     components:
     - type: Transform
@@ -3938,6 +3842,8 @@ entities:
       - 4718
       - 10427
       - 10426
+    - type: Fixtures
+      fixtures: {}
   - uid: 10408
     components:
     - type: Transform
@@ -3952,6 +3858,8 @@ entities:
       - 10313
       - 10314
       - 10315
+    - type: Fixtures
+      fixtures: {}
   - uid: 11002
     components:
     - type: Transform
@@ -3969,6 +3877,8 @@ entities:
       - 11000
       - 673
       - 8940
+    - type: Fixtures
+      fixtures: {}
 - proto: AirCanister
   entities:
   - uid: 1279
@@ -5463,6 +5373,8 @@ entities:
     - type: Transform
       pos: 14.5,13.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 770
     components:
     - type: MetaData
@@ -5471,6 +5383,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -4.5,17.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 771
     components:
     - type: MetaData
@@ -5479,6 +5393,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 13.5,-8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 1049
     components:
     - type: MetaData
@@ -5486,6 +5402,8 @@ entities:
     - type: Transform
       pos: -4.5,15.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 1233
     components:
     - type: MetaData
@@ -5495,12 +5413,16 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11999.417
+    - type: Fixtures
+      fixtures: {}
   - uid: 1488
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 37.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 2041
     components:
     - type: MetaData
@@ -5509,6 +5431,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -26.5,-4.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 2154
     components:
     - type: MetaData
@@ -5516,6 +5440,8 @@ entities:
     - type: Transform
       pos: 8.5,27.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 2484
     components:
     - type: MetaData
@@ -5525,6 +5451,8 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11999.3
+    - type: Fixtures
+      fixtures: {}
   - uid: 2485
     components:
     - type: MetaData
@@ -5534,6 +5462,8 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11999.066
+    - type: Fixtures
+      fixtures: {}
   - uid: 2489
     components:
     - type: MetaData
@@ -5542,6 +5472,8 @@ entities:
       rot: 3.141592653589793 rad
       pos: 31.5,1.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 2492
     components:
     - type: Transform
@@ -5549,6 +5481,8 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11999.066
+    - type: Fixtures
+      fixtures: {}
   - uid: 2493
     components:
     - type: MetaData
@@ -5558,6 +5492,8 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11999.467
+    - type: Fixtures
+      fixtures: {}
   - uid: 2497
     components:
     - type: MetaData
@@ -5567,6 +5503,8 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11999.4
+    - type: Fixtures
+      fixtures: {}
   - uid: 2498
     components:
     - type: MetaData
@@ -5576,6 +5514,8 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11998.483
+    - type: Fixtures
+      fixtures: {}
   - uid: 2526
     components:
     - type: MetaData
@@ -5584,6 +5524,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -30.5,9.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 2739
     components:
     - type: MetaData
@@ -5592,6 +5534,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -26.5,-14.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 2767
     components:
     - type: MetaData
@@ -5601,6 +5545,8 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11999.45
+    - type: Fixtures
+      fixtures: {}
   - uid: 2853
     components:
     - type: MetaData
@@ -5608,6 +5554,8 @@ entities:
     - type: Transform
       pos: -31.5,-12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 3355
     components:
     - type: MetaData
@@ -5616,6 +5564,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 13.5,-23.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 3625
     components:
     - type: MetaData
@@ -5623,6 +5573,8 @@ entities:
     - type: Transform
       pos: 24.5,18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 3797
     components:
     - type: MetaData
@@ -5630,6 +5582,8 @@ entities:
     - type: Transform
       pos: -38.5,-8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 3895
     components:
     - type: MetaData
@@ -5639,6 +5593,8 @@ entities:
       parent: 31
     - type: Battery
       startingCharge: 11999.217
+    - type: Fixtures
+      fixtures: {}
   - uid: 4085
     components:
     - type: MetaData
@@ -5646,6 +5602,8 @@ entities:
     - type: Transform
       pos: -20.5,15.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4261
     components:
     - type: MetaData
@@ -5653,6 +5611,8 @@ entities:
     - type: Transform
       pos: 55.5,-6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4550
     components:
     - type: MetaData
@@ -5661,6 +5621,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 16.5,-13.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 5093
     components:
     - type: MetaData
@@ -5668,6 +5630,8 @@ entities:
     - type: Transform
       pos: 7.5,12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 5527
     components:
     - type: MetaData
@@ -5676,6 +5640,8 @@ entities:
       rot: 3.141592653589793 rad
       pos: -18.5,-3.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 5785
     components:
     - type: MetaData
@@ -5684,6 +5650,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -8.5,-36.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 6100
     components:
     - type: MetaData
@@ -5692,6 +5660,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -12.5,-27.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 6888
     components:
     - type: MetaData
@@ -5699,6 +5669,8 @@ entities:
     - type: Transform
       pos: 43.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7250
     components:
     - type: MetaData
@@ -5707,6 +5679,8 @@ entities:
       rot: 3.141592653589793 rad
       pos: 23.5,-12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7787
     components:
     - type: MetaData
@@ -5714,6 +5688,8 @@ entities:
     - type: Transform
       pos: -11.5,-17.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8439
     components:
     - type: MetaData
@@ -5722,6 +5698,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -2.5,-21.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8668
     components:
     - type: MetaData
@@ -5729,6 +5707,8 @@ entities:
     - type: Transform
       pos: -32.5,-25.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10268
     components:
     - type: MetaData
@@ -5737,6 +5717,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 55.5,-3.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10327
     components:
     - type: MetaData
@@ -5745,6 +5727,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -14.5,-23.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10328
     components:
     - type: MetaData
@@ -5753,11 +5737,15 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 1.5,-30.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10962
     components:
     - type: Transform
       pos: 51.5,-2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 11344
     components:
     - type: MetaData
@@ -5765,6 +5753,8 @@ entities:
     - type: Transform
       pos: 20.5,-23.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 11351
     components:
     - type: MetaData
@@ -5772,6 +5762,8 @@ entities:
     - type: Transform
       pos: 26.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: APCElectronics
   entities:
   - uid: 86
@@ -6355,6 +6347,8 @@ entities:
     - type: Transform
       pos: -9.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: BaseGasCondenser
   entities:
   - uid: 2949
@@ -7140,6 +7134,8 @@ entities:
           - AutoClose
         - - Timer
           - Open
+    - type: Fixtures
+      fixtures: {}
   - uid: 9952
     components:
     - type: Transform
@@ -7156,6 +7152,8 @@ entities:
           - AutoClose
         - - Timer
           - Open
+    - type: Fixtures
+      fixtures: {}
 - proto: BrokenBottle
   entities:
   - uid: 10591
@@ -26534,6 +26532,8 @@ entities:
       rot: 3.141592653589793 rad
       pos: -18.5,-13.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: ClosetBombFilled
   entities:
   - uid: 5116
@@ -26756,26 +26756,8 @@ entities:
         immutable: False
         temperature: 293.14963
         moles:
-        - 1.7459903
-        - 6.568249
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
+          Oxygen: 1.7459903
+          Nitrogen: 6.568249
   - uid: 7058
     components:
     - type: Transform
@@ -26883,8 +26865,8 @@ entities:
           restitution: 0
           friction: 0.4
     - type: EntityStorage
-      open: True
       removedMasks: 20
+      open: True
     - type: PlaceableSurface
       isPlaceable: True
   - uid: 11244
@@ -26927,26 +26909,8 @@ entities:
         immutable: False
         temperature: 293.1496
         moles:
-        - 1.7459903
-        - 6.568249
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
+          Oxygen: 1.7459903
+          Nitrogen: 6.568249
     - type: ContainerContainer
       containers:
         entity_storage: !type:Container
@@ -26970,6 +26934,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -34.5,0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: ClosetWallEmergencyFilledRandom
   entities:
   - uid: 9868
@@ -26977,6 +26943,8 @@ entities:
     - type: Transform
       pos: 28.5,7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: ClosetWallFireFilledRandom
   entities:
   - uid: 339
@@ -26985,12 +26953,16 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -33.5,8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7105
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -34.5,-0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: ClosetWallMaintenanceFilledRandom
   entities:
   - uid: 9863
@@ -26999,12 +26971,16 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -21.5,-20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9864
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -31.5,-3.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: ClothingBeltChampion
   entities:
   - uid: 4197
@@ -28101,20 +28077,18 @@ entities:
     - type: Transform
       pos: -0.5,-28.5
       parent: 31
-- proto: ComputerShipyard
-  entities:
-  - uid: 4254
-    components:
-    - type: Transform
-      rot: -1.5707963267948966 rad
-      pos: 24.5,15.5
-      parent: 31
 - proto: ComputerShuttleCargo
   entities:
   - uid: 2374
     components:
     - type: Transform
       pos: 23.5,13.5
+      parent: 31
+  - uid: 4254
+    components:
+    - type: Transform
+      rot: -1.5707963267948966 rad
+      pos: 24.5,15.5
       parent: 31
 - proto: ComputerShuttleMiningLavaland
   entities:
@@ -28407,26 +28381,8 @@ entities:
         immutable: False
         temperature: 293.1496
         moles:
-        - 1.7459903
-        - 6.568249
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
+          Oxygen: 1.7459903
+          Nitrogen: 6.568249
 - proto: CrateEmptySpawner
   entities:
   - uid: 3135
@@ -28586,26 +28542,8 @@ entities:
         immutable: False
         temperature: 293.1496
         moles:
-        - 1.7459903
-        - 6.568249
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
+          Oxygen: 1.7459903
+          Nitrogen: 6.568249
     - type: ContainerContainer
       containers:
         entity_storage: !type:Container
@@ -29182,22 +29120,30 @@ entities:
       rot: 3.141592653589793 rad
       pos: 11.5,-12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9834
     components:
     - type: Transform
       pos: 1.5,29.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9835
     components:
     - type: Transform
       pos: -32.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10032
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 16.5,-17.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: DeployableBarrier
   entities:
   - uid: 2502
@@ -32416,6 +32362,8 @@ entities:
     - type: Transform
       pos: -11.5,17.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: ExtendedEmergencyOxygenTank
   entities:
   - uid: 3730
@@ -32431,6 +32379,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 1.5,-31.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: ExtinguisherCabinetFilled
   entities:
   - uid: 517
@@ -32438,107 +32388,149 @@ entities:
     - type: Transform
       pos: -10.5,12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 1868
     components:
     - type: Transform
       pos: 5.5,23.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4807
     components:
     - type: Transform
       pos: 14.5,-3.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4895
     components:
     - type: Transform
       pos: -34.5,-10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4899
     components:
     - type: Transform
       pos: -30.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4900
     components:
     - type: Transform
       pos: -34.5,-2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4901
     components:
     - type: Transform
       pos: -16.5,-8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4908
     components:
     - type: Transform
       pos: 32.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4913
     components:
     - type: Transform
       pos: 17.5,8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4914
     components:
     - type: Transform
       pos: 9.5,12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4916
     components:
     - type: Transform
       pos: -6.5,18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4917
     components:
     - type: Transform
       pos: 0.5,16.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4918
     components:
     - type: Transform
       pos: 11.5,17.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4923
     components:
     - type: Transform
       pos: 11.5,-28.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 5305
     components:
     - type: Transform
       pos: 17.5,-29.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 5306
     components:
     - type: Transform
       pos: -24.5,23.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7435
     components:
     - type: Transform
       pos: -12.5,-26.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8894
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 51.5,4.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8905
     components:
     - type: Transform
       pos: 5.5,29.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10889
     components:
     - type: Transform
       pos: 55.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 11387
     components:
     - type: Transform
       pos: 42.5,-1.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: FaxMachineBase
   entities:
   - uid: 683
@@ -32555,7 +32547,7 @@ entities:
       pos: 40.5,4.5
       parent: 31
     - type: FaxMachine
-      name: engineering
+      name: Engineering
   - uid: 2045
     components:
     - type: Transform
@@ -32570,7 +32562,7 @@ entities:
       pos: 9.5,-28.5
       parent: 31
     - type: FaxMachine
-      name: library
+      name: Library
   - uid: 8994
     components:
     - type: Transform
@@ -32585,15 +32577,15 @@ entities:
       pos: 8.5,18.5
       parent: 31
     - type: FaxMachine
-      name: hop's office
+      name: HoP's office
   - uid: 10825
     components:
     - type: Transform
       pos: 1.5,32.5
       parent: 31
     - type: FaxMachine
-      name: bridge
-      destinationAddress: bridge
+      name: Bridge
+      destinationAddress: Bridge
 - proto: FaxMachineCaptain
   entities:
   - uid: 9686
@@ -32602,7 +32594,7 @@ entities:
       pos: 7.5,24.5
       parent: 31
     - type: FaxMachine
-      name: captain's office
+      name: Captain's office
 - proto: filingCabinetDrawerRandom
   entities:
   - uid: 4637
@@ -32665,6 +32657,8 @@ entities:
       - 2872
       - 2891
       - 7379
+    - type: Fixtures
+      fixtures: {}
   - uid: 9041
     components:
     - type: Transform
@@ -32679,6 +32673,8 @@ entities:
       - 995
       - 179
       - 337
+    - type: Fixtures
+      fixtures: {}
   - uid: 9985
     components:
     - type: Transform
@@ -32690,6 +32686,8 @@ entities:
       - 9988
       - 9989
       - 9990
+    - type: Fixtures
+      fixtures: {}
   - uid: 9992
     components:
     - type: Transform
@@ -32719,6 +32717,8 @@ entities:
       - 1330
       - 1167
       - 7460
+    - type: Fixtures
+      fixtures: {}
   - uid: 9993
     components:
     - type: Transform
@@ -32737,6 +32737,8 @@ entities:
       - 9970
       - 9994
       - 9995
+    - type: Fixtures
+      fixtures: {}
   - uid: 9997
     components:
     - type: Transform
@@ -32748,6 +32750,8 @@ entities:
       - 3977
       - 3976
       - 3975
+    - type: Fixtures
+      fixtures: {}
   - uid: 10002
     components:
     - type: Transform
@@ -32762,6 +32766,8 @@ entities:
       - 8814
       - 8815
       - 9969
+    - type: Fixtures
+      fixtures: {}
   - uid: 10004
     components:
     - type: Transform
@@ -32774,6 +32780,8 @@ entities:
       - 8883
       - 8884
       - 5115
+    - type: Fixtures
+      fixtures: {}
   - uid: 10006
     components:
     - type: Transform
@@ -32787,6 +32795,8 @@ entities:
       - 8856
       - 8858
       - 8857
+    - type: Fixtures
+      fixtures: {}
   - uid: 10023
     components:
     - type: Transform
@@ -32804,6 +32814,8 @@ entities:
       - 4525
       - 4528
       - 4529
+    - type: Fixtures
+      fixtures: {}
   - uid: 10243
     components:
     - type: Transform
@@ -32818,6 +32830,8 @@ entities:
       - 10240
       - 10241
       - 10242
+    - type: Fixtures
+      fixtures: {}
   - uid: 10409
     components:
     - type: Transform
@@ -32828,6 +32842,8 @@ entities:
       - 10313
       - 10314
       - 10315
+    - type: Fixtures
+      fixtures: {}
   - uid: 10410
     components:
     - type: Transform
@@ -32838,6 +32854,8 @@ entities:
       - 10316
       - 10317
       - 10318
+    - type: Fixtures
+      fixtures: {}
   - uid: 10419
     components:
     - type: Transform
@@ -32849,6 +32867,8 @@ entities:
       - 3866
       - 3428
       - 3724
+    - type: Fixtures
+      fixtures: {}
   - uid: 11003
     components:
     - type: Transform
@@ -32862,6 +32882,8 @@ entities:
       - 3988
       - 8940
       - 673
+    - type: Fixtures
+      fixtures: {}
 - proto: FireAxeCabinetFilled
   entities:
   - uid: 4031
@@ -32869,11 +32891,15 @@ entities:
     - type: Transform
       pos: -1.5,32.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 11444
     components:
     - type: Transform
       pos: 52.5,18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: Firelock
   entities:
   - uid: 45
@@ -34090,7 +34116,7 @@ entities:
     - type: Transform
       pos: -2.214967,7.851863
       parent: 31
-- proto: FoodDonutJellySlugcat
+- proto: FoodDonutJellyScurret
   entities:
   - uid: 11256
     components:
@@ -34252,12 +34278,16 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 20.5,0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 11338
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 31.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: GasAnalyzer
   entities:
   - uid: 3985
@@ -35033,12 +35063,8 @@ entities:
   - uid: 1352
     components:
     - type: Transform
-      anchored: False
       pos: 34.5,14.5
       parent: 31
-    - type: Physics
-      canCollide: True
-      bodyType: Dynamic
   - uid: 1914
     components:
     - type: Transform
@@ -35048,33 +35074,21 @@ entities:
   - uid: 6469
     components:
     - type: Transform
-      anchored: False
       rot: 1.5707963267948966 rad
       pos: 47.5,15.5
       parent: 31
-    - type: Physics
-      canCollide: True
-      bodyType: Dynamic
   - uid: 6470
     components:
     - type: Transform
-      anchored: False
       rot: 1.5707963267948966 rad
       pos: 46.5,15.5
       parent: 31
-    - type: Physics
-      canCollide: True
-      bodyType: Dynamic
   - uid: 6538
     components:
     - type: Transform
-      anchored: False
       rot: 1.5707963267948966 rad
       pos: 35.5,13.5
       parent: 31
-    - type: Physics
-      canCollide: True
-      bodyType: Dynamic
   - uid: 6599
     components:
     - type: Transform
@@ -44908,7 +44922,14 @@ entities:
     - type: Transform
       pos: 12.447606,-4.278471
       parent: 31
-- proto: GlowstickBase
+- proto: GlowstickBlue
+  entities:
+  - uid: 10987
+    components:
+    - type: Transform
+      pos: 52.729786,-1.2094907
+      parent: 31
+- proto: GlowstickGreen
   entities:
   - uid: 8848
     components:
@@ -44927,13 +44948,6 @@ entities:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 27.826128,15.662895
-      parent: 31
-- proto: GlowstickBlue
-  entities:
-  - uid: 10987
-    components:
-    - type: Transform
-      pos: 52.729786,-1.2094907
       parent: 31
 - proto: GoldOre1
   entities:
@@ -48499,12 +48513,16 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 11.5,18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9904
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 9.5,24.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: IntercomCommon
   entities:
   - uid: 9905
@@ -48513,54 +48531,72 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -26.5,-3.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9906
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -34.5,-8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9907
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -33.5,7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9908
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: -12.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9909
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 23.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9910
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 1.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9911
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 0.5,18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9912
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 1.5,-7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9913
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 6.5,-18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: IntercomEngineering
   entities:
   - uid: 6528
@@ -48569,47 +48605,63 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 32.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9897
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 29.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9898
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 40.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9899
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 45.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9900
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 47.5,0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9901
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 56.5,-0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9902
     components:
     - type: Transform
       pos: 30.5,-0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10890
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 47.5,-2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: IntercomMedical
   entities:
   - uid: 1822
@@ -48618,30 +48670,40 @@ entities:
       rot: 3.141592653589793 rad
       pos: 8.5,-6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9881
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 12.5,-12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9882
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: 16.5,-16.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9883
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 25.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9884
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 19.5,-3.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: IntercomScience
   entities:
   - uid: 258
@@ -48650,23 +48712,31 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -6.5,-18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 1096
     components:
     - type: Transform
       pos: 1.5,-25.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4285
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: -14.5,-19.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10536
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -9.5,-24.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: IntercomSecurity
   entities:
   - uid: 2088
@@ -48675,16 +48745,22 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -1.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7827
     components:
     - type: Transform
       pos: -6.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8908
     components:
     - type: Transform
       pos: -15.5,15.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: IntercomService
   entities:
   - uid: 910
@@ -48693,36 +48769,48 @@ entities:
       rot: 3.141592653589793 rad
       pos: -9.5,-2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 3859
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -21.5,-11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9876
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: -17.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9878
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: -2.5,-7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9885
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 10.5,-28.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9893
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -15.5,-2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: IntercomSupply
   entities:
   - uid: 6438
@@ -48731,16 +48819,22 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 29.5,22.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9894
     components:
     - type: Transform
       pos: 16.5,8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9895
     components:
     - type: Transform
       pos: 23.5,14.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: JanitorialTrolley
   entities:
   - uid: 2291
@@ -49005,6 +49099,8 @@ entities:
         6548:
         - - Pressed
           - Trigger
+    - type: Fixtures
+      fixtures: {}
   - uid: 11053
     components:
     - type: MetaData
@@ -49023,6 +49119,8 @@ entities:
         6348:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
 - proto: LockerAtmosphericsFilledHardsuit
   entities:
   - uid: 6408
@@ -50074,6 +50172,8 @@ entities:
     - type: Transform
       pos: 13.5,24.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PaintingMonkey
   entities:
   - uid: 8859
@@ -50081,6 +50181,8 @@ entities:
     - type: Transform
       pos: -4.5,-7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PaintingMoony
   entities:
   - uid: 8370
@@ -50088,6 +50190,8 @@ entities:
     - type: Transform
       pos: 22.5,-8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PaintingTheGreatWave
   entities:
   - uid: 726
@@ -50095,6 +50199,8 @@ entities:
     - type: Transform
       pos: 7.5,22.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PaintingTheSonOfMan
   entities:
   - uid: 11044
@@ -50102,6 +50208,8 @@ entities:
     - type: Transform
       pos: -3.5,-18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: Paper
   entities:
   - uid: 968
@@ -50612,6 +50720,23 @@ entities:
     - type: Transform
       pos: -35.523197,-23.564377
       parent: 31
+- proto: PlushieSpawner50
+  entities:
+  - uid: 148
+    components:
+    - type: Transform
+      pos: -30.5,-2.5
+      parent: 31
+  - uid: 521
+    components:
+    - type: Transform
+      pos: -31.5,16.5
+      parent: 31
+  - uid: 7790
+    components:
+    - type: Transform
+      pos: -30.5,13.5
+      parent: 31
 - proto: PonderingOrb
   entities:
   - uid: 7097
@@ -50693,6 +50818,8 @@ entities:
     - type: Transform
       pos: -1.5,-18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandAtmosiaDeclarationIndependence
   entities:
   - uid: 6328
@@ -50700,6 +50827,8 @@ entities:
     - type: Transform
       pos: 35.5,7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandBountyHunters
   entities:
   - uid: 7127
@@ -50708,6 +50837,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 15.5,13.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandFreeDrone
   entities:
   - uid: 2411
@@ -50715,6 +50846,8 @@ entities:
     - type: Transform
       pos: 28.5,-0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandLamarr
   entities:
   - uid: 9617
@@ -50722,6 +50855,8 @@ entities:
     - type: Transform
       pos: -6.5,-19.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandLustyXenomorph
   entities:
   - uid: 7828
@@ -50729,6 +50864,8 @@ entities:
     - type: Transform
       pos: 5.5,-29.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandMissingGloves
   entities:
   - uid: 8046
@@ -50736,6 +50873,8 @@ entities:
     - type: Transform
       pos: -30.5,8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandRedRum
   entities:
   - uid: 10629
@@ -50743,6 +50882,8 @@ entities:
     - type: Transform
       pos: 42.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandSmoke
   entities:
   - uid: 7802
@@ -50750,6 +50891,8 @@ entities:
     - type: Transform
       pos: 13.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandSpaceCola
   entities:
   - uid: 7819
@@ -50757,6 +50900,8 @@ entities:
     - type: Transform
       pos: -33.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandTools
   entities:
   - uid: 7651
@@ -50764,6 +50909,8 @@ entities:
     - type: Transform
       pos: -27.5,12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandVoteWeh
   entities:
   - uid: 8703
@@ -50771,6 +50918,8 @@ entities:
     - type: Transform
       pos: -37.5,-26.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterContrabandWehWatches
   entities:
   - uid: 8720
@@ -50778,6 +50927,8 @@ entities:
     - type: Transform
       pos: -31.5,-28.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitAnatomyPoster
   entities:
   - uid: 7342
@@ -50785,6 +50936,8 @@ entities:
     - type: Transform
       pos: 25.5,-6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitCarbonDioxide
   entities:
   - uid: 7690
@@ -50792,6 +50945,8 @@ entities:
     - type: Transform
       pos: 29.5,14.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitCarpMount
   entities:
   - uid: 7559
@@ -50800,6 +50955,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 27.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitCleanliness
   entities:
   - uid: 7348
@@ -50808,6 +50965,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 16.5,-18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitCohibaRobustoAd
   entities:
   - uid: 2438
@@ -50815,6 +50974,8 @@ entities:
     - type: Transform
       pos: 1.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitDickGumshue
   entities:
   - uid: 9366
@@ -50822,6 +50983,8 @@ entities:
     - type: Transform
       pos: -22.5,18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitIan
   entities:
   - uid: 7806
@@ -50829,6 +50992,8 @@ entities:
     - type: Transform
       pos: 11.5,16.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitLoveIan
   entities:
   - uid: 7807
@@ -50836,6 +51001,8 @@ entities:
     - type: Transform
       pos: 11.5,21.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitNanotrasenLogo
   entities:
   - uid: 619
@@ -50843,37 +51010,51 @@ entities:
     - type: Transform
       pos: 5.5,26.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 2566
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: -43.5,-8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7803
     components:
     - type: Transform
       pos: 0.5,19.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8047
     components:
     - type: Transform
       pos: -33.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8266
     components:
     - type: Transform
       pos: 34.5,-18.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8325
     components:
     - type: Transform
       pos: 43.5,-22.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8326
     components:
     - type: Transform
       pos: 43.5,-26.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitNoERP
   entities:
   - uid: 7808
@@ -50881,6 +51062,8 @@ entities:
     - type: Transform
       pos: -14.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitObey
   entities:
   - uid: 7809
@@ -50888,6 +51071,8 @@ entities:
     - type: Transform
       pos: 1.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitReportCrimes
   entities:
   - uid: 3838
@@ -50895,6 +51080,8 @@ entities:
     - type: Transform
       pos: -9.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitSafetyEyeProtection
   entities:
   - uid: 7145
@@ -50902,6 +51089,8 @@ entities:
     - type: Transform
       pos: 18.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitSafetyInternals
   entities:
   - uid: 10791
@@ -50909,6 +51098,8 @@ entities:
     - type: Transform
       pos: 29.5,19.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitSafetyMothPiping
   entities:
   - uid: 11136
@@ -50916,6 +51107,8 @@ entities:
     - type: Transform
       pos: 38.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitStateLaws
   entities:
   - uid: 10558
@@ -50923,6 +51116,8 @@ entities:
     - type: Transform
       pos: -4.5,-26.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterLegitWorkForAFuture
   entities:
   - uid: 11107
@@ -50930,6 +51125,8 @@ entities:
     - type: Transform
       pos: -18.5,-9.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PosterMapSaltern
   entities:
   - uid: 9089
@@ -50937,41 +51134,57 @@ entities:
     - type: Transform
       pos: -29.5,12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9090
     components:
     - type: Transform
       pos: 1.5,22.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9091
     components:
     - type: Transform
       pos: 27.5,7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9092
     components:
     - type: Transform
       pos: 6.5,-15.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9477
     components:
     - type: Transform
       pos: -30.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9478
     components:
     - type: Transform
       pos: -39.5,-0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9479
     components:
     - type: Transform
       pos: -38.5,-6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9579
     components:
     - type: Transform
       pos: 29.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: PottedPlant15
   entities:
   - uid: 6894
@@ -51657,7 +51870,6 @@ entities:
       parent: 31
     - type: ApcPowerReceiver
       powerLoad: 0
-    - type: Timer
   - uid: 1324
     components:
     - type: Transform
@@ -56229,6 +56441,8 @@ entities:
         1756:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
   - uid: 4526
     components:
     - type: Transform
@@ -56245,6 +56459,8 @@ entities:
         4693:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
   - uid: 5132
     components:
     - type: Transform
@@ -56256,6 +56472,8 @@ entities:
         260:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
   - uid: 8766
     components:
     - type: Transform
@@ -56269,6 +56487,8 @@ entities:
         8768:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
   - uid: 8774
     components:
     - type: Transform
@@ -56288,6 +56508,8 @@ entities:
         8770:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
   - uid: 10325
     components:
     - type: Transform
@@ -56300,6 +56522,8 @@ entities:
         7588:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
   - uid: 10996
     components:
     - type: Transform
@@ -56313,6 +56537,8 @@ entities:
         2138:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
   - uid: 10997
     components:
     - type: Transform
@@ -56326,6 +56552,8 @@ entities:
         2137:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
   - uid: 11284
     components:
     - type: Transform
@@ -56340,6 +56568,8 @@ entities:
         11118:
         - - Pressed
           - Toggle
+    - type: Fixtures
+      fixtures: {}
 - proto: SignalButtonDirectional
   entities:
   - uid: 11380
@@ -56357,6 +56587,8 @@ entities:
         124:
         - - Pressed
           - Open
+    - type: Fixtures
+      fixtures: {}
 - proto: SignalSwitch
   entities:
   - uid: 276
@@ -56383,6 +56615,8 @@ entities:
           - Close
         - - On
           - AutoClose
+    - type: Fixtures
+      fixtures: {}
   - uid: 1084
     components:
     - type: Transform
@@ -56465,6 +56699,8 @@ entities:
           - Forward
         - - Off
           - Off
+    - type: Fixtures
+      fixtures: {}
   - uid: 7945
     components:
     - type: Transform
@@ -56542,6 +56778,8 @@ entities:
           - Forward
         - - Off
           - Off
+    - type: Fixtures
+      fixtures: {}
   - uid: 9557
     components:
     - type: Transform
@@ -56574,6 +56812,8 @@ entities:
           - Open
         - - Off
           - Close
+    - type: Fixtures
+      fixtures: {}
   - uid: 10218
     components:
     - type: Transform
@@ -56637,6 +56877,8 @@ entities:
           - Forward
         - - Off
           - Off
+    - type: Fixtures
+      fixtures: {}
 - proto: SignalSwitchDirectional
   entities:
   - uid: 11371
@@ -56651,6 +56893,8 @@ entities:
           - Open
         - - Off
           - Close
+    - type: Fixtures
+      fixtures: {}
   - uid: 11372
     components:
     - type: Transform
@@ -56664,6 +56908,8 @@ entities:
           - Open
         - - Off
           - Close
+    - type: Fixtures
+      fixtures: {}
 - proto: SignAnomaly
   entities:
   - uid: 10546
@@ -56671,6 +56917,8 @@ entities:
     - type: Transform
       pos: -12.5,-31.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignAnomaly2
   entities:
   - uid: 10544
@@ -56678,6 +56926,8 @@ entities:
     - type: Transform
       pos: -7.5,-33.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignArmory
   entities:
   - uid: 1523
@@ -56685,6 +56935,8 @@ entities:
     - type: Transform
       pos: -13.507725,17.439112
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignAtmos
   entities:
   - uid: 6329
@@ -56692,6 +56944,8 @@ entities:
     - type: Transform
       pos: 31.5,7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignBar
   entities:
   - uid: 5110
@@ -56699,6 +56953,8 @@ entities:
     - type: Transform
       pos: 1.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignBiohazardMed
   entities:
   - uid: 8895
@@ -56706,6 +56962,8 @@ entities:
     - type: Transform
       pos: 16.5,-12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignBridge
   entities:
   - uid: 142
@@ -56713,6 +56971,8 @@ entities:
     - type: Transform
       pos: 5.5,22.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignCargo
   entities:
   - uid: 4299
@@ -56720,6 +56980,8 @@ entities:
     - type: Transform
       pos: 12.5,8.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignCargoDock
   entities:
   - uid: 5150
@@ -56727,6 +56989,8 @@ entities:
     - type: Transform
       pos: 21.5,28.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignChapel
   entities:
   - uid: 7694
@@ -56734,6 +56998,8 @@ entities:
     - type: Transform
       pos: -38.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignChem
   entities:
   - uid: 4889
@@ -56741,11 +57007,15 @@ entities:
     - type: Transform
       pos: 18.5,-3.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7291
     components:
     - type: Transform
       pos: 14.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignCloning
   entities:
   - uid: 4133
@@ -56753,6 +57023,8 @@ entities:
     - type: Transform
       pos: 10.5,-12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignConference
   entities:
   - uid: 1524
@@ -56760,11 +57032,15 @@ entities:
     - type: Transform
       pos: 1.5,26.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8704
     components:
     - type: Transform
       pos: -33.5,-25.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignCryogenicsMed
   entities:
   - uid: 10992
@@ -56772,6 +57048,8 @@ entities:
     - type: Transform
       pos: 8.5,-12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDangerMed
   entities:
   - uid: 4640
@@ -56779,27 +57057,37 @@ entities:
     - type: Transform
       pos: 58.5,5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4797
     components:
     - type: Transform
       pos: 71.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9548
     components:
     - type: Transform
       pos: 71.5,-6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9549
     components:
     - type: Transform
       pos: 80.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 11379
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 55.5,9.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalBridge
   entities:
   - uid: 157
@@ -56808,18 +57096,24 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -21.482899,6.2720566
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 1766
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 1.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7492
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 5.493867,-12.264781
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalChapel
   entities:
   - uid: 8239
@@ -56828,12 +57122,16 @@ entities:
       rot: 3.141592653589793 rad
       pos: -34.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8917
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -26.499413,2.2858148
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalCryo
   entities:
   - uid: 9326
@@ -56842,6 +57140,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -38.5,-2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalDorms
   entities:
   - uid: 8915
@@ -56849,6 +57149,8 @@ entities:
     - type: Transform
       pos: -26.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalEng
   entities:
   - uid: 141
@@ -56857,12 +57159,16 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 5.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8842
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: -26.497889,6.7333336
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalEvac
   entities:
   - uid: 2225
@@ -56871,12 +57177,16 @@ entities:
       rot: -1.5707963267948966 rad
       pos: -21.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9333
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 1.494153,6.738206
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalFood
   entities:
   - uid: 7684
@@ -56885,6 +57195,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -20.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalHydro
   entities:
   - uid: 8916
@@ -56893,6 +57205,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -26.495642,2.7233148
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalJanitor
   entities:
   - uid: 120
@@ -56900,6 +57214,8 @@ entities:
     - type: Transform
       pos: -22.49935,1.7157228
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalMed
   entities:
   - uid: 7491
@@ -56908,18 +57224,24 @@ entities:
       rot: 3.141592653589793 rad
       pos: 5.5,-12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8841
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: -26.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10555
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 0.5049188,-17.286484
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalSci
   entities:
   - uid: 1263
@@ -56927,17 +57249,23 @@ entities:
     - type: Transform
       pos: 1.4985528,6.263013
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10552
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 0.5,-17.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10553
     components:
     - type: Transform
       pos: -22.5,1.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalSec
   entities:
   - uid: 7493
@@ -56946,24 +57274,32 @@ entities:
       rot: 3.141592653589793 rad
       pos: 5.493867,-12.749156
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7795
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: -21.50213,6.729406
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10272
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: -17.5,15.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10554
     components:
     - type: Transform
       rot: 3.141592653589793 rad
       pos: 0.5049188,-17.71476
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignDirectionalSupply
   entities:
   - uid: 146
@@ -56972,12 +57308,16 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 5.498553,6.247388
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8843
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: -26.497889,6.2645836
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignElectrical
   entities:
   - uid: 11377
@@ -56986,12 +57326,16 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 54.5,12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 11378
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: 58.5,12.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignElectricalMed
   entities:
   - uid: 3134
@@ -56999,6 +57343,8 @@ entities:
     - type: Transform
       pos: 45.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignEngineering
   entities:
   - uid: 1222
@@ -57006,6 +57352,8 @@ entities:
     - type: Transform
       pos: 30.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignEVA
   entities:
   - uid: 150
@@ -57013,6 +57361,8 @@ entities:
     - type: Transform
       pos: 10.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignExamroom
   entities:
   - uid: 530
@@ -57020,6 +57370,8 @@ entities:
     - type: Transform
       pos: 8.5,-9.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignGravity
   entities:
   - uid: 8148
@@ -57027,6 +57379,8 @@ entities:
     - type: Transform
       pos: 50.5,-1.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignHydro1
   entities:
   - uid: 10545
@@ -57034,6 +57388,8 @@ entities:
     - type: Transform
       pos: -2.5,-40.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignInterrogation
   entities:
   - uid: 9508
@@ -57041,6 +57397,8 @@ entities:
     - type: Transform
       pos: -0.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignJanitor
   entities:
   - uid: 2749
@@ -57049,6 +57407,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: -20.5,-13.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignLaserMed
   entities:
   - uid: 8898
@@ -57056,6 +57416,8 @@ entities:
     - type: Transform
       pos: 61.5,-0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignLibrary
   entities:
   - uid: 4831
@@ -57063,6 +57425,8 @@ entities:
     - type: Transform
       pos: 5.5,-22.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignMagneticsMed
   entities:
   - uid: 2953
@@ -57070,6 +57434,8 @@ entities:
     - type: Transform
       pos: 32.5,23.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignMaterials
   entities:
   - uid: 7224
@@ -57077,6 +57443,8 @@ entities:
     - type: Transform
       pos: 26.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignMedical
   entities:
   - uid: 4151
@@ -57084,6 +57452,8 @@ entities:
     - type: Transform
       pos: 5.5,2.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignMorgue
   entities:
   - uid: 4230
@@ -57091,6 +57461,8 @@ entities:
     - type: Transform
       pos: 16.5,-14.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignRadiationMed
   entities:
   - uid: 4638
@@ -57098,51 +57470,71 @@ entities:
     - type: Transform
       pos: 54.5,4.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 4639
     components:
     - type: Transform
       pos: 54.5,0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9550
     components:
     - type: Transform
       pos: 79.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9560
     components:
     - type: Transform
       pos: 62.5,11.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9561
     components:
     - type: Transform
       pos: 80.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9562
     components:
     - type: Transform
       pos: 80.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9563
     components:
     - type: Transform
       pos: 79.5,-6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9564
     components:
     - type: Transform
       pos: 62.5,-6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9565
     components:
     - type: Transform
       pos: 61.5,-5.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9567
     components:
     - type: Transform
       pos: 61.5,10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignRobo
   entities:
   - uid: 10561
@@ -57150,6 +57542,8 @@ entities:
     - type: Transform
       pos: -3.5,-28.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignScience
   entities:
   - uid: 10543
@@ -57157,6 +57551,8 @@ entities:
     - type: Transform
       pos: -13.5,-17.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignSecurearea
   entities:
   - uid: 9395
@@ -57164,11 +57560,15 @@ entities:
     - type: Transform
       pos: -44.5,1.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9396
     components:
     - type: Transform
       pos: -44.5,9.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignSecureMedRed
   entities:
   - uid: 10983
@@ -57176,6 +57576,8 @@ entities:
     - type: Transform
       pos: 54.5,-10.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignShipDock
   entities:
   - uid: 9941
@@ -57184,6 +57586,8 @@ entities:
       rot: 3.141592653589793 rad
       pos: 34.5,38.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignSomethingOld2
   entities:
   - uid: 1469
@@ -57191,6 +57595,8 @@ entities:
     - type: Transform
       pos: -2.5,19.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignSpace
   entities:
   - uid: 9237
@@ -57198,16 +57604,22 @@ entities:
     - type: Transform
       pos: -40.5,9.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9238
     components:
     - type: Transform
       pos: -40.5,1.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9473
     components:
     - type: Transform
       pos: -21.5,-31.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignSurgery
   entities:
   - uid: 1107
@@ -57216,6 +57628,8 @@ entities:
       rot: -1.5707963267948966 rad
       pos: 20.5,-13.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignTelecomms
   entities:
   - uid: 8149
@@ -57223,6 +57637,8 @@ entities:
     - type: Transform
       pos: 48.5,-1.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SignToolStorage
   entities:
   - uid: 158
@@ -57230,6 +57646,8 @@ entities:
     - type: Transform
       pos: -25.5,7.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SingularityGenerator
   entities:
   - uid: 4654
@@ -57932,7 +58350,7 @@ entities:
     - type: Transform
       pos: -6.962518,29.44575
       parent: 31
-- proto: SpacemenFigureSpawner
+- proto: SpacemenFigurineSpawner90
   entities:
   - uid: 10822
     components:
@@ -58482,22 +58900,30 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 1.5,0.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 7259
     components:
     - type: Transform
       pos: 23.5,6.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 8849
     components:
     - type: Transform
       rot: -1.5707963267948966 rad
       pos: -34.5,-9.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 10535
     components:
     - type: Transform
       pos: -14.5,-13.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: SteelOre1
   entities:
   - uid: 10819
@@ -61136,23 +61562,6 @@ entities:
     - type: Transform
       pos: 12.492016,27.532398
       parent: 31
-- proto: ToySpawner
-  entities:
-  - uid: 148
-    components:
-    - type: Transform
-      pos: -30.5,-2.5
-      parent: 31
-  - uid: 521
-    components:
-    - type: Transform
-      pos: -31.5,16.5
-      parent: 31
-  - uid: 7790
-    components:
-    - type: Transform
-      pos: -30.5,13.5
-      parent: 31
 - proto: TrainingBomb
   entities:
   - uid: 631
@@ -61534,22 +61943,30 @@ entities:
     - type: Transform
       pos: -8.5,23.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9024
     components:
     - type: Transform
       pos: -0.5,9.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 9512
     components:
     - type: Transform
       pos: 11.5,25.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
   - uid: 11432
     components:
     - type: Transform
       rot: 1.5707963267948966 rad
       pos: -16.5,-38.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: WallReinforced
   entities:
   - uid: 34
@@ -69555,26 +69972,8 @@ entities:
         immutable: False
         temperature: 293.14963
         moles:
-        - 1.7459903
-        - 6.568249
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
-        - 0
+          Oxygen: 1.7459903
+          Nitrogen: 6.568249
   - uid: 1957
     components:
     - type: Transform
@@ -69622,6 +70021,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 41.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: WarningN2
   entities:
   - uid: 11012
@@ -69630,6 +70031,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 35.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: WarningN2O
   entities:
   - uid: 11006
@@ -69638,6 +70041,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 39.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: WarningO2
   entities:
   - uid: 11011
@@ -69646,6 +70051,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 37.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: WarningPlasma
   entities:
   - uid: 11016
@@ -69654,6 +70061,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 43.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: WarningTritium
   entities:
   - uid: 11017
@@ -69662,6 +70071,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 45.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: WarningWaste
   entities:
   - uid: 6813
@@ -69670,6 +70081,8 @@ entities:
       rot: 1.5707963267948966 rad
       pos: 47.5,20.5
       parent: 31
+    - type: Fixtures
+      fixtures: {}
 - proto: WarpPoint
   entities:
   - uid: 162
@@ -69679,113 +70092,6 @@ entities:
       parent: 31
     - type: WarpPoint
       location: library
-- proto: WarpPointBombing
-  entities:
-  - uid: 934
-    components:
-    - type: Transform
-      pos: -36.5,14.5
-      parent: 31
-    - type: WarpPoint
-      location: chapel
-  - uid: 2142
-    components:
-    - type: Transform
-      pos: 8.5,19.5
-      parent: 31
-    - type: WarpPoint
-      location: hop's office
-  - uid: 4910
-    components:
-    - type: Transform
-      pos: 9.5,-9.5
-      parent: 31
-    - type: WarpPoint
-      location: medbay
-  - uid: 7261
-    components:
-    - type: Transform
-      pos: 16.5,-0.5
-      parent: 31
-    - type: WarpPoint
-      location: chemistry
-  - uid: 7262
-    components:
-    - type: Transform
-      pos: 13.5,-15.5
-      parent: 31
-    - type: WarpPoint
-      location: morgue
-  - uid: 9712
-    components:
-    - type: Transform
-      pos: -12.5,19.5
-      parent: 31
-    - type: WarpPoint
-      location: armory
-  - uid: 10539
-    components:
-    - type: Transform
-      pos: -9.5,-20.5
-      parent: 31
-    - type: WarpPoint
-      location: science
-  - uid: 11267
-    components:
-    - type: Transform
-      pos: 8.5,25.5
-      parent: 31
-    - type: WarpPoint
-      location: captain's quarters
-  - uid: 11308
-    components:
-    - type: Transform
-      pos: 3.5,30.5
-      parent: 31
-    - type: WarpPoint
-      location: bridge
-  - uid: 11309
-    components:
-    - type: Transform
-      pos: -1.5,17.5
-      parent: 31
-    - type: WarpPoint
-      location: vault
-  - uid: 11310
-    components:
-    - type: Transform
-      pos: 8.5,9.5
-      parent: 31
-    - type: WarpPoint
-      location: eva room
-  - uid: 11311
-    components:
-    - type: Transform
-      pos: 58.5,2.5
-      parent: 31
-    - type: WarpPoint
-      location: particle accelerator
-  - uid: 11313
-    components:
-    - type: Transform
-      pos: 34.5,14.5
-      parent: 31
-    - type: WarpPoint
-      location: atmospherics
-  - uid: 11322
-    components:
-    - type: Transform
-      pos: 27.5,18.5
-      parent: 31
-    - type: WarpPoint
-      location: salvage
-  - uid: 11359
-    components:
-    - type: Transform
-      pos: 50.5,-5.5
-      parent: 31
-    - type: WarpPoint
-      location: telecomms
 - proto: WaterCooler
   entities:
   - uid: 1156

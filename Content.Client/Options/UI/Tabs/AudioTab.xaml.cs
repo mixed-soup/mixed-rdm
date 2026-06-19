@@ -14,9 +14,9 @@ namespace Content.Client.Options.UI.Tabs;
 [GenerateTypedNameReferences]
 public sealed partial class AudioTab : Control
 {
-    [Dependency] private readonly IAudioManager _audio = default!;
-    [Dependency] private readonly IClientAdminManager _admin = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private IAudioManager _audio = default!;
+    [Dependency] private IClientAdminManager _admin = default!;
+    [Dependency] private IConfigurationManager _cfg = default!;
 
     public AudioTab()
     {
@@ -66,7 +66,13 @@ public sealed partial class AudioTab : Control
         Control.AddOptionPercentSlider(
             CCCVars.TTSVolume,
             SliderTtsVolume,
+            min: ContentAudioSystem.TtsMinSliderRatio,
             scale: ContentAudioSystem.TtsMultiplier); // Corvax-TTS
+
+        Control.AddOptionPercentSlider(
+            CCCVars.TTSHeadsetVolume,
+            SliderTtsHeadsetVolume,
+            scale: ContentAudioSystem.TtsHeadsetMultiplier); // Corvax-TTS
 
         Control.AddOptionPercentSlider(
             CCCVars.TTSAnnounceVolume,
