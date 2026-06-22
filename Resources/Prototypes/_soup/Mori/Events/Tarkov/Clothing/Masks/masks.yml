@@ -1,0 +1,31 @@
+- type: entity
+  parent: [ClothingMaskGas, BaseSecurityContraband]
+  id: ClothingMaskBalaclava
+  name: тактическая балаклава "Призрак"
+  description: Простая хлопковая маска, выданная как базовый элемент экипировки. Помогает защитить лицо от копоти и мелких осколков.
+  components:
+  - type: Item
+    size: Tiny
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Masks/balaclava.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Masks/balaclava.rsi
+  - type: Armor
+    traumaDeductions:
+      Dismemberment: 0
+      OrganDamage: 0.12
+      BoneDamage: 0.12
+      VeinsDamage: 0
+      NerveDamage: 0
+    coverage: # backmen: armour coverage
+    - Head
+    modifiers:
+      coefficients:
+        Blunt: 0.95
+        Slash: 0.95
+        Piercing: 0.95
+        ArmorPiercing: 0.95
+        Heat: 0.95
+  - type: HideLayerClothing
+    layers:
+      Hair: HEAD

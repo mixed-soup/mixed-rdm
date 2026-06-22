@@ -1,0 +1,39 @@
+- type: entity
+  parent: [ClothingOuterBaseMedium, AllowSuitStorageClothing, BaseSecurityContraband]
+  id: ClothingOuterArmorBEAR
+  name: бронежилет 6Б13
+  description: Стандартный армейский бронежилет Российской Федерации, хорошо знакомый бойцам ЧВК BEAR ещё со времён первого конфликта в Таркове. Модульная система на основе кевлара и стальных пластин обеспечивает надёжную защиту от большинства пистолетных и винтовочных патронов. Главные достоинства 6Б13 - простота, ремонтопригодность и высокая живучесть в условиях затяжных рейдов. Пусть он тяжеловат и не обладает эргономикой дорогих западных аналогов, но в нём чувствуешь себя увереннее, когда вокруг свистят пули.
+  components:
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/OuterClothing/BEAR/BEARArmor.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/OuterClothing/BEAR/BEARArmor.rsi
+  - type: StaminaResistance
+    damageCoefficient: 0.95
+  - type: Armor # Based on /tg/ but slightly compensated to fit the fact that armor stacks in SS14. :x:
+    coverage: # backmen: armour coverage
+    - Chest
+    - Groin
+    - Tail
+    - Hand
+    traumaDeductions:
+      Dismemberment: 0.21
+      OrganDamage: 0.21
+      BoneDamage: 0.21
+      VeinsDamage: 0
+      NerveDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.7
+        Slash: 0.7
+        Piercing: 0.6 #Can save you, but bullets will still hurt. Will take about 10 shots from a Viper before critting, as opposed to 7 while unarmored and 16~ with a bulletproof vest.
+        ArmorPiercing: 0.7
+        Heat: 0.8
+  - type: ClothingSpeedModifier
+    walkModifier: 0.90
+    sprintModifier: 0.90
+  - type: ExplosionResistance
+    damageCoefficient: 0.90
+  - type: Tag
+    tags:
+      - BroneArachne

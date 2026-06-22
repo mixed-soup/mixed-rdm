@@ -1,0 +1,39 @@
+- type: entity
+  parent: [ClothingHeadHelmetArmoredBase, BaseSecurityContraband]
+  id: ClothingHeadHelmetUSEC1
+  name: шлем "Либерти"
+  description: "Базовый защитный шлем ЧВК USEC. Сделан из сплавов легкого класса. Предназначен для долгих битв: не греет голову, не мешает обзору. Дешевый аналог дорогих американских систем, но в условиях битвы - лучше, чем ничего."
+  components:
+  - type: SlotBlock # Backmen
+    slots: [eyes]
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Head/USEC/USECHelmet1.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Head/USEC/USECHelmet1.rsi
+  - type: Tag
+    tags:
+    - WhitelistChameleon
+    - SecurityHelmet
+  - type: HideLayerClothing
+    layers:
+      Hair: HEAD
+
+- type: entity
+  parent: [ClothingHeadHelmetArmoredBase, BaseSecurityContraband]
+  id: ClothingHeadHelmetUSEC2
+  name: шлем "Командос"
+  description: Тяжелый модифицированный шлем с креплением на подбородок и усиленным козырьком. Специально доработан бывшими инженерами USEC для работы в условиях сильного автоматного огня. Затылочная часть шлема дополнительно усилена композитными пластинами. Отличительный признак командиров и ветеранов.
+  components:
+  - type: SlotBlock # Backmen
+    slots: [eyes]
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Head/USEC/USECHelmet2.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Head/USEC/USECHelmet2.rsi
+  - type: Tag
+    tags:
+    - WhitelistChameleon
+    - SecurityHelmet
+  - type: HideLayerClothing
+    layers:
+      Hair: HEAD

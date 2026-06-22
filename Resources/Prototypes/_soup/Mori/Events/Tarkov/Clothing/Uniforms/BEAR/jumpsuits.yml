@@ -1,0 +1,21 @@
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitBEAR1
+  name: тактический костюм "Ночь" 
+  description: Полный чёрный тактический костюм, разработанный для ночных операций и городских боёв. Выполнен из дышащей, но плотной ткани с водоотталкивающей пропиткой. Обеспечивает отличную маскировку в условиях плохой видимости и городских теней. На груди и рукавах предусмотрены нашивки с логотипом BEAR и "кровавыми" патчами. Идеален для скрытного передвижения и внезапных атак.
+  components:
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Uniforms/BEAR/BEARUniform1.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Uniforms/BEAR/BEARUniform1.rsi
+
+- type: entity
+  parent: ClothingUniformBase
+  id: ClothingUniformJumpsuitBEAR2
+  name: тактические штаны с тельняшкой
+  description: Неформальный, но культовый комплект экипировки BEAR. Чёрные тактические штаны с множеством карманов сочетаются с классической русской тельняшкой - полосатой майкой, которая стала символом элитных подразделений ВДВ и морской пехоты. Такой образ говорит о том, что перед вами не просто наёмник, а опытный боец, прошедший через множество горячих точек. Тельняшка добавляет бойцу дерзости и харизмы, а чёрные штаны сохраняют функциональность и маскировку. В этом комплекте боец BEAR выглядит как настоящий "русский медведь" - свирепый, неуклюжий на первый взгляд, но смертельно опасный в ближнем бою.
+  components:
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Uniforms/BEAR/BEARUniform2.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Uniforms/BEAR/BEARUniform2.rsi
