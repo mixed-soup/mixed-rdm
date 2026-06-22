@@ -1,0 +1,19 @@
+- type: entity
+  parent: [ClothingHeadHelmetArmoredBase, BaseSecurityContraband]
+  id: ClothingHeadHelmetBEAR
+  name: шлем "Ратник-БШ"
+  description: Армейский боевой шлем нового поколения, разработанный для Российской Федерации. Обеспечивает надежную защиту от осколков и пуль пистолетного калибра. Цифровой камуфляж "Цифра" и характерный силуэт выдают в владельце бойца элитной ЧВК BEAR. Крепления на "велкро" позволяют закрепить нашивку с родным медведем.
+  components:
+  - type: SlotBlock # Backmen
+    slots: [eyes]
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Head/BEAR/BEARHelmet.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Head/BEAR/BEARHelmet.rsi
+  - type: Tag
+    tags:
+    - WhitelistChameleon
+    - SecurityHelmet
+  - type: HideLayerClothing
+    layers:
+      Hair: HEAD

@@ -1,0 +1,42 @@
+- type: entity
+  parent: [ClothingOuterBaseMedium, AllowSuitStorageClothing, BaseSecurityContraband]
+  id: ClothingOuterArmorJuggernaut
+  name: бронежилет 6Б45 "Защита"
+  description: Тяжёлый армейский бронежилет 6-го класса защиты, разработанный для штурмовых отрядов и сапёров Российской армии. В отличие от стандартных жилетов, 6Б45 прикрывает не только грудь и спину, но и плечи, бока, паховую область и шею. Усиленные титановые пластины способны выдержать несколько попаданий из винтовок крупного калибра, а кевларовая основа останавливает осколки и шрапнель. Единственная плата за такую защиту - чудовищный вес, замедляющий бойца до скорости пехотной машины. Носится исключительно с полным штурмовым комплектом, включая шлем "Алтын". Настоящий "танк" в мире пехоты.
+  components:
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/OuterClothing/JuggernautArmor.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/OuterClothing/JuggernautArmor.rsi
+  - type: StaminaResistance
+    damageCoefficient: 0.5
+  - type: Armor
+    coverage: # backmen: armour coverage
+    - Chest
+    - Groin
+    #- Arm  #this dont cover a arms
+    - Hand
+    - Leg
+    #- Foot #this dont cover a foots
+    - Tail
+    traumaDeductions:
+      Dismemberment: 0.21
+      OrganDamage: 0.21
+      BoneDamage: 0.21
+      VeinsDamage: 0
+      NerveDamage: 0
+    modifiers:
+      coefficients:
+        Blunt: 0.5
+        Slash: 0.5
+        Piercing: 0.4 #Can save you, but bullets will still hurt. Will take about 10 shots from a Viper before critting, as opposed to 7 while unarmored and 16~ with a bulletproof vest.
+        ArmorPiercing: 0.4
+        Heat: 0.2
+  - type: ClothingSpeedModifier
+    walkModifier: 0.80
+    sprintModifier: 0.80
+  - type: ExplosionResistance
+    damageCoefficient: 0.2
+  - type: Tag
+    tags:
+      - BroneArachne

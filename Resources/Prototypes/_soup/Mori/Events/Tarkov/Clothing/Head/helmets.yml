@@ -1,0 +1,19 @@
+- type: entity
+  parent: [ClothingHeadHelmetArmoredBase, BaseSecurityContraband]
+  id: ClothingHeadHelmetAltyn
+  name: шлем "Алтын"
+  description: Легендарный тяжелый штурмовой шлем, прошедший проверку в Афганистане и Чечне и до сих пор состоящий на вооружении спецподразделений МВД России. Массивный купол из 3-мм титанового сплава с арамидным подпором обеспечивает надежную защиту. В базовой комплектации поставляется с усиленным бронезабралом, полностью закрывающим лицо. Чудовищная защита от пуль и осколков требует от бойца крепкой шеи - этот шлем превосходно защищает, но сильно ограничивает обзор, подвижность и делает тебя главной мишенью для врага. Настоящий "мерседес" среди шлемов.
+  components:
+  - type: SlotBlock # Backmen
+    slots: [eyes]
+  - type: Sprite
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Head/altyn.rsi
+  - type: Clothing
+    sprite: _soup/Mori/Events/Tarkov/Clothing/Head/altyn.rsi
+  - type: Tag
+    tags:
+    - WhitelistChameleon
+    - SecurityHelmet
+  - type: HideLayerClothing
+    layers:
+      Hair: HEAD
